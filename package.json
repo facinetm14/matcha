@@ -1,0 +1,45 @@
+{
+  "name": "matcha",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "[fakouyat,nfauconn]",
+  "scripts": {
+    "dev:front": "npm --workspace front run dev",
+    "dev:back": "npm --workspace api run dev",
+    "dev": "npm run dev:front & npm run dev:back",
+    "lint": "eslint . --ext .ts, & npm --workspace front run lint",
+    "lint:fix": "eslint . --fix & npm --workspace front run lint:fix",
+    "test:front": "npm --workspace front run test:unit",
+    "test:back": "npm --workspace api run test",
+    "test": "npm run test:front & npm run test:back",
+    "prepare": "husky",
+    "commit:lint": "npx --no -- commitlint --edit $1"
+  },
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "keywords": [],
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@commitlint/cli": "^19.8.1",
+    "@commitlint/config-conventional": "^19.8.1",
+    "@eslint/eslintrc": "^3.3.1",
+    "@eslint/js": "^9.34.0",
+    "eslint-plugin-vue": "^10.4.0",
+    "standard-version": "^9.5.0",
+    "typescript": "^5.9.2",
+    "vue-eslint-parser": "^10.2.0"
+  },
+  "dependencies": {
+    "@typescript-eslint/eslint-plugin": "^8.41.0",
+    "@typescript-eslint/parser": "^8.41.0",
+    "eslint": "^9.34.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.4",
+    "express": "^5.1.0",
+    "husky": "^9.1.7",
+    "prettier": "^3.6.2"
+  }
+}
