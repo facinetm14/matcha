@@ -1,0 +1,48 @@
+name: Monorepo CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-lint-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Lint
+        run: |
+          npm run lint --workspace=@matcha/shared
+          npm run lint --workspace=@matcha/back
+          npm run lint --workspace=@matcha/front
+
+      - name: Build
+        run: |
+          npm run build --workspace=@matcha/shared
+          npm run build --workspace=@matcha/back
+          npm run build --workspace=@matcha/front
+
+      - name: Format check
+        run: |
+          prettier --check "shared/src/**/*.{ts,js,json,md}"
+          prettier --check "back/src/**/*.{ts,js,json,md}"
+          prettier --check "front/src/**/*.{ts,tsx,vue,js,json,md}"
+
+      - name: Test
+        run: |
+          npm test --workspace=@matcha/back
+          npm test --workspace=@matcha/front
+

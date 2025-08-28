@@ -1,0 +1,55 @@
+services:
+  # db:
+  #   image: postgres:13-alpine
+  #   networks:
+  #     - matcha-network
+  #   ports:
+  #     - "5432:5432"
+  #   environment:
+  #     POSTGRES_USER: ${DB_USER}
+  #     POSTGRES_PASSWORD: ${DB_PASSWD}
+  #     POSTGRES_DB: ${DB_NAME}
+  #     PGDATA: /var/lib/postgresql/data/pgdata
+  #   volumes:
+  #     - pgdata:/var/lib/postgresql/data
+
+  # back:
+  #   build:
+  #     context: ./back
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "127.0.0.1:5000:5000"
+  #   depends_on:
+  #     - db
+  #   env_file:
+  #     - ./.env
+  #   networks:
+  #     - matcha-network
+  #   develop:
+  #     watch:
+  #       - action: rebuild
+  #         path: ./back
+  #         ignore:
+  #           - node_modules/
+
+  front:
+    build:
+      context: .
+      dockerfile: Dockerfile.front
+    ports:
+      - "5173:5173"
+    env_file:
+      - .env.front
+    networks:
+      - matcha-network
+    develop:
+      watch:
+        - action: rebuild
+          path: ./packages/front
+
+# volumes:
+#   pgdata:
+
+networks:
+  matcha-network:
+    driver: bridge
