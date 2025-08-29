@@ -2,6 +2,8 @@ import { fileURLToPath } from 'node:url'
 import { mergeConfig, defineConfig, configDefaults } from 'vitest/config'
 import viteConfig from './vite.config'
 
+const host = process.env.VITE_HOST || 'localhost'
+
 export default mergeConfig(
   viteConfig,
   defineConfig({
@@ -11,11 +13,11 @@ export default mergeConfig(
       root: fileURLToPath(new URL('./', import.meta.url)),
     },
     server: {
-      host: process.env.VITE_HOST || 'localhost',
+      host,
       port: 5173,
       proxy: {
-        "/api/v1": "http://localhost:5000"
-      }
+        '/api/v1': 'http://localhost:5000',
+      },
     },
   }),
 )
