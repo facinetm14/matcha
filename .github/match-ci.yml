@@ -43,6 +43,6 @@ jobs:
 
       - name: Test
         run: |
-          npm test --workspace=@matcha/back
-          npm test --workspace=@matcha/front
+          npm run test --workspace=@matcha/back
+          npm run test:unit --workspace=@matcha/front
 

@@ -39,7 +39,7 @@ services:
     ports:
       - "5173:5173"
     env_file:
-      - .env.front
+      - ./packages/front/.env
     networks:
       - matcha-network
     develop:

@@ -9,8 +9,11 @@
     "dev": "npm run dev:front & npm run dev:back",
     "lint": "eslint . --ext .ts, & npm --workspace front run lint",
     "lint:fix": "eslint . --fix & npm --workspace front run lint:fix",
-    "test":"npm --workspace front run test & npm run --workspace api run test",
-    "prepare": "husky"
+    "test:front": "npm --workspace front run test:unit",
+    "test:back": "npm --workspace api run test",
+    "test": "npm run test:front & npm run test:back",
+    "prepare": "husky",
+    "commit:lint": "npx --no -- commitlint --edit $1"
   },
   "private": true,
   "workspaces": [
@@ -20,9 +23,12 @@
   "license": "ISC",
   "description": "",
   "devDependencies": {
+    "@commitlint/cli": "^19.8.1",
+    "@commitlint/config-conventional": "^19.8.1",
     "@eslint/eslintrc": "^3.3.1",
     "@eslint/js": "^9.34.0",
     "eslint-plugin-vue": "^10.4.0",
+    "standard-version": "^9.5.0",
     "typescript": "^5.9.2",
     "vue-eslint-parser": "^10.2.0"
   },
