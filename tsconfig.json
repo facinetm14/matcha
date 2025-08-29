@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@shared/*": ["app/shared/src/*"],
+      "@client/*": ["app/front/src/*"],
+      "@server/*": ["app/api/src/*"]
+    }
+  },
+  "include": ["app/*/src"],
+  "overrides": [
+    {
+      "files": ["tests/**/*"],
+      "plugins": ["jest"],
+      "env": {
+        "jest/globals": true
+      }
+    }
+  ]
+}
