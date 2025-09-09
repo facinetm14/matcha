@@ -7,7 +7,6 @@ import {
 import { TYPE } from '../../infrastructure/config/inversify-type';
 import { Logger } from '../../core/ports/services/logger.service';
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports
 import {
   TransactionalEmailsApi,
   SendSmtpEmail,
@@ -35,8 +34,7 @@ export class EmailApi implements EmailService {
     message.to = [{ email: payload.email, name: payload.username }];
 
     emailAPI.sendTransacEmail(message).then(
-      (data) => {
-        console.log(data);
+      () => {
         this.logger.success(`mail successfully sent to ${payload.email}`);
       },
       (error: unknown) => {
