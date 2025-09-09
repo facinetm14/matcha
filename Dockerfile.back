@@ -4,14 +4,15 @@ FROM node:20-alpine
 WORKDIR /usr/src/app
 
 COPY package*.json ./
+COPY packages/api/package*.json ./packages/api/
 
+RUN npm install
 
 COPY packages/api ./packages/api
 COPY packages/shared ./packages/shared
 
 
-RUN npm install
 
 EXPOSE 5000
 
-CMD ["npm", "run", "dev:front"]
+CMD ["npm", "run", "dev:back"]
