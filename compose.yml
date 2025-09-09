@@ -42,10 +42,10 @@ services:
       - ./packages/front/.env
     networks:
       - matcha-network
-    develop:
-      watch:
-        - action: rebuild
-          path: ./packages/front
+    volumes:
+      - ./packages/front:/usr/src/app/packages/front
+      - ./packages/shared:/usr/src/app/packages/shared
+      - /usr/src/app/packages/front/node_modules
 
 # volumes:
 #   pgdata:
