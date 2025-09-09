@@ -2,10 +2,10 @@ import { Container } from 'inversify';
 import { bindControllers } from './bind-controllers';
 import { bindUseCases } from './bind-usecases';
 import { bindRepositories } from './bind-repositories';
-import { bindLoggers } from './bind-logger';
+import { bindServices } from './bind-services';
 
 const container: Container = new Container();
-bindLoggers(container);
+bindServices(container);
 bindControllers(container);
 bindUseCases(container);
 bindRepositories(container);

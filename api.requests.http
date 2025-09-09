@@ -6,10 +6,12 @@ POST http://localhost:5000/api/v1/auth/register
 content-type: application/json
 
 {
- "email": "allt.xp-c0hrhhn@yopmail.com",
- "username": "guestt-422",
+ "email": "alt.c9-2xeyqyo@yopmail.com",
+ "username": "blabla-1",
  "passwd": "Allt.xp-c0hrhhn@yopmail.com",
  "confirmPasswd": "Allt.xp-c0hrhhn@yopmail.com",
  "firstName": "GUEST",
  "lastName": "Blabla"
 }
+
+

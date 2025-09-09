@@ -5,16 +5,24 @@ import container from '../../../src/infrastructure/config/inversify';
 import { TYPE } from '../../../src/infrastructure/config/inversify-type';
 import { Logger } from '../../../src/core/ports/services/logger.service';
 import { CreateUserDto } from '../../../src/core/domain/dto/create-user.dto';
+import { EventBus } from '../../../src/core/ports/services/event-bus';
 import { uuid } from '../../../../shared/uuid';
 
 describe('User Registration', () => {
   let userRepository: UserRepository;
   let registerUserUseCase: RegisterUserUseCase;
+  let eventBus: EventBus;
 
   beforeAll(() => {
     const logger = container.get<Logger>(TYPE.Logger);
     userRepository = container.get<UserRepository>(TYPE.UserRepository);
-    registerUserUseCase = new RegisterUserUseCase(userRepository, logger);
+    eventBus = container.get<EventBus>(TYPE.EventBus);
+
+    registerUserUseCase = new RegisterUserUseCase(
+      userRepository,
+      logger,
+      eventBus,
+    );
   });
 
   test('should register user and return its id', async () => {
