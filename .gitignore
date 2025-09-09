@@ -1,5 +1,4 @@
 node_modules
 
-packages/front/.env
 packages/api/.env
-packages/*/.env
+packages/front/.env
