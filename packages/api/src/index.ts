@@ -4,6 +4,8 @@ import container from './infrastructure/config/inversify';
 import { Logger } from './core/ports/services/logger.service';
 import { TYPE } from './infrastructure/config/inversify-type';
 
+import './infrastructure/events-listeners/listeners-register';
+
 const logger = container.get<Logger>(TYPE.Logger);
 const logger = container.get<Logger>(TYPE.Logger);
 const PORT = process.env.SERVER_PORT || 5000;
