@@ -11,10 +11,6 @@ import {
 } from '../../../../../shared/password';
 import { isValidEmail } from '../../../../../shared/is-valid-email';
 import { Logger } from '../../ports/services/logger.service';
-import { EventBus } from '../../ports/services/event-bus';
-import { EventType } from '../../domain/enums/event-type';
-import { UserRegisteredPayload } from '../../domain/dto/user-registered-payload';
-import { uuid } from '../../../../../shared/uuid';
 
 @injectable()
 export class RegisterUserUseCase {
@@ -22,7 +18,6 @@ export class RegisterUserUseCase {
     @inject(TYPE.UserRepository)
     private readonly userRepository: UserRepository,
     @inject(TYPE.Logger) private readonly logger: Logger,
-    @inject(TYPE.EventBus) private readonly eventBus: EventBus,
   ) {}
   async execute(
     createUserDto: CreateUserDto,
@@ -80,18 +75,6 @@ export class RegisterUserUseCase {
 
     const newUserId = await this.userRepository.create(createUserDto);
     if (newUserId) {
-      const userRegisteredPayload: UserRegisteredPayload = {
-        id: newUserId,
-        username,
-        email,
-        validationToken: uuid(),
-      };
-
-      this.eventBus.emitEvent(
-        EventType.USER_REGISTERED,
-        JSON.stringify(userRegisteredPayload),
-      );
-
       this.logger.success(
         `user with id ${newUserId} is sucessfully registered!`,
       );
