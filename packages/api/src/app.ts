@@ -1,20 +1,15 @@
-import express, { Express, Request, Response } from 'express';
-import { Server } from 'http';
+import express, { Express } from 'express';
+import { baseApi } from './adapters/web/consts/base.api';
+import AuthRouter from './adapters/web/routes/auth.route';
+import DefaultRouter from './adapters/web/routes/default.route';
 
-export const runApp = (app: Express, port: number): Server => {
+export const createApp = (): Express => {
+  const app = express();
+
   app.use(express.json());
 
-  const baseApi = process.env.BASE_API ?? '/api/v1/';
+  app.use(`${baseApi}`, DefaultRouter);
+  app.use(`${baseApi}/auth`, AuthRouter);
 
-  app.get(baseApi, (req: Request, res: Response) => {
-    res.send({
-      greeting: 'top',
-    });
-  });
-
-  const server = app.listen(port, () => {
-    console.log(`Server running at http://localhost:${port}`);
-  });
-
-  return server;
+  return app;
 };
