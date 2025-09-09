@@ -1,14 +1,21 @@
 import { describe, expect, test } from '@jest/globals';
-import express from 'express';
 import request from 'supertest';
 import { Server } from 'http';
-import { runApp } from '../../src/app';
+import { createApp } from '../../src/app';
+import { Logger } from '../../src/core/ports/services/logger.service';
+import container from '../../src/infrastructure/config/inversify';
+import { TYPE } from '../../src/infrastructure/config/inversify-type';
+
+const logger = container.get<Logger>(TYPE.Logger);
 
 let server: Server;
-const app = express();
+const app = createApp();
+const PORT = 5001;
 
 beforeAll(() => {
-  server = runApp(app, 5001);
+  server = app.listen(PORT, () => {
+    logger.info(`Server running at http://localhost:${PORT}`);
+  });
 });
 
 afterAll((done) => {
