@@ -16,7 +16,6 @@ import { EventBus } from '../../ports/services/event-bus';
 import { EventType } from '../../domain/enums/event-type';
 import { UserRegisteredPayload } from '../../domain/dto/user-registered-payload';
 import { UserToken } from '../../domain/entities/user-token.entity';
-import { UserStatus } from '../../domain/enums/user-status.enum';
 
 @injectable()
 export class RegisterUserUseCase {
@@ -28,7 +27,7 @@ export class RegisterUserUseCase {
   ) {}
   async execute(
     createUserDto: CreateUserDto,
-    userToken: UserToken,
+    userToken: UserToken
   ): Promise<Result<string, RegisterUserError>> {
     const lastName = createUserDto.lastName.trim();
     if (!lastName) {
@@ -97,7 +96,7 @@ export class RegisterUserUseCase {
         id: newUserId,
         username,
         email,
-        userToken,
+        userToken
       };
 
       this.eventBus.emitEvent(

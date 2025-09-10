@@ -1,20 +1,17 @@
 import { UserToken } from '../../core/domain/entities/user-token.entity';
 import { UserTokenRepository } from '../../core/ports/repositories/user-token.repository';
 import { inject, injectable } from 'inversify';
+import { mapUserTokenEntityToModel } from '../mappers/user-token-entity-to-model';
 import { pgClient } from '../../infrastructure/persistence/data-source';
 import { Logger } from '../../core/ports/services/logger.service';
 import { TYPE } from '../../infrastructure/config/inversify-type';
 import { mapUserTokenModelToEntity } from '../mappers/user-token-model-to-entity';
-import { mapEnityOrDtoToModel } from '../mappers/map-entity-or-dto-to-model';
-import { UserTokenModel } from '../../infrastructure/persistence/models/user-token.model';
 
 @injectable()
 export class UserTokenRepositoryDb implements UserTokenRepository {
   constructor(@inject(TYPE.Logger) private readonly logger: Logger) {}
   async create(createUserToken: UserToken): Promise<string | null> {
-    const userToken = mapEnityOrDtoToModel<UserToken, UserTokenModel>(
-      createUserToken,
-    );
+    const userToken = mapUserTokenEntityToModel(createUserToken);
 
     const {
       id,
@@ -61,7 +58,7 @@ export class UserTokenRepositoryDb implements UserTokenRepository {
 
   async findByToken(token: string): Promise<UserToken | null> {
     const queryUserToken = {
-      text: `SELECT * FROM users_tokens WHERE token = $1 LIMIT 1`,
+      text: `SELECT * FROM users_token WHERE token = $1 LIMIT 1`,
       values: [token],
     };
 
@@ -74,20 +71,5 @@ export class UserTokenRepositoryDb implements UserTokenRepository {
     }
 
     return mapUserTokenModelToEntity(userToken);
-  }
-
-  async delete(id: string): Promise<void> {
-    const queryUserToken = {
-      text: `DELETE FROM users_tokens WHERE id = $1`,
-      values: [id],
-    };
-
-    try {
-      const connexion = await pgClient.connect();
-      await pgClient.query(queryUserToken);
-      connexion.release();
-    } catch (error) {
-      this.logger.error(`Failed to delete user token with id ${id}: ${error}`);
-    }
   }
 }
