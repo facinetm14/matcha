@@ -8,10 +8,6 @@ import { EventBus } from '../../../src/core/ports/services/event-bus';
 import { uuid } from '../../../../shared/uuid';
 import { UserToken } from '../../../src/core/domain/entities/user-token.entity';
 import { UserTokenCateory } from '../../../src/core/domain/enums/user-token-category';
-import {
-  factoryCreateUserDto,
-  factoryUserRepositoryInMemory,
-} from '../../../../shared/factory';
 
 describe('User Registration', () => {
   let userRepository: UserRepository;
@@ -116,6 +112,10 @@ describe('User Registration', () => {
       userToken,
     );
 
+    const userRegister = await registerUserUseCase.execute(
+      createUserDto,
+      userToken,
+    );
     const newUserId = userRegister.isErr ? null : userRegister.data;
 
     expect(newUserId).toBe(null);

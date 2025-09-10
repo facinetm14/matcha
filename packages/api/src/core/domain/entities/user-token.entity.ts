@@ -1,6 +1,6 @@
 import { UserTokenCateory } from '../enums/user-token-category';
 
-export type UserToken = {
+export interface UserToken {
   id: string;
   token: string;
   userId: string;
@@ -10,4 +10,4 @@ export type UserToken = {
   expireAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
-};
+}
