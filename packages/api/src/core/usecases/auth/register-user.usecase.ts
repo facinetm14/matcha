@@ -14,7 +14,7 @@ import { Logger } from '../../ports/services/logger.service';
 import { EventBus } from '../../ports/services/event-bus';
 import { EventType } from '../../domain/enums/event-type';
 import { UserRegisteredPayload } from '../../domain/dto/user-registered-payload';
-import { uuid } from '../../../../../shared/uuid';
+import { UserToken } from '../../domain/entities/user-token.entity';
 
 @injectable()
 export class RegisterUserUseCase {
@@ -26,6 +26,7 @@ export class RegisterUserUseCase {
   ) {}
   async execute(
     createUserDto: CreateUserDto,
+    userToken: UserToken
   ): Promise<Result<string, RegisterUserError>> {
     const lastName = createUserDto.lastName.trim();
     if (!lastName) {
@@ -84,7 +85,7 @@ export class RegisterUserUseCase {
         id: newUserId,
         username,
         email,
-        validationToken: uuid(),
+        userToken
       };
 
       this.eventBus.emitEvent(
@@ -96,7 +97,7 @@ export class RegisterUserUseCase {
         `user with id ${newUserId} is sucessfully registered!`,
       );
 
-      return Ok(newUserId);
+      return Ok(userRegisteredPayload.userToken.token);
     }
 
     return Err(RegisterUserError.UNKNOWN_ERROR);
