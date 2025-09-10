@@ -3,6 +3,7 @@ import { User } from '../../core/domain/entities/user.entity';
 import { UserUniqKeys } from '../../core/domain/enums/user-uniq-keys.enum';
 import { UserRepository } from '../../core/ports/repositories/user.repository';
 import { pgClient } from '../../infrastructure/persistence/data-source';
+import { mapCreateUserDtoToModel } from '../mappers/create-user-dto-to-model';
 import { inject, injectable } from 'inversify';
 import { mapUserModelToEntity } from '../mappers/user-model-to-entity';
 import { Logger } from '../../core/ports/services/logger.service';
@@ -16,9 +17,7 @@ export class UserRepositoryDb implements UserRepository {
   constructor(@inject(TYPE.Logger) private readonly logger: Logger) {}
 
   async create(createUserDto: CreateUserDto): Promise<string | null> {
-    const userModel = mapEnityOrDtoToModel<CreateUserDto, UserModel>(
-      createUserDto,
-    );
+    const userModel = await mapCreateUserDtoToModel(createUserDto);
 
     const {
       id,
@@ -80,37 +79,5 @@ export class UserRepositoryDb implements UserRepository {
     }
 
     return mapUserModelToEntity(user);
-  }
-
-  async update(id: string, updateUserDto: UpdateUserDto): Promise<User | null> {
-    const updateUser = mapEnityOrDtoToModel<UpdateUserDto, UserModel>(
-      updateUserDto,
-    );
-
-    let columns = '';
-    const columnsValues = [];
-
-    let index = 1;
-
-    for (const [colum, value] of Object.entries(updateUser)) {
-      columns += `${index > 1 ? ',' : ''} ${colum}=$${index}`;
-      columnsValues.push(value);
-      index += 1;
-    }
-
-    const updateQuery = {
-      text: `UPDATE users SET ${columns} WHERE id=$${index}`,
-      values: [...columnsValues, id],
-    };
-
-    const connexion = await pgClient.connect();
-    try {
-      await pgClient.query(updateQuery);
-    } catch (error) {
-      this.logger.error(`Error: unable to update user ${id}, ${error}`);
-    }
-    connexion.release();
-
-    return this.findUserByUniqKey(UserUniqKeys.ID, id);
   }
 }
