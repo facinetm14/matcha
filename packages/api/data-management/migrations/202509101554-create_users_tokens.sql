@@ -1,0 +1,16 @@
+-- up Migration
+CREATE TABLE IF NOT EXISTS users_tokens (
+  id VARCHAR(255) PRIMARY KEY NOT NULL,
+  token VARCHAR(255) UNIQUE NOT NULL,
+  user_id VARCHAR(255) NOT NULL REFERENCES users(id),
+  category VARCHAR(255) NOT NULL,
+  ip_addr VARCHAR(255) UNIQUE NOT NULL,
+  device VARCHAR(255) UNIQUE NOT NULL,
+  expire_at TIMESTAMP DEFAULT NULL,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+
+
+--Down Migration
+DROP TABLE IF EXISTS users_tokens CASCADE;

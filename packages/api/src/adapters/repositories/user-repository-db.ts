@@ -3,9 +3,9 @@ import { User } from '../../core/domain/entities/user.entity';
 import { UserUniqKeys } from '../../core/domain/enums/user-uniq-keys.enum';
 import { UserRepository } from '../../core/ports/repositories/user.repository';
 import { pgClient } from '../../infrastructure/persistence/data-source';
-import { mapCreateUserDtoToUserModel } from '../mappers/create-user-dto-to-user-model';
+import { mapCreateUserDtoToModel } from '../mappers/create-user-dto-to-model';
 import { inject, injectable } from 'inversify';
-import { mapUserModelToUserEntity } from '../mappers/user-model-to-user-entity';
+import { mapUserModelToEntity } from '../mappers/user-model-to-entity';
 import { Logger } from '../../core/ports/services/logger.service';
 import { TYPE } from '../../infrastructure/config/inversify-type';
 
@@ -14,7 +14,7 @@ export class UserRepositoryDb implements UserRepository {
   constructor(@inject(TYPE.Logger) private readonly logger: Logger) {}
 
   async create(createUserDto: CreateUserDto): Promise<string | null> {
-    const userModel = mapCreateUserDtoToUserModel(createUserDto);
+    const userModel = await mapCreateUserDtoToModel(createUserDto);
 
     const {
       id,
@@ -75,6 +75,6 @@ export class UserRepositoryDb implements UserRepository {
       return null;
     }
 
-    return mapUserModelToUserEntity(user);
+    return mapUserModelToEntity(user);
   }
 }

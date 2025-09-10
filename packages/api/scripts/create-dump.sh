@@ -38,10 +38,11 @@ if [ -z "$DB_PORT" ]; then
 fi
 
 # Ensure dumps directory exists
-mkdir -p ./dumps
+MIGRATION_DIR=../data-management/dumps
+mkdir -p "$MIGRATION_DIR"
 
 # Use current timestamp for backup file
-BACKUP_FILE="./dumps/backup_$(date +%F_%H-%M-%S).dump"
+BACKUP_FILE="$MIGRATION_DIR/backup_$(date +%F_%H-%M-%S).dump"
 
 # Run pg_dump (password can be provided via PGPASSWORD in .env)
 pg_dump -h "$DB_ENV" -p "$DB_PORT" -U "$POSTGRES_USER" -F c -b -v -f "$BACKUP_FILE" "$POSTGRES_DB"

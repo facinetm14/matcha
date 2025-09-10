@@ -1,0 +1,1 @@
+export const TOKEN_DURATION_IN_MINUTES = 20 * 60000;
