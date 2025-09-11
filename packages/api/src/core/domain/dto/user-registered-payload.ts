@@ -1,9 +1,8 @@
-import * as z from 'zod';
-export const UserRegisteredPayloadSchema = z.object({
-  id: z.string(),
-  validationToken: z.string(),
-  username: z.string(),
-  email: z.string(),
-});
+import { UserToken } from '../entities/user-token.entity';
 
-export type UserRegisteredPayload = z.infer<typeof UserRegisteredPayloadSchema>;
+export type UserRegisteredPayload = {
+  id: string;
+  username: string;
+  email: string;
+  userToken: UserToken;
+};

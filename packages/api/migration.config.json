@@ -1,0 +1,8 @@
+{
+  "migrations-dir": "data-management/migrations",
+  "envPath": ".env",
+  "migration-file-language": "sql",
+  "logFileName": "migrations.log",
+  "migrationsTable": "pgmigrations",
+  "migrationFileExtension": ".sql"
+}
