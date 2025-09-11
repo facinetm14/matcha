@@ -8,10 +8,13 @@ import { NotificationService } from '../../core/ports/services/notification.serv
 import { Notification } from '../../adapters/services/Notification';
 import { EmailService } from '../../core/ports/services/email.service';
 import { EmailApi } from '../../adapters/services/EmailApi';
+import { CacheService } from '../../core/ports/services/cache.service';
+import { RedisCacheApi } from '../../adapters/services/redis-cache-api';
 
 export function bindServices(container: Container) {
   container.bind<Logger>(TYPE.Logger).to(LoggerStd).inSingletonScope();
   container.bind<EventBus>(TYPE.EventBus).to(NodeEventBus).inSingletonScope();
   container.bind<NotificationService>(TYPE.NotificationService).to(Notification).inSingletonScope();
   container.bind<EmailService>(TYPE.EmailService).to(EmailApi).inSingletonScope();
+  container.bind<CacheService>(TYPE.CacheService).to(RedisCacheApi).inSingletonScope();
 }
