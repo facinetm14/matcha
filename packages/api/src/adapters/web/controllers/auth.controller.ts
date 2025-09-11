@@ -38,8 +38,6 @@ export class AuthController {
 
     const now = new Date();
 
-    console.log({ device: JSON.parse(device), ipAddr });
-
     const userToken: UserToken = {
       id: uuid(),
       token: uuid(),
@@ -94,7 +92,14 @@ export class AuthController {
       return;
     }
 
-    // const activateUserAccountResult =
+    const activateUserAccountResult =
       await this.verifyUserUseCase.execute(validationToken);
+
+    if (activateUserAccountResult.isErr) {
+      resp.status(401).send('invalid token');
+      return;
+    }
+
+    resp.status(200).send('user email successfully verified');
   }
 }
