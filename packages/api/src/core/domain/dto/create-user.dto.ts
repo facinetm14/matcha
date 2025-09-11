@@ -1,4 +1,5 @@
 import * as z from 'zod';
+import { UserStatus } from '../enums/user-status.enum';
 
 export const CreateUserDtoSchema = z.object({
   email: z.string(),
@@ -11,4 +12,7 @@ export const CreateUserDtoSchema = z.object({
 
 export type CreateUserDto = z.infer<typeof CreateUserDtoSchema> & {
   id: string;
+  status?: UserStatus;
+  createdAt?: Date;
+  updatedAt?: Date;
 };
