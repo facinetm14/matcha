@@ -1,8 +1,8 @@
 ### base route
-GET http://localhost:5000/api/v1
+GET {{baseUrl}}
 
 ### register a user
-POST http://localhost:5000/api/v1/auth/register
+POST {{baseUrl}}/auth/register
 content-type: application/json
 
 {
@@ -14,4 +14,5 @@ content-type: application/json
  "lastName": "Blabla"
 }
 
-
+### activate user account
+POST {{baseUrl}}/auth/verify/{{validationToken}}

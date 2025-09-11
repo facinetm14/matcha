@@ -25,7 +25,7 @@ export class Notification implements NotificationService {
     payload: UserRegisteredPayload,
     clientHost: string,
   ): Promise<void> {
-    const verifyLink = `${clientHost}/activate/${payload.validationToken}`;
+    const verifyLink = `${clientHost}/activate/${payload.userToken.token}`;
 
     const emailPayload: EmailPayload = {
       email: payload.email,

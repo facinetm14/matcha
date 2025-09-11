@@ -7,6 +7,9 @@ import { RegisterUserError } from '../../../core/domain/errors/register-user.err
 import { baseApi } from '../consts/base.api';
 import { Logger } from '../../../core/ports/services/logger.service';
 import { TYPE } from '../../../infrastructure/config/inversify-type';
+import { VerifyUserUseCase } from '../../../core/usecases/auth/verify-user.usecase';
+import { UserToken } from '../../../core/domain/entities/user-token.entity';
+import { UserTokenCateory } from '../../../core/domain/enums/user-token-category';
 
 @injectable()
 export class AuthController {
@@ -15,6 +18,8 @@ export class AuthController {
     private readonly registerUserUseCase: RegisterUserUseCase,
     @inject(TYPE.Logger)
     private readonly logger: Logger,
+    @inject(VerifyUserUseCase)
+    private readonly verifyUserUseCase: VerifyUserUseCase,
   ) {}
 
   async registerUser(req: Request, resp: Response) {
@@ -28,16 +33,35 @@ export class AuthController {
     }
 
     const createUserDto = { ...parsedBody.data, id: uuid() };
+    const device = `${JSON.stringify(req.headers['user-agent'])}`;
+    const ipAddr = `${req.ip}`;
 
-    const registerUserResult =
-      await this.registerUserUseCase.execute(createUserDto);
+    const now = new Date();
+
+    const userToken: UserToken = {
+      id: uuid(),
+      token: uuid(),
+      userId: createUserDto.id,
+      category: UserTokenCateory.ONE_TIME,
+      expireAt: null,
+      ipAddr,
+      device,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    const registerUserResult = await this.registerUserUseCase.execute(
+      createUserDto,
+      userToken,
+    );
+
     if (registerUserResult.isErr) {
       const error = registerUserResult.error;
       this.handleRegisterUserError(error, resp);
       return;
     }
 
-    resp.status(201).send('user registered successfully');
+    resp.status(201).send(registerUserResult.data);
     const duration = performance.now() - start;
     this.logger.info(
       `${baseApi}/auth/register - [201] - [${Math.ceil(duration)} ms]`,
@@ -58,5 +82,24 @@ export class AuthController {
       default:
         return resp.status(400).send(error);
     }
+  }
+
+  async verirfyUserEmail(req: Request, resp: Response) {
+    const { validationToken } = req.params;
+
+    if (!validationToken) {
+      resp.status(400).send('bad request');
+      return;
+    }
+
+    const activateUserAccountResult =
+      await this.verifyUserUseCase.execute(validationToken);
+
+    if (activateUserAccountResult.isErr) {
+      resp.status(401).send('invalid token');
+      return;
+    }
+
+    resp.status(200).send('user email successfully verified');
   }
 }

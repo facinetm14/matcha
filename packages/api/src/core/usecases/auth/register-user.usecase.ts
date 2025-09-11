@@ -6,6 +6,7 @@ import { RegisterUserError } from '../../domain/errors/register-user.error';
 import { Err, Ok, Result } from '../../domain/utils/result';
 import { UserUniqKeys } from '../../domain/enums/user-uniq-keys.enum';
 import {
+  hashPassword,
   isPasswordStrong,
   MIN_SIZE_PASSWORD,
 } from '../../../../../shared/password';
@@ -14,7 +15,8 @@ import { Logger } from '../../ports/services/logger.service';
 import { EventBus } from '../../ports/services/event-bus';
 import { EventType } from '../../domain/enums/event-type';
 import { UserRegisteredPayload } from '../../domain/dto/user-registered-payload';
-import { uuid } from '../../../../../shared/uuid';
+import { UserToken } from '../../domain/entities/user-token.entity';
+import { UserStatus } from '../../domain/enums/user-status.enum';
 
 @injectable()
 export class RegisterUserUseCase {
@@ -26,6 +28,7 @@ export class RegisterUserUseCase {
   ) {}
   async execute(
     createUserDto: CreateUserDto,
+    userToken: UserToken,
   ): Promise<Result<string, RegisterUserError>> {
     const lastName = createUserDto.lastName.trim();
     if (!lastName) {
@@ -78,13 +81,23 @@ export class RegisterUserUseCase {
       return Err(RegisterUserError.EMAIL_ALREADY_EXISTS);
     }
 
-    const newUserId = await this.userRepository.create(createUserDto);
+    const hashedPasswd = await hashPassword(createUserDto.passwd);
+    const now = new Date();
+
+    const newUserId = await this.userRepository.create({
+      ...createUserDto,
+      passwd: hashedPasswd,
+      createdAt: now,
+      updatedAt: now,
+      status: UserStatus.UNVERIFIED,
+    });
+
     if (newUserId) {
       const userRegisteredPayload: UserRegisteredPayload = {
         id: newUserId,
         username,
         email,
-        validationToken: uuid(),
+        userToken,
       };
 
       this.eventBus.emitEvent(
@@ -96,7 +109,7 @@ export class RegisterUserUseCase {
         `user with id ${newUserId} is sucessfully registered!`,
       );
 
-      return Ok(newUserId);
+      return Ok(userRegisteredPayload.userToken.token);
     }
 
     return Err(RegisterUserError.UNKNOWN_ERROR);
