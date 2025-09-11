@@ -15,4 +15,4 @@ content-type: application/json
 }
 
 ### activate user account
-POST {{baseUrl}}/auth/activate/{{validationToken}}
+POST {{baseUrl}}/auth/verify/{{validationToken}}
