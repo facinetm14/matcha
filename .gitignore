@@ -1,5 +1,11 @@
 node_modules
 
 packages/api/.env
+# packages/api/package-lock.json
 packages/front/.env
+# packages/front/package-lock.json
 .vscode
+# package-lock.json
+
+packages/front/src/components.d.ts
+packages/front/src/typed-router.d.ts
