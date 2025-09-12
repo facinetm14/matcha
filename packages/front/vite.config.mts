@@ -89,6 +89,9 @@ export default defineConfig({
     watch: {
       usePolling: true,
     },
+    proxy: {
+      '/api': 'http://localhost:5000',
+    },
   },
   css: {
     preprocessorOptions: {
@@ -97,6 +100,15 @@ export default defineConfig({
       },
       scss: {
         api: 'modern-compiler',
+      },
+    },
+  },
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    server: {
+      deps: {
+        inline: ['vuetify'],
       },
     },
   },

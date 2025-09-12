@@ -109,7 +109,7 @@ describe('User Registration', () => {
       confirmPasswd: 'weak passwd',
       firstName: 'toto',
       lastName: 'tata',
-    };
+    });
 
     userRepository.findUserByUniqKey = jest.fn().mockResolvedValue(null);
 
