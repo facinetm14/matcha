@@ -109,7 +109,7 @@ export class RegisterUserUseCase {
         `user with id ${newUserId} is sucessfully registered!`,
       );
 
-      return Ok(userRegisteredPayload.userToken.token);
+      return Ok(userRegisteredPayload.userToken.id);
     }
 
     return Err(RegisterUserError.UNKNOWN_ERROR);

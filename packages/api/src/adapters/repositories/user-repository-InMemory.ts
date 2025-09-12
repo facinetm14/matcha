@@ -4,6 +4,7 @@ import { User } from '../../core/domain/entities/user.entity';
 import { UserUniqKeys } from '../../core/domain/enums/user-uniq-keys.enum';
 import { UserRepository } from '../../core/ports/repositories/user.repository';
 import { factoryUser } from '../../../../shared/factory';
+import { hashPassword } from '../../../../shared/password';
 
 export class UserRepositoryInMemory implements UserRepository {
   private users: User[];
@@ -18,19 +19,25 @@ export class UserRepositoryInMemory implements UserRepository {
   }
 
   async update(id: string, updateUserDto: UpdateUserDto): Promise<User | null> {
-    let hasModified = false;
-    const newValue = factoryUser({ ...updateUserDto });
+    const userToUpdate = this.users.find((u) => u.id === id);
+    if (!userToUpdate) {
+      return null;
+    }
+
+    const updatedUser = structuredClone({ ...userToUpdate, ...updateUserDto });
+
     const currentUsers = structuredClone(this.users);
 
     this.users = currentUsers.map((user) => {
       if (user.id === id) {
-        hasModified = true;
-        return newValue;
+        return updatedUser;
       }
       return user;
     });
 
-    return hasModified ? newValue : null;
+    const passwd = await hashPassword(updatedUser.passwd);
+
+    return { ...updatedUser, passwd };
   }
 
   async findUserByUniqKey(
@@ -45,7 +52,11 @@ export class UserRepositoryInMemory implements UserRepository {
       }
       return false;
     });
+    if (user) {
+      const passwd = await hashPassword(user?.passwd ?? '');
+      return { ...user, passwd };
+    }
 
-    return user ?? null;
+    return null;
   }
 }

@@ -84,7 +84,7 @@ export class AuthController {
     }
   }
 
-  async verirfyUserEmail(req: Request, resp: Response) {
+  async verifyUserEmail(req: Request, resp: Response) {
     const { validationToken } = req.params;
 
     if (!validationToken) {

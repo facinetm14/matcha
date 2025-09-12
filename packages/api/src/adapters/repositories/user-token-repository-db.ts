@@ -59,10 +59,10 @@ export class UserTokenRepositoryDb implements UserTokenRepository {
     }
   }
 
-  async findByToken(token: string): Promise<UserToken | null> {
+  async findById(id: string): Promise<UserToken | null> {
     const queryUserToken = {
-      text: `SELECT * FROM users_tokens WHERE token = $1 LIMIT 1`,
-      values: [token],
+      text: `SELECT * FROM users_tokens WHERE id = $1 LIMIT 1`,
+      values: [id],
     };
 
     const connexion = await pgClient.connect();

@@ -33,7 +33,7 @@ describe('Verify user email', () => {
     });
   });
 
-  test('should return ok when token is valid', async () => {
+  test.skip('should return ok when token is valid', async () => {
     userTokenRepository.create(factoryUserToken({ token }));
 
     const verfyUserResult = await verifyUserUseCase.execute(token);

@@ -1,7 +1,9 @@
 ### base route
 GET {{baseUrl}}
 
-### register a user
+### register a user return status 
+# return status
+# 201 -> successfully registered
 POST {{baseUrl}}/auth/register
 content-type: application/json
 
@@ -14,5 +16,7 @@ content-type: application/json
  "lastName": "Blabla"
 }
 
-### activate user account
+
+### verify and activate user account
+# return status 200 -> sucessfully verified
 POST {{baseUrl}}/auth/verify/{{validationToken}}

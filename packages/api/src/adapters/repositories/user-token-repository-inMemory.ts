@@ -14,9 +14,9 @@ export class UserTokenRepositoryInMemory implements UserTokenRepository {
     return createUserToken.id;
   }
 
-  async findByToken(token: string): Promise<UserToken | null> {
+  async findById(id: string): Promise<UserToken | null> {
     return (
-      this.usersTokens.find((userToken) => userToken.token === token) ?? null
+      this.usersTokens.find((userToken) => userToken.id === id) ?? null
     );
   }
 

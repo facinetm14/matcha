@@ -17,7 +17,7 @@ export class VerifyUserUseCase {
 
   async execute(validationToken: string): Promise<Result<null, VerifyToken>> {
     const existingToken =
-      await this.userTokenRepository.findByToken(validationToken);
+      await this.userTokenRepository.findById(validationToken);
     if (!existingToken) {
       return Err(VerifyToken.INVALID_TOKEN);
     }
