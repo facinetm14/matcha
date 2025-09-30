@@ -9,8 +9,10 @@
 </script>
 
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
 #app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
+  background-image: "@/assets/bokeh.jpg";
+  font-family: 'Inter', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   color: #2c3e50;
