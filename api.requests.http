@@ -8,12 +8,12 @@ POST {{baseUrl}}/auth/register
 content-type: application/json
 
 {
- "email": "allt.c9-2xeyqyo@yopmail.com",
- "username": "bllabla-1",
- "passwd": "Allt.xp-c0hrhhn@yopmail.com",
- "confirmPasswd": "Allt.xp-c0hrhhn@yopmail.com",
- "firstName": "GUEST",
- "lastName": "Blabla"
+ "email": "testing-user-42@yopmail.com",
+ "username": "bllabla-11",
+ "passwd": "Allt.xp-c0hrhhn@yopmaill.com",
+ "confirmPasswd": "Allt.xp-c0hrhhn@yopmaill.com",
+ "firstName": "GUESTs",
+ "lastName": "Blablas"
 }
 
 
@@ -28,8 +28,8 @@ POST {{baseUrl}}/auth/login
 content-type: application/json
 
 {
- "username": "bllabla-1",
- "passwd": "Allt.xp-c0hrhhn@yopmail.com"
+ "username": "bllabla-11",
+ "passwd": "Allt.xp-c0hrhhn@yopmaill.com"
 }
 
 ### get current user profile
@@ -37,3 +37,13 @@ content-type: application/json
 GET {{baseUrl}}/users/me
 Content-Type: application/json
 Authorization: Bearer {{accessToken}}
+
+### check user identifier availability
+# return status 200 -> successfully checked user identifier availability
+POST {{baseUrl}}/users/check-identifier
+Content-Type: application/json  
+
+{
+  "field": "username",
+  "value": "cool"
+}

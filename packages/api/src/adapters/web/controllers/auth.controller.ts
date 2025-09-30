@@ -28,8 +28,6 @@ export class AuthController {
   ) {}
 
   async registerUser(req: Request, resp: Response) {
-    const start = performance.now();
-
     const parsedBody = CreateUserDtoSchema.safeParse(req.body);
 
     if (!parsedBody.success) {
@@ -67,10 +65,7 @@ export class AuthController {
     }
 
     resp.status(201).send(registerUserResult.data);
-    const duration = performance.now() - start;
-    this.logger.info(
-      `${baseApi}/auth/register - [201] - [${Math.ceil(duration)} ms]`,
-    );
+    this.logger.info(`${baseApi}/auth/register - [201]`);
   }
 
   private handleRegisterUserError(
