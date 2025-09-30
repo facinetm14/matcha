@@ -1,8 +1,8 @@
+import { UserTokenRepository } from '@/core/ports/repositories/user-token.repository';
 import { CacheResourceKeys } from '../../core/domain/consts/cache-resource-keys';
 import { UserRegisteredPayload } from '../../core/domain/dto/user-registered-payload';
 import { UserToken } from '../../core/domain/entities/user-token.entity';
 import { EventType } from '../../core/domain/enums/event-type';
-import { CacheService } from '../../core/ports/services/cache.service';
 import { EventBus } from '../../core/ports/services/event-bus';
 import { Logger } from '../../core/ports/services/logger.service';
 import { NotificationService } from '../../core/ports/services/notification.service';
@@ -11,7 +11,9 @@ import { TYPE } from '../config/inversify-type';
 
 const eventBus = container.get<EventBus>(TYPE.EventBus);
 const logger = container.get<Logger>(TYPE.Logger);
-const cacheService = container.get<CacheService>(TYPE.CacheService);
+const userTokenRepository = container.get<UserTokenRepository>(
+  TYPE.UserTokenRepository,
+);
 
 const notificationService = container.get<NotificationService>(
   TYPE.NotificationService,
@@ -28,8 +30,7 @@ eventBus.listenTo(EventType.USER_REGISTERED, async (payload: string) => {
     return;
   }
 
-  const token = await cacheService.insert<UserToken>(
-    CacheResourceKeys.USER_TOKENS,
+  const token = await userTokenRepository.create(
     userRegisteredPayload.userToken,
   );
 
@@ -41,7 +42,9 @@ eventBus.listenTo(EventType.USER_REGISTERED, async (payload: string) => {
   }
 
   if (process.env.DEBUG === 'true') {
-    logger.info(`Received event: ${EventType.USER_REGISTERED} but sending email is skipped in debug mode`);
+    logger.info(
+      `Received event: ${EventType.USER_REGISTERED} but sending email is skipped in debug mode`,
+    );
     return;
   }
 
