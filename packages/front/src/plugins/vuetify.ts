@@ -11,8 +11,6 @@ import '@mdi/font/css/materialdesignicons.css'
 
 import 'vuetify/styles'
 
-import { createApp } from 'vue'
-
 const myCustomLightTheme = {
   dark: false,
   colors: {

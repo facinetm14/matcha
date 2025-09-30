@@ -9,22 +9,22 @@ export default defineComponent({
     // state
     const step = ref(1);
 
-    const username = ref('');
-    const firstname = ref('');
-    const lastname = ref('');
-    const password = ref('');
-    const confirmPassword = ref('');
+    const username = ref<string>('');
+    const firstname = ref<string>('');
+    const lastname = ref<string>('');
+    const password = ref<string>('');
+    const confirmPassword = ref<string>('');
     const email = ref('');
 
-    const errorMessage = ref('');
-    const successMessage = ref('');
+    const errorMessage = ref<string>('');
+    const successMessage = ref<string>('');
 
     // forms
-    const form1 = ref();
-    const form2 = ref();
-    const form3 = ref();
-    const form4 = ref();
-    const form5 = ref();
+    const form1 = ref<HTMLFormElement>();
+    const form2 = ref<HTMLFormElement>();
+    const form3 = ref<HTMLFormElement>();
+    const form4 = ref<HTMLFormElement>();
+    const form5 = ref<HTMLFormElement>();
 
     // friendly titles per step
     const titles: Record<number, string> = {
@@ -52,7 +52,7 @@ export default defineComponent({
     };
 
     const validateCurrentStep = async () => {
-      const map: Record<number, any> = {
+      const map: Record<number, HTMLFormElement | undefined> = {
         1: form1.value,
         2: form2.value,
         3: form3.value,
