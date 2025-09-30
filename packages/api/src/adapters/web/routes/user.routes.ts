@@ -9,4 +9,8 @@ UserRouter.get(`/me`, (req: Request, resp: Response) => {
   userController.getMe(req, resp);
 });
 
+UserRouter.post(`/check-identifier`, (req: Request, resp: Response) => {
+  userController.checkUserIdentifierAvailability(req, resp);
+});
+
 export default UserRouter;
