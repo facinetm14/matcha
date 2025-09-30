@@ -10,6 +10,9 @@ import { TYPE } from '../../../infrastructure/config/inversify-type';
 import { VerifyUserUseCase } from '../../../core/usecases/auth/verify-user.usecase';
 import { UserToken } from '../../../core/domain/entities/user-token.entity';
 import { UserTokenCateory } from '../../../core/domain/enums/user-token-category';
+import { LoginUserUseCase } from '../../../core/usecases/auth/login-user.usecase';
+import { LoginUserDtoSchema } from '../../../core/domain/dto/login-user.dto';
+import { LoginUserError } from '../../../core/domain/errors/login-user.error';
 
 @injectable()
 export class AuthController {
@@ -20,6 +23,8 @@ export class AuthController {
     private readonly logger: Logger,
     @inject(VerifyUserUseCase)
     private readonly verifyUserUseCase: VerifyUserUseCase,
+    @inject(LoginUserUseCase)
+    private readonly loginUserUseCase: LoginUserUseCase,
   ) {}
 
   async registerUser(req: Request, resp: Response) {
@@ -101,5 +106,44 @@ export class AuthController {
     }
 
     resp.status(200).send('user email successfully verified');
+  }
+
+  private handleLoginUserError(
+    error: LoginUserError,
+    resp: Response,
+  ): Response {
+    switch (error) {
+      case LoginUserError.USER_UNVERIFIED:
+        return resp.status(403).send('user not verified');
+      default:
+        return resp.status(401).send('invalid credentials');
+    }
+  }
+
+  async loginUser(req: Request, resp: Response) {
+    const parsedBody = LoginUserDtoSchema.safeParse(req.body);
+
+    if (!parsedBody.success) {
+      resp.status(400).send('Bad request');
+      return;
+    }
+
+    const loginUserDto = parsedBody.data;
+    const device = `${JSON.stringify(req.headers['user-agent'])}`;
+    const ipAddr = `${req.ip}`;
+
+    const loginUserResult = await this.loginUserUseCase.execute(
+      loginUserDto,
+      device,
+      ipAddr,
+    );
+
+    if (loginUserResult.isErr) {
+      const error = loginUserResult.error;
+      this.handleLoginUserError(error, resp);
+      return;
+    }
+
+    resp.status(200).send(loginUserResult.data);
   }
 }

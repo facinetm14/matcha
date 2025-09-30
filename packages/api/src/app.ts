@@ -1,6 +1,8 @@
 import express, { Express } from 'express';
 import { baseApi } from './adapters/web/consts/base.api';
-import AuthRouter from './adapters/web/routes/auth.route';
+import AuthRouter from './adapters/web/routes/auth.route'
+import UserRouter from './adapters/web/routes/user.routes';
+
 import DefaultRouter from './adapters/web/routes/default.route';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -14,6 +16,7 @@ export const createApp = (): Express => {
     windowMs: AuthRateLimit.TIME,
     limit: AuthRateLimit.REQUEST,
     ipv6Subnet: 52,
+    message: 'Too many requests, please try again later.',
   });
 
   app.use(cors());
@@ -23,6 +26,7 @@ export const createApp = (): Express => {
 
   app.use(`${baseApi}`, DefaultRouter);
   app.use(`${baseApi}/auth`, rateLimiter, AuthRouter);
+  app.use(`${baseApi}/users`, UserRouter);
 
   return app;
 };

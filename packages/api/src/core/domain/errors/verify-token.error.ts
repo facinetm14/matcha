@@ -1,3 +1,5 @@
-export enum VerifyToken {
+export enum VerifyTokenError {
   INVALID_TOKEN = 'INVALID_TOKEN',
+  USER_NOT_FOUND = 'USER_NOT_FOUND',
+  TOKEN_EXPIRED = 'TOKEN_EXPIRED',
 }

@@ -14,4 +14,8 @@ AuthRouter.post('/verify/:validationToken', (req: Request, resp: Response) => {
   authController.verifyUserEmail(req, resp);
 });
 
+AuthRouter.post('/login', (req: Request, resp: Response) => {
+  authController.loginUser(req, resp);
+});
+
 export default AuthRouter;

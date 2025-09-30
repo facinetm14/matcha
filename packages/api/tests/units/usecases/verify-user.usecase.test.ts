@@ -1,7 +1,7 @@
 import { describe } from 'node:test';
 import { uuid } from '../../../../shared/uuid';
 import { VerifyUserUseCase } from '../../../src/core/usecases/auth/verify-user.usecase';
-import { VerifyToken } from '../../../src/core/domain/errors/verify-token.error';
+import { VerifyTokenError } from '../../../src/core/domain/errors/verify-token.error';
 import {
   factoryUserRepositoryInMemory,
   factoryUserToken,
@@ -29,18 +29,17 @@ describe('Verify user email', () => {
 
     expect(verfyUserResult).toMatchObject({
       isErr: true,
-      error: VerifyToken.INVALID_TOKEN,
+      error: VerifyTokenError.INVALID_TOKEN,
     });
   });
 
-  test.skip('should return ok when token is valid', async () => {
-    userTokenRepository.create(factoryUserToken({ token }));
+  test('should return ok when token is valid', async () => {
+    const userToken = await  userTokenRepository.create(factoryUserToken({}));
 
-    const verfyUserResult = await verifyUserUseCase.execute(token);
+    const verfyUserResult = await verifyUserUseCase.execute(`${userToken}`);
 
     expect(verfyUserResult).toMatchObject({
       isErr: false,
-      data: null,
     });
   });
 
@@ -49,7 +48,7 @@ describe('Verify user email', () => {
 
     expect(verfyUserResult).toMatchObject({
       isErr: true,
-      error: VerifyToken.INVALID_TOKEN,
+      error: VerifyTokenError.INVALID_TOKEN,
     });
   });
 });
