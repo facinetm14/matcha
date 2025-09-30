@@ -10,6 +10,7 @@ import {
   isPasswordStrong,
   MIN_SIZE_PASSWORD,
 } from '../../../../../shared/password';
+
 import { isValidEmail } from '../../../../../shared/is-valid-email';
 import { Logger } from '../../ports/services/logger.service';
 import { EventBus } from '../../ports/services/event-bus';

@@ -7,6 +7,8 @@ import { UserRepositoryInMemory } from '../api/src/adapters/repositories/user-re
 import { CreateUserDto } from '../api/src/core/domain/dto/create-user.dto';
 import { UserTokenRepositoryInMemory } from '../api/src/adapters/repositories/user-token-repository-inMemory';
 
+export const MOCK_CURRENT_USER_ID = 'user-id-1234';
+
 export function factoryUser(user: Partial<User>): User {
   const now = new Date();
   return {
@@ -49,11 +51,12 @@ export function factoryUserTokenRepositoryInMemory(): UserTokenRepositoryInMemor
 
 export function factoryCreateUserDto(
   createUserDto: Partial<CreateUserDto>,
+  { shouldMockId }: { shouldMockId: boolean } = { shouldMockId: false },
 ): CreateUserDto {
   const now = new Date();
 
   return {
-    id: uuid(),
+    id: shouldMockId ? MOCK_CURRENT_USER_ID : uuid(),
     email: '',
     username: '',
     passwd: '',

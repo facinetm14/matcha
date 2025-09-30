@@ -1,5 +1,5 @@
 import { TYPE } from '../../../infrastructure/config/inversify-type';
-import { VerifyToken } from '../../domain/errors/verify-token.error';
+import { VerifyTokenError } from '../../domain/errors/verify-token.error';
 import { Err, Ok, Result } from '../../domain/utils/result';
 import { inject, injectable } from 'inversify';
 import { UserTokenRepository } from '../../ports/repositories/user-token.repository';
@@ -15,11 +15,14 @@ export class VerifyUserUseCase {
     private readonly userRepository: UserRepository,
   ) {}
 
-  async execute(validationToken: string): Promise<Result<null, VerifyToken>> {
+  async execute(
+    validationToken: string,
+  ): Promise<Result<null, VerifyTokenError>> {
     const existingToken =
       await this.userTokenRepository.findById(validationToken);
+
     if (!existingToken) {
-      return Err(VerifyToken.INVALID_TOKEN);
+      return Err(VerifyTokenError.INVALID_TOKEN);
     }
 
     await this.userRepository.update(existingToken.userId, {

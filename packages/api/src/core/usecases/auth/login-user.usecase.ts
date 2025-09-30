@@ -8,7 +8,11 @@ import { UserUniqKeys } from '../../domain/enums/user-uniq-keys.enum';
 import { verifyPassword } from '../../../../../shared/password';
 import { UserStatus } from '../../domain/enums/user-status.enum';
 import { UserTokenRepository } from '../../ports/repositories/user-token.repository';
+import { createAccessToken } from '../../../infrastructure/utils/jwt';
 import { UserToken } from '../../domain/entities/user-token.entity';
+import { uuid } from '../../../../../shared/uuid';
+import { UserTokenCateory } from '../../domain/enums/user-token-category';
+import { REFRESH_ACESS_TOKEN_TTL_IN_MS } from '../../domain/consts/access-token-ttl';
 
 @injectable()
 export class LoginUserUseCase {
@@ -21,8 +25,11 @@ export class LoginUserUseCase {
 
   async execute(
     loginUserDto: LoginUserDto,
-    userToken: UserToken,
-  ): Promise<Result<string, LoginUserError>> {
+    device: string,
+    ipAddr: string,
+  ): Promise<
+    Result<{ accessToken: string; refreshToken: string }, LoginUserError>
+  > {
     if (!loginUserDto.username) {
       return Err(LoginUserError.INVALID_CREDENTIALS);
     }
@@ -40,7 +47,7 @@ export class LoginUserUseCase {
       return Err(LoginUserError.USER_UNVERIFIED);
     }
 
-    const matchPasswd = verifyPassword(
+    const matchPasswd = await verifyPassword(
       existingUser.passwd,
       loginUserDto.passwd,
     );
@@ -49,6 +56,26 @@ export class LoginUserUseCase {
       return Err(LoginUserError.INVALID_CREDENTIALS);
     }
 
-    return Ok(userToken.id);
+    const now = new Date();
+    const expireAt = new Date(now.getTime() + REFRESH_ACESS_TOKEN_TTL_IN_MS );
+
+    const userToken: UserToken = {
+      id: uuid(),
+      token: uuid(),
+      userId: existingUser.id,
+      category: UserTokenCateory.SESSION,
+      expireAt,
+      createdAt: now,
+      updatedAt: now,
+      device,
+      ipAddr,
+    }
+
+    await this.userTokenRepository.create(userToken);
+
+    const refreshToken = userToken.id;
+    const accessToken =  await createAccessToken(existingUser.id, userToken.token);
+    
+    return Ok({ accessToken, refreshToken });
   }
 }

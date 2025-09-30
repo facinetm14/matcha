@@ -3,7 +3,7 @@ import { UpdateUserDto } from '../../core/domain/dto/update-user.dto';
 import { User } from '../../core/domain/entities/user.entity';
 import { UserUniqKeys } from '../../core/domain/enums/user-uniq-keys.enum';
 import { UserRepository } from '../../core/ports/repositories/user.repository';
-import { factoryUser } from '../../../../shared/factory';
+import { factoryUser } from '@shared/factory';
 import { hashPassword } from '../../../../shared/password';
 
 export class UserRepositoryInMemory implements UserRepository {
@@ -15,7 +15,7 @@ export class UserRepositoryInMemory implements UserRepository {
 
   async create(createUserDto: CreateUserDto): Promise<string | null> {
     this.users.push(factoryUser({ ...createUserDto }));
-    return createUserDto.id;
+    return Promise.resolve(createUserDto.id);
   }
 
   async update(id: string, updateUserDto: UpdateUserDto): Promise<User | null> {
@@ -37,7 +37,7 @@ export class UserRepositoryInMemory implements UserRepository {
 
     const passwd = await hashPassword(updatedUser.passwd);
 
-    return { ...updatedUser, passwd };
+    return Promise.resolve({ ...updatedUser, passwd });
   }
 
   async findUserByUniqKey(

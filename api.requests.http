@@ -8,8 +8,8 @@ POST {{baseUrl}}/auth/register
 content-type: application/json
 
 {
- "email": "alt.c9-2xeyqyo@yopmail.com",
- "username": "blabla-1",
+ "email": "allt.c9-2xeyqyo@yopmail.com",
+ "username": "bllabla-1",
  "passwd": "Allt.xp-c0hrhhn@yopmail.com",
  "confirmPasswd": "Allt.xp-c0hrhhn@yopmail.com",
  "firstName": "GUEST",
@@ -20,3 +20,20 @@ content-type: application/json
 ### verify and activate user account
 # return status 200 -> sucessfully verified
 POST {{baseUrl}}/auth/verify/{{validationToken}}
+
+
+### login user
+# return status 200 -> successfully logged in
+POST {{baseUrl}}/auth/login
+content-type: application/json
+
+{
+ "username": "bllabla-1",
+ "passwd": "Allt.xp-c0hrhhn@yopmail.com"
+}
+
+### get current user profile
+# return status 200 -> successfully fetched user profile
+GET {{baseUrl}}/users/me
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}

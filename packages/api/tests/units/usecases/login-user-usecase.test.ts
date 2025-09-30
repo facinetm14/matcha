@@ -1,24 +1,21 @@
-import { describe, test } from '@jest/globals';
 import { LoginUserUseCase } from '../../../src/core/usecases/auth/login-user.usecase';
 import { UserRepository } from '../../../src/core/ports/repositories/user.repository';
 import {
   factoryCreateUserDto,
   factoryUserRepositoryInMemory,
-  factoryUserToken,
   factoryUserTokenRepositoryInMemory,
 } from '../../../../shared/factory';
 import { CreateUserDto } from '../../../src/core/domain/dto/create-user.dto';
 import { UserStatus } from '../../../src/core/domain/enums/user-status.enum';
 import { UserTokenRepository } from '../../../src/core/ports/repositories/user-token.repository';
-import { UserToken } from '../../../src/core/domain/entities/user-token.entity';
-import { UserTokenCateory } from '../../../src/core/domain/enums/user-token-category';
 
 describe('Login user usecase', () => {
   let loginUserUseCase: LoginUserUseCase;
   let userRepository: UserRepository;
   let userTokenRepository: UserTokenRepository;
   let createUserDto: CreateUserDto;
-  let userToken: UserToken;
+  const ipAddr = '';
+  const device = '';
 
   beforeAll(() => {
     userRepository = factoryUserRepositoryInMemory();
@@ -29,10 +26,6 @@ describe('Login user usecase', () => {
       passwd: 'user-blabla-Strong**',
     });
 
-    userToken = factoryUserToken({
-      userId: createUserDto.id,
-      category: UserTokenCateory.SESSION,
-    });
 
     loginUserUseCase = new LoginUserUseCase(
       userRepository,
@@ -44,7 +37,7 @@ describe('Login user usecase', () => {
     const loginResult = await loginUserUseCase.execute({
       username: createUserDto.username,
       passwd: 'wrong pass',
-    }, userToken);
+    }, device, ipAddr);
 
     expect(loginResult).toMatchObject({
       isErr: true,
@@ -58,7 +51,7 @@ describe('Login user usecase', () => {
     const loginUserResult = await loginUserUseCase.execute({
       username: createUserDto.username,
       passwd: createUserDto.passwd,
-    }, userToken);
+    }, device, ipAddr);
 
     expect(loginUserResult).toMatchObject({
       isErr: true,
@@ -74,18 +67,7 @@ describe('Login user usecase', () => {
     const loginUserResult = await loginUserUseCase.execute({
       username: createUserDto.username,
       passwd: createUserDto.passwd,
-    }, userToken);
-
-    expect(loginUserResult).toMatchObject({
-      isErr: false,
-    });
-  });
-
-  test('should issue a session user token ', async () => {
-    const loginUserResult = await loginUserUseCase.execute({
-      username: createUserDto.username,
-      passwd: createUserDto.passwd,
-    }, userToken);
+    }, device, ipAddr);
 
     expect(loginUserResult).toMatchObject({
       isErr: false,

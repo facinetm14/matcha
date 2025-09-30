@@ -32,12 +32,22 @@ eventBus.listenTo(EventType.USER_REGISTERED, async (payload: string) => {
     CacheResourceKeys.USER_TOKENS,
     userRegisteredPayload.userToken,
   );
-  
-  if (token) {
-    logger.info(
-      `Sending registration notification to ${userRegisteredPayload.email}`,
-    );
 
-    notificationService.sendUserRegisteredNotifification(userRegisteredPayload);
+  if (!token) {
+    logger.error(
+      `Failed to handle ${EventType.USER_REGISTERED} event caused by failure to store user token in cache`,
+    );
+    return;
   }
+
+  if (process.env.DEBUG === 'true') {
+    logger.info(`Received event: ${EventType.USER_REGISTERED} but sending email is skipped in debug mode`);
+    return;
+  }
+
+  logger.info(
+    `Sending registration notification to ${userRegisteredPayload.email}`,
+  );
+
+  notificationService.sendUserRegisteredNotifification(userRegisteredPayload);
 });
