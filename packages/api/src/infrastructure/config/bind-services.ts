@@ -10,11 +10,26 @@ import { EmailService } from '../../core/ports/services/email.service';
 import { EmailApi } from '../../adapters/services/EmailApi';
 import { CacheService } from '../../core/ports/services/cache.service';
 import { RedisCacheApi } from '../../adapters/services/redis-cache-api';
+import { AccessTokenService } from '@/core/ports/services/access-token.service';
+import { AccessTokenHelper } from '@/adapters/services/access-token-helper';
 
 export function bindServices(container: Container) {
   container.bind<Logger>(TYPE.Logger).to(LoggerStd).inSingletonScope();
   container.bind<EventBus>(TYPE.EventBus).to(NodeEventBus).inSingletonScope();
-  container.bind<NotificationService>(TYPE.NotificationService).to(Notification).inSingletonScope();
-  container.bind<EmailService>(TYPE.EmailService).to(EmailApi).inSingletonScope();
-  container.bind<CacheService>(TYPE.CacheService).to(RedisCacheApi).inSingletonScope();
+  container
+    .bind<NotificationService>(TYPE.NotificationService)
+    .to(Notification)
+    .inSingletonScope();
+  container
+    .bind<EmailService>(TYPE.EmailService)
+    .to(EmailApi)
+    .inSingletonScope();
+  container
+    .bind<CacheService>(TYPE.CacheService)
+    .to(RedisCacheApi)
+    .inSingletonScope();
+  container
+    .bind<AccessTokenService>(TYPE.AccessTokenService)
+    .to(AccessTokenHelper)
+    .inSingletonScope();
 }
