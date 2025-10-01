@@ -5,7 +5,6 @@ packages/api/package-lock.json
 packages/front/package-lock.json
 packages/front/.env
 .vscode
-# package-lock.json
+package-lock.json
 
-packages/front/src/components.d.ts
-packages/front/src/typed-router.d.ts
+*.d.ts
