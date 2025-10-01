@@ -2,6 +2,7 @@ import { defineComponent, computed, ref } from 'vue';
 import { isPasswordStrong, MIN_SIZE_PASSWORD } from '../utils/password';
 import { isValidEmail } from '../../../shared/is-valid-email';
 import { isValidUsername, MIN_SIZE_USERNAME } from '@/utils/username';
+import { useAuthStore } from '@/stores/auth-pinia';
 
 export default defineComponent({
   name: 'RegisterForm',
@@ -72,6 +73,8 @@ export default defineComponent({
       if (step.value < 4) step.value += 1;
     };
 
+    console.log('VITE_API_BASE_ROUTE:', import.meta.env.VITE_API_BASE_ROUTE);
+
     const back = () => {
       errorMessage.value = '';
       if (step.value > 1) step.value -= 1;
@@ -113,10 +116,23 @@ export default defineComponent({
         return;
       }
 
-      // API call simulation
-      // send email verification link
-      step.value = 5;
       // successMessage.value = 'You have registered successfully! Please check your email to verify your account.';
+      const user = {
+        username: username.value,
+        firstName: firstname.value,
+        lastName: lastname.value,
+        passwd: password.value,
+        confirmPasswd: confirmPassword.value,
+        email: email.value,
+      };
+      console.log('Registering user:', user);
+      const registerResult = await useAuthStore().register(user);
+      if (registerResult.isErr) {
+        errorMessage.value = 'Registration failed. Please try again.';
+        //step.value = 4;
+        return;
+      }
+      step.value = 5;
     };
 
     return {
