@@ -111,6 +111,8 @@ describe('User Registration', () => {
       lastName: 'tata',
     });
 
+    userRepository.findUserByUniqKey = jest.fn().mockResolvedValue(null);
+
     const userRegister = await registerUserUseCase.execute(
       createUserDto,
       userToken,
