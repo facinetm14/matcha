@@ -8,11 +8,14 @@ import { baseApi } from '../consts/base.api';
 import { Logger } from '../../../core/ports/services/logger.service';
 import { TYPE } from '../../../infrastructure/config/inversify-type';
 import { VerifyUserUseCase } from '../../../core/usecases/auth/verify-user.usecase';
-import { UserToken } from '../../../core/domain/entities/user-token.entity';
 import { UserTokenCateory } from '../../../core/domain/enums/user-token-category';
 import { LoginUserUseCase } from '../../../core/usecases/auth/login-user.usecase';
 import { LoginUserDtoSchema } from '../../../core/domain/dto/login-user.dto';
 import { LoginUserError } from '../../../core/domain/errors/login-user.error';
+import { RefreshTokenDtoSchema } from '@/core/domain/dto/refresh-token.dto';
+import { factoryUserToken } from '@shared/factory';
+import { RefreshAccessTokenUseCase } from '@/core/usecases/auth/refresh-token.usecase';
+import { VerifyTokenError } from '@/core/domain/errors/verify-token.error';
 
 @injectable()
 export class AuthController {
@@ -25,6 +28,8 @@ export class AuthController {
     private readonly verifyUserUseCase: VerifyUserUseCase,
     @inject(LoginUserUseCase)
     private readonly loginUserUseCase: LoginUserUseCase,
+    @inject(RefreshAccessTokenUseCase)
+    private readonly refreshTokenUseCase: RefreshAccessTokenUseCase,
   ) {}
 
   async registerUser(req: Request, resp: Response) {
@@ -41,9 +46,7 @@ export class AuthController {
 
     const now = new Date();
 
-    const userToken: UserToken = {
-      id: uuid(),
-      token: uuid(),
+    const userToken = factoryUserToken({
       userId: createUserDto.id,
       category: UserTokenCateory.ONE_TIME,
       expireAt: null,
@@ -51,7 +54,7 @@ export class AuthController {
       device,
       createdAt: now,
       updatedAt: now,
-    };
+    });
 
     const registerUserResult = await this.registerUserUseCase.execute(
       createUserDto,
@@ -140,5 +143,36 @@ export class AuthController {
     }
 
     resp.status(200).send(loginUserResult.data);
+  }
+
+  async refreshToken(req: Request, resp: Response) {
+    const parsedBody = RefreshTokenDtoSchema.safeParse(req.body);
+
+    if (!parsedBody.success) {
+      resp.status(400).send('Bad request');
+      return;
+    }
+
+    const refreshTokenDto = parsedBody.data;
+    const device = `${JSON.stringify(req.headers['user-agent'])}`;
+    const ipAddr = `${req.ip}`;
+
+    const refreshTokenResult = await this.refreshTokenUseCase.execute(
+      refreshTokenDto.refreshToken,
+      ipAddr,
+      device,
+    );
+
+    if (refreshTokenResult.isErr) {
+      const error = refreshTokenResult.error;
+      if (error === VerifyTokenError.UNKNOWN_CLIENT) {
+        resp.status(403).send('Unknown client');
+        return;
+      }
+      resp.status(401).send('Invalid token');
+      return;
+    }
+
+    resp.status(201).send(refreshTokenResult.data);
   }
 }

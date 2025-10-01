@@ -13,6 +13,8 @@ import { UserToken } from '../../domain/entities/user-token.entity';
 import { uuid } from '../../../../../shared/uuid';
 import { UserTokenCateory } from '../../domain/enums/user-token-category';
 import { REFRESH_ACESS_TOKEN_TTL_IN_MS } from '../../domain/consts/access-token-ttl';
+import { AccessToken } from '@/core/domain/entities/access-token.entity';
+import { factoryUserToken } from '@shared/factory';
 
 @injectable()
 export class LoginUserUseCase {
@@ -27,9 +29,7 @@ export class LoginUserUseCase {
     loginUserDto: LoginUserDto,
     device: string,
     ipAddr: string,
-  ): Promise<
-    Result<{ accessToken: string; refreshToken: string }, LoginUserError>
-  > {
+  ): Promise<Result<AccessToken, LoginUserError>> {
     if (!loginUserDto.username) {
       return Err(LoginUserError.INVALID_CREDENTIALS);
     }
@@ -57,11 +57,9 @@ export class LoginUserUseCase {
     }
 
     const now = new Date();
-    const expireAt = new Date(now.getTime() + REFRESH_ACESS_TOKEN_TTL_IN_MS );
+    const expireAt = new Date(now.getTime() + REFRESH_ACESS_TOKEN_TTL_IN_MS);
 
-    const userToken: UserToken = {
-      id: uuid(),
-      token: uuid(),
+    const userToken = factoryUserToken({
       userId: existingUser.id,
       category: UserTokenCateory.SESSION,
       expireAt,
@@ -69,13 +67,13 @@ export class LoginUserUseCase {
       updatedAt: now,
       device,
       ipAddr,
-    }
+    });
 
     await this.userTokenRepository.create(userToken);
 
-    const refreshToken = userToken.id;
-    const accessToken =  await createAccessToken(existingUser.id, userToken.token);
-    
-    return Ok({ accessToken, refreshToken });
+    const refresh = userToken.id;
+    const token = await createAccessToken(existingUser.id, userToken.token);
+
+    return Ok({ token, refresh });
   }
 }

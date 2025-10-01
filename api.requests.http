@@ -47,3 +47,12 @@ Content-Type: application/json
   "field": "username",
   "value": "cool"
 }
+
+### refresh access token
+# return status 201 -> successfully refreshed access token
+POST {{baseUrl}}/auth/refresh-token
+Content-Type: application/json
+
+{
+  "refreshToken": "dl0j50-mg7vcqbi-s6wc00-xm69eg"
+}

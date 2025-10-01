@@ -6,5 +6,6 @@ export const TYPE = {
   EventBus: Symbol.for('EventBus'),
   NotificationService: Symbol.for('NotificationService'),
   EmailService: Symbol.for('EmailService'),
-  CacheService: Symbol.for('CacheService')
+  CacheService: Symbol.for('CacheService'),
+  AccessTokenService: Symbol.for('AccessTokenService'),
 };
