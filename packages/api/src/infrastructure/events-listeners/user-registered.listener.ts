@@ -1,7 +1,5 @@
 import { UserTokenRepository } from '@/core/ports/repositories/user-token.repository';
-import { CacheResourceKeys } from '../../core/domain/consts/cache-resource-keys';
 import { UserRegisteredPayload } from '../../core/domain/dto/user-registered-payload';
-import { UserToken } from '../../core/domain/entities/user-token.entity';
 import { EventType } from '../../core/domain/enums/event-type';
 import { EventBus } from '../../core/ports/services/event-bus';
 import { Logger } from '../../core/ports/services/logger.service';
