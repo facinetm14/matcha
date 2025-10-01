@@ -90,7 +90,10 @@ export default defineConfig({
       usePolling: true,
     },
     proxy: {
-      '/api': 'http://localhost:5000',
+      '/api': {
+        target: 'http://back:5000',
+        changeOrigin: true,
+      }
     },
   },
   css: {
