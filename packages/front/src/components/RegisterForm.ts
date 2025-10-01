@@ -73,8 +73,6 @@ export default defineComponent({
       if (step.value < 4) step.value += 1;
     };
 
-    console.log('VITE_API_BASE_ROUTE:', import.meta.env.VITE_API_BASE_ROUTE);
-
     const back = () => {
       errorMessage.value = '';
       if (step.value > 1) step.value -= 1;
@@ -126,10 +124,11 @@ export default defineComponent({
         email: email.value,
       };
       console.log('Registering user:', user);
+
       const registerResult = await useAuthStore().register(user);
       if (registerResult.isErr) {
         errorMessage.value = 'Registration failed. Please try again.';
-        //step.value = 4;
+        step.value = 4;
         return;
       }
       step.value = 5;
