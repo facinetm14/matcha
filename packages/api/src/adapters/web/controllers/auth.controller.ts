@@ -1,5 +1,5 @@
 import { inject, injectable } from 'inversify';
-import { Request, Response } from 'express';
+import { Request, response, Response } from 'express';
 import { CreateUserDtoSchema } from '../../../core/domain/dto/create-user.dto';
 import { RegisterUserUseCase } from '../../../core/usecases/auth/register-user.usecase';
 import { uuid } from '../../../../../shared/uuid';
@@ -16,6 +16,9 @@ import { RefreshTokenDtoSchema } from '@/core/domain/dto/refresh-token.dto';
 import { factoryUserToken } from '@shared/factory';
 import { RefreshAccessTokenUseCase } from '@/core/usecases/auth/refresh-token.usecase';
 import { VerifyTokenError } from '@/core/domain/errors/verify-token.error';
+import { ResetPasswordDtoSchema } from '@/core/domain/dto/reset-password.dto';
+import { ResetPasswordUseCase } from '@/core/usecases/auth/reset-password.usecase';
+import { ResetPasswordError } from '@/core/domain/errors/reset-password.error';
 
 @injectable()
 export class AuthController {
@@ -30,6 +33,8 @@ export class AuthController {
     private readonly loginUserUseCase: LoginUserUseCase,
     @inject(RefreshAccessTokenUseCase)
     private readonly refreshTokenUseCase: RefreshAccessTokenUseCase,
+    @inject(ResetPasswordUseCase)
+    private readonly resetPasswordUseCase: ResetPasswordUseCase,
   ) {}
 
   async registerUser(req: Request, resp: Response) {
@@ -174,5 +179,30 @@ export class AuthController {
     }
 
     resp.status(201).send(refreshTokenResult.data);
+  }
+
+  async resetPassword(req: Request, resp: Response) {
+    const parsedBody = ResetPasswordDtoSchema.safeParse(req.body);
+
+    if (!parsedBody.success) {
+      resp.status(400).send('bad request');
+      return;
+    }
+
+    const { email } = parsedBody.data;
+    const resetPasswordResult = await this.resetPasswordUseCase.execute(email);
+    if (resetPasswordResult.isErr) {
+      const error = resetPasswordResult.error;
+
+      if (error === ResetPasswordError.USER_NOT_FOUND) {
+        resp.status(404).send(`no user found with ${email}`);
+        return;
+      }
+
+      resp.status(500).send('server internal error, please try later!');
+      return;
+    }
+
+    resp.status(200).send('a link to create a new password has been sent');
   }
 }

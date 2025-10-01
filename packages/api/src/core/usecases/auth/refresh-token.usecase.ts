@@ -33,12 +33,12 @@ export class RefreshAccessTokenUseCase {
 
     await this.accessTokenService.revokeRefreshToken(refreshToken);
 
-    const newAccessToken = await this.accessTokenService.issueNewAccessToken(
-      userToken.userId,
-      now,
+    const newAccessToken = await this.accessTokenService.issueNewAccessToken({
+      userId: userToken.userId,
+      issueAt: now,
       device,
       ipAddr,
-    );
+    });
 
     return Ok(newAccessToken);
   }

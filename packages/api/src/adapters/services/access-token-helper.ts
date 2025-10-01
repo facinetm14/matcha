@@ -1,4 +1,7 @@
-import { AccessTokenService } from '@/core/ports/services/access-token.service';
+import {
+  AccessTokenService,
+  NewAccessTokenParams,
+} from '@/core/ports/services/access-token.service';
 import { AccessToken } from '@/core/domain/entities/access-token.entity';
 import { injectable, inject } from 'inversify';
 import { UserTokenRepository } from '@/core/ports/repositories/user-token.repository';
@@ -17,25 +20,24 @@ export class AccessTokenHelper implements AccessTokenService {
   ) {}
 
   async issueNewAccessToken(
-    userId: string,
-    issueAt: Date,
-    device: string,
-    ipAddr: string,
+    newAccessToken: NewAccessTokenParams,
   ): Promise<AccessToken> {
     const userToken = factoryUserToken({
-      userId,
+      userId: newAccessToken.userId,
       category: UserTokenCateory.SESSION,
-      expireAt: new Date(issueAt.getTime() + REFRESH_ACESS_TOKEN_TTL_IN_MS),
-      createdAt: issueAt,
-      updatedAt: issueAt,
-      device,
-      ipAddr,
+      expireAt: new Date(
+        newAccessToken.issueAt.getTime() + REFRESH_ACESS_TOKEN_TTL_IN_MS,
+      ),
+      createdAt: newAccessToken.issueAt,
+      updatedAt: newAccessToken.issueAt,
+      device: newAccessToken.device,
+      ipAddr: newAccessToken.ipAddr,
     });
 
     await this.userTokenRepository.create(userToken);
 
     const refresh = userToken.id;
-    const token = await createAccessToken(userId, userToken.token);
+    const token = await createAccessToken(userToken.userId, userToken.token);
 
     return { token, refresh };
   }
