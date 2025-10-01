@@ -1,6 +1,6 @@
 import { TYPE } from '../../../infrastructure/config/inversify-type';
 import { VerifyTokenError } from '../../domain/errors/verify-token.error';
-import { Err, Ok, Result } from '../../domain/utils/result';
+import { Ok, Result, Err } from '../../domain/utils/result';
 import { inject, injectable } from 'inversify';
 import { UserTokenRepository } from '../../ports/repositories/user-token.repository';
 import { UserRepository } from '../../ports/repositories/user.repository';

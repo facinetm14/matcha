@@ -6,3 +6,5 @@ packages/front/package-lock.json
 packages/front/.env
 .vscode
 package-lock.json
+
+*.d.ts

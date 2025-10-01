@@ -5,11 +5,7 @@ WORKDIR /usr/src/app
 
 COPY package*.json ./
 COPY packages/front/package*.json ./packages/front/
-
 RUN npm install
-
-COPY packages/front ./packages/front
-COPY packages/shared ./packages/shared
 
 EXPOSE 5173
 
