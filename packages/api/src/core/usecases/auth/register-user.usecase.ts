@@ -95,7 +95,6 @@ export class RegisterUserUseCase {
 
     if (newUserId) {
       const userRegisteredPayload: UserRegisteredPayload = {
-        id: newUserId,
         username,
         email,
         userToken,

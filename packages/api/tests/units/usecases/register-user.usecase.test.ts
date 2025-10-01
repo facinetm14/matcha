@@ -5,12 +5,12 @@ import container from '../../../src/infrastructure/config/inversify';
 import { TYPE } from '../../../src/infrastructure/config/inversify-type';
 import { Logger } from '../../../src/core/ports/services/logger.service';
 import { EventBus } from '../../../src/core/ports/services/event-bus';
-import { uuid } from '../../../../shared/uuid';
 import { UserToken } from '../../../src/core/domain/entities/user-token.entity';
 import { UserTokenCateory } from '../../../src/core/domain/enums/user-token-category';
 import {
   factoryCreateUserDto,
   factoryUserRepositoryInMemory,
+  factoryUserToken,
 } from '../../../../shared/factory';
 
 describe('User Registration', () => {
@@ -25,9 +25,7 @@ describe('User Registration', () => {
 
     eventBus = container.get<EventBus>(TYPE.EventBus);
     const now = new Date();
-    userToken = {
-      id: uuid(),
-      token: uuid(),
+    userToken = factoryUserToken({
       userId: '',
       category: UserTokenCateory.ONE_TIME,
       expireAt: null,
@@ -35,7 +33,7 @@ describe('User Registration', () => {
       device: '',
       createdAt: now,
       updatedAt: now,
-    };
+    });
 
     registerUserUseCase = new RegisterUserUseCase(
       userRepository,
