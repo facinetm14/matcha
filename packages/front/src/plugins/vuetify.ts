@@ -50,6 +50,7 @@ const myCustomLightTheme = {
   }
 }
 
+
 export default createVuetify({
   theme: {
     defaultTheme: 'myCustomLightTheme',
