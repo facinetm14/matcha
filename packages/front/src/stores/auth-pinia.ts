@@ -6,7 +6,8 @@ import type { CreateUserDto } from '@/dto/create-user.dto';
 
 enum AuthApiError {
  REGISTRATION_FAILED = 'REGISTRATION_FAILED',
- VERIFY_FAILED = 'VERIFY_FAILED'
+ VERIFY_FAILED = 'VERIFY_FAILED',
+ SIGNIN_FAILED = 'SIGNIN_FAILED'
 }
 
 export const useAuthStore = defineStore('auth', {
@@ -31,7 +32,19 @@ export const useAuthStore = defineStore('auth', {
     }
 
     return Err(AuthApiError.VERIFY_FAILED)
-   }
+   },
+
+   async signIn(username: string, passwd: string): Promise<Result<{token: string, refresh: string}, AuthApiError>> {
+    const signInResult = await authApi.signIn(username, passwd);
+
+    if (signInResult.status === 200) {
+      const { token, refresh } = await signInResult.json();
+      return Ok({ token, refresh });
+    }
+
+    return Err(AuthApiError.SIGNIN_FAILED)
+  }
+
   },
 
 });
