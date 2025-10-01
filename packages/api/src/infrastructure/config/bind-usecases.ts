@@ -4,6 +4,8 @@ import { VerifyUserUseCase } from '../../core/usecases/auth/verify-user.usecase'
 import { LoginUserUseCase } from '../../core/usecases/auth/login-user.usecase';
 import { GetCurrentUserUseCase } from '@/core/usecases/users/get-current-user.usecase';
 import { CheckUserIdentifierAvailabilityUseCase } from '@/core/usecases/auth/check-user-identifier-availability.usecase';
+import { RefreshAccessTokenUseCase } from '@/core/usecases/auth/refresh-token.usecase';
+import { ResetPasswordUseCase } from '@/core/usecases/auth/reset-password.usecase';
 
 export function bindUseCases(container: Container) {
   container.bind(RegisterUserUseCase).toSelf().inSingletonScope();
@@ -14,4 +16,6 @@ export function bindUseCases(container: Container) {
     .bind(CheckUserIdentifierAvailabilityUseCase)
     .toSelf()
     .inSingletonScope();
+  container.bind(RefreshAccessTokenUseCase).toSelf().inSingletonScope();
+  container.bind(ResetPasswordUseCase).toSelf().inSingletonScope();
 }

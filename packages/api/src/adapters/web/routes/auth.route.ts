@@ -18,4 +18,12 @@ AuthRouter.post('/login', (req: Request, resp: Response) => {
   authController.loginUser(req, resp);
 });
 
+AuthRouter.post('/refresh-token', (req: Request, resp: Response) => {
+  authController.refreshToken(req, resp);
+});
+
+AuthRouter.post('/reset-password', (req: Request, resp: Response) => {
+  authController.resetPassword(req, resp);
+});
+
 export default AuthRouter;

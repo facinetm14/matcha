@@ -6,8 +6,13 @@ import {
   EmailPayload,
   EmailService,
 } from '../../core/ports/services/email.service';
-import { buildUserRegisteredEmailTemplate } from '../../infrastructure/mail-templates/user-registered.template';
+import {
+  buildResetPasswordEmailTemplate,
+  buildUserRegisteredEmailTemplate,
+} from '../../infrastructure/mail-templates/user-registered.template';
+import { ResetPasswordWishedPayload } from '@/core/domain/dto/reset-password-wished-payload';
 
+const clientHost = `${process.env.CLIENT_HOST}`;
 @injectable()
 export class Notification implements NotificationService {
   constructor(
@@ -17,20 +22,26 @@ export class Notification implements NotificationService {
   async sendUserRegisteredNotifification(
     payload: UserRegisteredPayload,
   ): Promise<void> {
-    const clientHost = `${process.env.CLIENT_HOST}`;
-    this.sendUserRegisteredEmailNotifification(payload, clientHost);
-  }
-
-  private async sendUserRegisteredEmailNotifification(
-    payload: UserRegisteredPayload,
-    clientHost: string,
-  ): Promise<void> {
     const verifyLink = `${clientHost}/verify/${payload.userToken.id}`;
 
     const emailPayload: EmailPayload = {
       email: payload.email,
       message: buildUserRegisteredEmailTemplate(payload.username, verifyLink),
       subject: 'User Registration',
+      username: payload.username,
+    };
+    this.emailService.send(emailPayload);
+  }
+
+  async sendResetPasswordNotification(
+    payload: ResetPasswordWishedPayload,
+  ): Promise<void> {
+    const verifyLink = `${clientHost}/new-password/${payload.userToken.id}`;
+
+    const emailPayload: EmailPayload = {
+      email: payload.email,
+      message: buildResetPasswordEmailTemplate(payload.username, verifyLink),
+      subject: 'Reset Password',
       username: payload.username,
     };
     this.emailService.send(emailPayload);

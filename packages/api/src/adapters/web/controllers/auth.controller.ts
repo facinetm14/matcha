@@ -1,5 +1,5 @@
 import { inject, injectable } from 'inversify';
-import { Request, Response } from 'express';
+import { Request, response, Response } from 'express';
 import { CreateUserDtoSchema } from '../../../core/domain/dto/create-user.dto';
 import { RegisterUserUseCase } from '../../../core/usecases/auth/register-user.usecase';
 import { uuid } from '../../../../../shared/uuid';
@@ -8,11 +8,17 @@ import { baseApi } from '../consts/base.api';
 import { Logger } from '../../../core/ports/services/logger.service';
 import { TYPE } from '../../../infrastructure/config/inversify-type';
 import { VerifyUserUseCase } from '../../../core/usecases/auth/verify-user.usecase';
-import { UserToken } from '../../../core/domain/entities/user-token.entity';
 import { UserTokenCateory } from '../../../core/domain/enums/user-token-category';
 import { LoginUserUseCase } from '../../../core/usecases/auth/login-user.usecase';
 import { LoginUserDtoSchema } from '../../../core/domain/dto/login-user.dto';
 import { LoginUserError } from '../../../core/domain/errors/login-user.error';
+import { RefreshTokenDtoSchema } from '@/core/domain/dto/refresh-token.dto';
+import { factoryUserToken } from '@shared/factory';
+import { RefreshAccessTokenUseCase } from '@/core/usecases/auth/refresh-token.usecase';
+import { VerifyTokenError } from '@/core/domain/errors/verify-token.error';
+import { ResetPasswordDtoSchema } from '@/core/domain/dto/reset-password.dto';
+import { ResetPasswordUseCase } from '@/core/usecases/auth/reset-password.usecase';
+import { ResetPasswordError } from '@/core/domain/errors/reset-password.error';
 
 @injectable()
 export class AuthController {
@@ -25,6 +31,10 @@ export class AuthController {
     private readonly verifyUserUseCase: VerifyUserUseCase,
     @inject(LoginUserUseCase)
     private readonly loginUserUseCase: LoginUserUseCase,
+    @inject(RefreshAccessTokenUseCase)
+    private readonly refreshTokenUseCase: RefreshAccessTokenUseCase,
+    @inject(ResetPasswordUseCase)
+    private readonly resetPasswordUseCase: ResetPasswordUseCase,
   ) {}
 
   async registerUser(req: Request, resp: Response) {
@@ -41,9 +51,7 @@ export class AuthController {
 
     const now = new Date();
 
-    const userToken: UserToken = {
-      id: uuid(),
-      token: uuid(),
+    const userToken = factoryUserToken({
       userId: createUserDto.id,
       category: UserTokenCateory.ONE_TIME,
       expireAt: null,
@@ -51,7 +59,7 @@ export class AuthController {
       device,
       createdAt: now,
       updatedAt: now,
-    };
+    });
 
     const registerUserResult = await this.registerUserUseCase.execute(
       createUserDto,
@@ -140,5 +148,61 @@ export class AuthController {
     }
 
     resp.status(200).send(loginUserResult.data);
+  }
+
+  async refreshToken(req: Request, resp: Response) {
+    const parsedBody = RefreshTokenDtoSchema.safeParse(req.body);
+
+    if (!parsedBody.success) {
+      resp.status(400).send('Bad request');
+      return;
+    }
+
+    const refreshTokenDto = parsedBody.data;
+    const device = `${JSON.stringify(req.headers['user-agent'])}`;
+    const ipAddr = `${req.ip}`;
+
+    const refreshTokenResult = await this.refreshTokenUseCase.execute(
+      refreshTokenDto.refreshToken,
+      ipAddr,
+      device,
+    );
+
+    if (refreshTokenResult.isErr) {
+      const error = refreshTokenResult.error;
+      if (error === VerifyTokenError.UNKNOWN_CLIENT) {
+        resp.status(403).send('Unknown client');
+        return;
+      }
+      resp.status(401).send('Invalid token');
+      return;
+    }
+
+    resp.status(201).send(refreshTokenResult.data);
+  }
+
+  async resetPassword(req: Request, resp: Response) {
+    const parsedBody = ResetPasswordDtoSchema.safeParse(req.body);
+
+    if (!parsedBody.success) {
+      resp.status(400).send('bad request');
+      return;
+    }
+
+    const { email } = parsedBody.data;
+    const resetPasswordResult = await this.resetPasswordUseCase.execute(email);
+    if (resetPasswordResult.isErr) {
+      const error = resetPasswordResult.error;
+
+      if (error === ResetPasswordError.USER_NOT_FOUND) {
+        resp.status(404).send(`no user found with ${email}`);
+        return;
+      }
+
+      resp.status(500).send('server internal error, please try later!');
+      return;
+    }
+
+    resp.status(200).send('a link to create a new password has been sent');
   }
 }
