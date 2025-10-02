@@ -63,7 +63,7 @@ POST {{baseUrl}}/auth/reset-password
 Content-Type: application/json
 
 {
-  "email": "testing-user-42@yopmaill.com"
+  "email": "testing-user-42@yopmail.com"
 }
 
 ### confirm reset password

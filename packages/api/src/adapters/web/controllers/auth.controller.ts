@@ -1,5 +1,5 @@
 import { inject, injectable } from 'inversify';
-import { Request, response, Response } from 'express';
+import { Request, Response } from 'express';
 import { CreateUserDtoSchema } from '../../../core/domain/dto/create-user.dto';
 import { RegisterUserUseCase } from '../../../core/usecases/auth/register-user.usecase';
 import { uuid } from '../../../../../shared/uuid';
