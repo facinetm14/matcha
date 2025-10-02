@@ -16,15 +16,10 @@ export class UserController {
   ) {}
 
   async getMe(req: Request, resp: Response) {
-    const accessToken = req.headers['authorization']?.split(' ')[1];
-
-    if (!accessToken) {
-      resp.status(401).send('Unauthorized');
-      return;
-    }
-
-    const getCurrentUserResult =
-      await this.getCurrentUserUseCase.execute(accessToken);
+    const accessToken = req.token!;
+    const getCurrentUserResult = await this.getCurrentUserUseCase.execute(
+      accessToken
+    );
 
     if (getCurrentUserResult.isErr) {
       const error = getCurrentUserResult.error;

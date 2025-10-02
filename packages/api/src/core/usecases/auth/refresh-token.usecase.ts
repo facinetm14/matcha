@@ -31,7 +31,7 @@ export class RefreshAccessTokenUseCase {
       return Err(VerifyTokenError.UNKNOWN_CLIENT);
     }
 
-    await this.accessTokenService.revokeRefreshToken(refreshToken);
+    await this.accessTokenService.revokeToken(refreshToken);
 
     const newAccessToken = await this.accessTokenService.issueNewAccessToken({
       userId: userToken.userId,

@@ -2,7 +2,7 @@ import argon2 from 'argon2';
 
 export const MIN_SIZE_PASSWORD = 12;
 
-export function isPasswordStrong(passwd: string, minLength: number): boolean {
+export function isPasswordStrong(passwd: string, minLength = MIN_SIZE_PASSWORD): boolean {
   const rulePattern =
     /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^a-zA-Z0-9_]).+$/;
 
