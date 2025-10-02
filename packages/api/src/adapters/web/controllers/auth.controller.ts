@@ -19,6 +19,10 @@ import { VerifyTokenError } from '@/core/domain/errors/verify-token.error';
 import { ResetPasswordDtoSchema } from '@/core/domain/dto/reset-password.dto';
 import { ResetPasswordUseCase } from '@/core/usecases/auth/reset-password.usecase';
 import { ResetPasswordError } from '@/core/domain/errors/reset-password.error';
+import { ConfrimResetPasswordUseCase } from '@/core/usecases/auth/confirm-reset-password.usecase';
+import { CreateNewPasswordDtoSchema } from '@/core/domain/dto/create-new-password.dto';
+import { CreateNewPasswordUseCase } from '@/core/usecases/auth/create-new-password.usecase';
+import { CreateNewPasswordError } from '@/core/domain/errors/create-new-password.error';
 
 @injectable()
 export class AuthController {
@@ -35,6 +39,10 @@ export class AuthController {
     private readonly refreshTokenUseCase: RefreshAccessTokenUseCase,
     @inject(ResetPasswordUseCase)
     private readonly resetPasswordUseCase: ResetPasswordUseCase,
+    @inject(ConfrimResetPasswordUseCase)
+    private readonly confirmResetPasswordUseCase: ConfrimResetPasswordUseCase,
+    @inject(CreateNewPasswordUseCase)
+    private readonly createNewPasswordUseCase: CreateNewPasswordUseCase,
   ) {}
 
   async registerUser(req: Request, resp: Response) {
@@ -203,6 +211,79 @@ export class AuthController {
       return;
     }
 
-    resp.status(200).send('a link to create a new password has been sent');
+    resp.status(200).send(resetPasswordResult.data);
+  }
+
+  async confirmResetPassword(req: Request, resp: Response) {
+    const { validationToken } = req.body;
+
+    if (!validationToken) {
+      resp.status(400).send('baq request');
+      return;
+    }
+
+    const device = `${JSON.stringify(req.headers['user-agent'])}`;
+    const ipAddr = `${req.ip}`;
+
+    const confrimResetPasswordResult =
+      await this.confirmResetPasswordUseCase.execute(
+        validationToken,
+        ipAddr,
+        device,
+      );
+
+    if (confrimResetPasswordResult.isErr) {
+      resp.status(401).send('invalid token');
+      return;
+    }
+
+    resp.status(200).send(confrimResetPasswordResult.data);
+  }
+
+  async createNewPassword(req: Request, resp: Response) {
+    const parsedBody = CreateNewPasswordDtoSchema.safeParse(req.body);
+
+    if (!parsedBody.success) {
+      resp.status(400).send('bad request');
+      return;
+    }
+
+    const createNewPasswordDto = parsedBody.data;
+    const accessToken = req.token!;
+
+    const createNewPasswordResult = await this.createNewPasswordUseCase.execute(
+      createNewPasswordDto,
+      accessToken,
+    );
+
+    if (createNewPasswordResult.isErr) {
+      const error = createNewPasswordResult.error;
+      this.handleCreateNewPasswordError(error, resp);
+      return;
+    }
+
+    resp.status(200).send('password successfully updated!');
+  }
+
+  private handleCreateNewPasswordError(
+    error: CreateNewPasswordError,
+    resp: Response,
+  ): Response {
+    switch (error) {
+      case CreateNewPasswordError.MIS_MATCH_PASSWORD:
+        return resp.status(400).send('mismatch password and confirm password');
+      case CreateNewPasswordError.INVALID_TOKEN:
+        return resp.status(401).send('invalid token');
+      case CreateNewPasswordError.EXPIRED_TOKEN:
+        return resp
+          .status(401)
+          .send('expired token, please refresh your token');
+      case CreateNewPasswordError.USER_NOT_FOUND:
+        return resp.status(404).send('user not found');
+      case CreateNewPasswordError.WEAK_PASSWORD:
+        return resp.status(400).send('weak password');
+      default:
+        return resp.status(500).send('unknown error, please retry later');
+    }
   }
 }
