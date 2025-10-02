@@ -1,7 +1,7 @@
 import { defineComponent, computed, ref } from 'vue';
 import { isValidEmail } from '../../../shared/is-valid-email';
 import { isValidUsername, MIN_SIZE_USERNAME } from '@/utils/username';
-import { useAuthStore } from '@/stores/auth-pinia';
+import { AuthApiError, useAuthStore } from '@/stores/auth-pinia';
 
 export default defineComponent({
   name: 'LoginForm',
@@ -24,7 +24,9 @@ export default defineComponent({
       login: '. ݁₊ ⊹ . ݁ Welcome back ݁ . ⊹ ₊ ݁.',
       forgot: '. ݁₊ ⊹ . ݁ Reset your password ݁ . ⊹ ₊ ݁.',
     };
-    const currentTitle = computed(() => (forgotMode.value ? titles.forgot : titles.login));
+    const currentTitle = computed(() =>
+      forgotMode.value ? titles.forgot : titles.login,
+    );
 
     // rules
     const rules = {
@@ -53,20 +55,24 @@ export default defineComponent({
       const res = await loginForm.value?.validate?.();
       if (!res?.valid) return;
 
-      if ((!username.value || !password.value)
-        || !isValidUsername(username.value, MIN_SIZE_USERNAME)) {
-        errorMessage.value =
-          'Username and/or password are incorrect.';
+      if (
+        !username.value ||
+        !password.value ||
+        !isValidUsername(username.value, MIN_SIZE_USERNAME)
+      ) {
+        errorMessage.value = 'Username and/or password are incorrect.';
         return;
       }
 
-      // API call simulation
-      const loginResult = await useAuthStore().signIn(username.value, password.value);
+      const loginResult = await useAuthStore().signIn(
+        username.value,
+        password.value,
+      );
       if (loginResult.isErr) {
         errorMessage.value = 'Username and/or password are incorrect.';
         return;
       }
-      // store the token somewhere, e.g., localStorage
+
       const { token, refresh } = loginResult.data;
       localStorage.setItem('authToken', token);
       localStorage.setItem('refreshToken', refresh);
@@ -89,8 +95,25 @@ export default defineComponent({
         return;
       }
 
+      const resetPasswordResult = await useAuthStore().sendResetPasswordLink(
+        email.value,
+      );
+      
+      if (resetPasswordResult.isErr) {
+        const error = resetPasswordResult.error;
+
+        if (error === AuthApiError.USER_NOT_FOUND) {
+          errorMessage.value = `No user found with email ${email.value}`;
+          return;
+        }
+
+        if (error === AuthApiError.FAILED_TO_SEND_RESET_PASSWORD_LINK) {
+          errorMessage.value = `Failed to send reset link, please try later`;
+          return;
+        }
+      }
       // API call simulation
-      successMessage.value = 'If this email exists, a reset link has been sent.';
+      successMessage.value = 'A reset link has been successfully sent';
     };
 
     return {

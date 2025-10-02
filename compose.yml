@@ -4,7 +4,7 @@ services:
     networks:
       - matcha-network
     ports:
-      - '5432:5432'
+      - "5432:5432"
     env_file:
       - ./packages/api/.env
     volumes:
@@ -14,17 +14,17 @@ services:
     image: redis:7-alpine
     container_name: redis
     networks:
-    - matcha-network
+      - matcha-network
     ports:
-    - '6379:6379'
-    command: ['redis-server', '--save', '', '--appendonly', 'no']
+      - "6379:6379"
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
 
   back:
     build:
       context: .
       dockerfile: Dockerfile.back
     ports:
-      - '127.0.0.1:5000:5000'
+      - "127.0.0.1:5000:5000"
     depends_on:
       - db
       - redis
@@ -35,14 +35,14 @@ services:
     volumes:
       - ./packages/api:/usr/src/app/packages/api
       - ./packages/shared:/usr/src/app/packages/shared
-      - /usr/src/app/node_modules
+      - /usr/src/app/packages/back/node_modules
 
   front:
     build:
       context: .
       dockerfile: Dockerfile.front
     ports:
-      - '5173:5173'
+      - "5173:5173"
     env_file:
       - ./packages/front/.env
     networks:
@@ -50,7 +50,7 @@ services:
     volumes:
       - ./packages/front:/usr/src/app/packages/front
       - ./packages/shared:/usr/src/app/packages/shared
-      - /usr/src/app/node_modules
+      - /usr/src/app/packages/front/node_modules
 
 volumes:
   pgdata:
