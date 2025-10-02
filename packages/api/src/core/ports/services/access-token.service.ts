@@ -12,7 +12,7 @@ export interface AccessTokenService {
     newAccessToken: NewAccessTokenParams,
   ): Promise<AccessToken>;
 
-  revokeRefreshToken(refreshToken: string): Promise<void>;
+  revokeToken(refreshToken: string): Promise<void>;
 
   find(token: string): Promise<UserToken | null>;
 }
