@@ -9,8 +9,6 @@ import { verifyPassword } from '../../../../../shared/password';
 import { UserStatus } from '../../domain/enums/user-status.enum';
 import { UserTokenRepository } from '../../ports/repositories/user-token.repository';
 import { createAccessToken } from '../../../infrastructure/utils/jwt';
-import { UserToken } from '../../domain/entities/user-token.entity';
-import { uuid } from '../../../../../shared/uuid';
 import { UserTokenCateory } from '../../domain/enums/user-token-category';
 import { REFRESH_ACESS_TOKEN_TTL_IN_MS } from '../../domain/consts/access-token-ttl';
 import { AccessToken } from '@/core/domain/entities/access-token.entity';
