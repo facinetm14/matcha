@@ -98,7 +98,7 @@ export default defineComponent({
       const resetPasswordResult = await useAuthStore().sendResetPasswordLink(
         email.value,
       );
-      
+
       if (resetPasswordResult.isErr) {
         const error = resetPasswordResult.error;
 
@@ -112,7 +112,6 @@ export default defineComponent({
           return;
         }
       }
-      // API call simulation
       successMessage.value = 'A reset link has been successfully sent';
     };
 
