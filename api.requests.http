@@ -8,8 +8,8 @@ POST {{baseUrl}}/auth/register
 content-type: application/json
 
 {
- "email": "testing-user-42@yopmail.com",
- "username": "bllabla-11",
+ "email": "testing-user-42@yopmaill.com",
+ "username": "bllabla-ok",
  "passwd": "Allt.xp-c0hrhhn@yopmaill.com",
  "confirmPasswd": "Allt.xp-c0hrhhn@yopmaill.com",
  "firstName": "GUESTs",
@@ -25,11 +25,11 @@ POST {{baseUrl}}/auth/verify/{{validationToken}}
 ### login user
 # return status 200 -> successfully logged in
 POST {{baseUrl}}/auth/login
-content-type: applicatioin/json
+content-type: application/json
 
 {
- "username": "bllabla-11",
- "passwd": "Allt.xp-c0hrhhn@yopmaill.com"
+ "username": "bllabla-ok",
+ "passwd": "Allt.xp-c0hrhhn@yopmaill.comLL"
 }
 
 ### get current user profile
@@ -54,7 +54,7 @@ POST {{baseUrl}}/auth/refresh-token
 Content-Type: application/json
 
 {
-  "refreshToken": "dl0j50-mg7vcqbi-s6wc00-xm69eg"
+  "refreshToken": {{refreshToken}}
 }
 
 ### reset password
@@ -64,4 +64,24 @@ Content-Type: application/json
 
 {
   "email": "testing-user-42@yopmail.com"
+}
+
+### confirm reset password
+# return status 200 -> success
+POST {{baseUrl}}/auth/confirm-reset-password
+Content-Type: application/json
+
+{
+  "validationToken": {{validationToken}}
+}
+
+
+### create new password
+POST {{baseUrl}}/auth/create-new-password
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "passwd": "Allt.xp-c0hrhhn@yopmaill.comLL",
+  "confirmPasswd": "Allt.xp-c0hrhhn@yopmaill.comLL"
 }

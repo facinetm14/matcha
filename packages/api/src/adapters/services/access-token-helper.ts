@@ -42,7 +42,7 @@ export class AccessTokenHelper implements AccessTokenService {
     return { token, refresh };
   }
 
-  async revokeRefreshToken(refreshToken: string): Promise<void> {
+  async revokeToken(refreshToken: string): Promise<void> {
     await this.userTokenRepository.delete(refreshToken);
   }
 
