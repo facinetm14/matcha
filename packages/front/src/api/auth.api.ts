@@ -1,52 +1,52 @@
-import type { CreateUserDto } from "@/dto/create-user.dto";
+import type { CreateUserDto } from '@/types/dto/create-user.dto';
 
-const API_BASE_ROUTE = import.meta.env.VITE_API_BASE_ROUTE || "/api/v1";
+const API_BASE_ROUTE = import.meta.env.VITE_API_BASE_ROUTE || '/api/v1';
 
-const register = async (user:CreateUserDto) => {
+const register = async (user: CreateUserDto) => {
   return fetch(`${API_BASE_ROUTE}/auth/register`, {
     headers: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
     },
-    method: "POST",
+    method: 'POST',
     body: JSON.stringify(user),
   });
 };
 
-const verify = async (token:string) => {
+const verify = async (token: string) => {
   return fetch(`${API_BASE_ROUTE}/auth/verify/${token}`, {
     headers: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
     },
-    method: "POST",
+    method: 'POST',
   });
 };
 
-const updatePassword = async (id:string, passwd:string) => {
+const updatePassword = async (id: string, passwd: string) => {
   return fetch(`${API_BASE_ROUTE}/auth/new-password`, {
     headers: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
     },
-    method: "PATCH",
+    method: 'PATCH',
     body: JSON.stringify({ passwd, id }),
   });
 };
 
-const signIn = async (username:string, passwd: string) => {
+const signIn = async (username: string, passwd: string) => {
   return fetch(`${API_BASE_ROUTE}/auth/login`, {
     headers: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
     },
-    method: "POST",
+    method: 'POST',
     body: JSON.stringify({ username, passwd }),
   });
 };
 
-const sendResetPasswordRequest = async (email:string) => {
+const sendResetPasswordRequest = async (email: string) => {
   return fetch(`${API_BASE_ROUTE}/auth/reset-password`, {
     headers: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
     },
-    method: "POST",
+    method: 'POST',
     body: JSON.stringify({ email }),
   });
 };
