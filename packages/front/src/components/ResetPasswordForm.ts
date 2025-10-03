@@ -1,5 +1,7 @@
 import { defineComponent, ref } from 'vue';
 import { isPasswordStrong, MIN_SIZE_PASSWORD } from '@/utils/password';
+import { useAuthStore } from '@/stores/auth-pinia';
+import router from '@/router';
 
 export default defineComponent({
   name: 'ResetPasswordForm',
@@ -22,7 +24,8 @@ export default defineComponent({
       required: (v: string) =>
         (!!v && v.toString().trim().length > 0) || 'This field is required.',
       passwordStrong: (v: string) =>
-        isPasswordStrong(v, MIN_SIZE_PASSWORD) || 'Password is not strong enough.',
+        isPasswordStrong(v, MIN_SIZE_PASSWORD) ||
+        'Password is not strong enough.',
       passwordsMatch: () =>
         password.value === confirmPassword.value || 'Passwords do not match.',
     };
@@ -45,13 +48,20 @@ export default defineComponent({
         return;
       }
 
-      // API call
-      // const resetResult = await useAuthStore().resetPassword(password.value);
-      // if (resetResult.isErr) {
-      //   errorMessage.value = 'Failed to reset password. Please try again.';
-      //   return;
-      // }
-      successMessage.value = 'Password has been reset successfully! You can now log in with your new password.';
+      const createNewPasswordResult = await useAuthStore().createNewPassword(
+        password.value,
+        confirmPassword.value,
+      );
+
+      if (createNewPasswordResult.isErr) {
+        errorMessage.value =
+          'Failed to create a new password, please retry later';
+        return;
+      }
+
+      // TODO Add a loader with this message before moving to login
+      // 'Password has been reset successfully! You can now log in with your new password.';
+      router.push('/Login');
     };
 
     return {

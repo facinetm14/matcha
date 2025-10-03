@@ -1,7 +1,5 @@
 import { CreateNewPasswordDto } from '@/core/domain/dto/create-new-password.dto';
 import { CreateNewPasswordError } from '@/core/domain/errors/create-new-password.error';
-import { VerifyTokenError } from '@/core/domain/errors/verify-token.error';
-import { verifyAccessToken } from '@/infrastructure/utils/jwt';
 import { inject, injectable } from 'inversify';
 import { Result, Err, Ok } from '@/core/domain/utils/result';
 import { hashPassword, isPasswordStrong } from '@shared/password';
@@ -18,18 +16,8 @@ export class CreateNewPasswordUseCase {
 
   async execute(
     createNewPasswordDto: CreateNewPasswordDto,
-    token: string,
+    userId: string,
   ): Promise<Result<null, CreateNewPasswordError>> {
-    const verifyTokenResult = await verifyAccessToken(token);
-    if (verifyTokenResult.isErr) {
-      const error = verifyTokenResult.error;
-      if (error === VerifyTokenError.TOKEN_EXPIRED) {
-        return Err(CreateNewPasswordError.EXPIRED_TOKEN);
-      }
-      return Err(CreateNewPasswordError.INVALID_TOKEN);
-    }
-    const userId = verifyTokenResult.data;
-
     const existingUser = await this.userRepository.findUserByUniqKey(
       UserUniqKeys.ID,
       userId,
