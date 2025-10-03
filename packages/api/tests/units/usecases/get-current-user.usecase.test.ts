@@ -1,9 +1,7 @@
+import { CreateUserDto } from '@/core/domain/dto/create-user.dto';
 import { UserStatus } from '@/core/domain/enums/user-status.enum';
 import { UserRepository } from '@/core/ports/repositories/user.repository';
-import { AccessTokenService } from '@/core/ports/services/access-token.service';
 import { GetCurrentUserUseCase } from '@/core/usecases/users/get-current-user.usecase';
-import container from '@/infrastructure/config/inversify';
-import { TYPE } from '@/infrastructure/config/inversify-type';
 
 import {
   factoryCreateUserDto,
@@ -13,17 +11,22 @@ import {
 describe('Get current user usecase', () => {
   let getCurrentUserUseCase: GetCurrentUserUseCase;
   let userRepository: UserRepository;
-  let accessTokenService: AccessTokenService;
+  let createUserDto: CreateUserDto;
 
   beforeAll(() => {
     userRepository = factoryUserRepositoryInMemory();
-    accessTokenService = container.get<AccessTokenService>(
-      TYPE.AccessTokenService,
-    );
 
-    getCurrentUserUseCase = new GetCurrentUserUseCase(
-      userRepository,
-      accessTokenService,
+    getCurrentUserUseCase = new GetCurrentUserUseCase(userRepository);
+
+    createUserDto = factoryCreateUserDto(
+      {
+        username: 'user-blabla',
+        passwd: 'user-blabla-Strong**',
+        email: 'blabla@gmail.com',
+        firstName: 'toto',
+        lastName: 'tata',
+      },
+      { shouldMockId: true },
     );
   });
 
@@ -36,29 +39,34 @@ describe('Get current user usecase', () => {
     });
   });
 
-  test('should return a valid user', async () => {
-    // Arrange
-    const createUserDto = factoryCreateUserDto(
-      {
-        username: 'user-blabla',
-        passwd: 'user-blabla-Strong**',
-        email: 'blabla@gmail.com',
-        firstName: 'toto',
-        lastName: 'tata',
-      },
-      { shouldMockId: true },
-    );
-
+  test('should return a valid user with first login yes', async () => {
     await userRepository.create(createUserDto);
     await userRepository.update(createUserDto.id, {
       status: UserStatus.VERIFIED,
     });
 
-    const getCurrentUserResult =
-      await getCurrentUserUseCase.execute(createUserDto.id);
+    const getCurrentUserResult = await getCurrentUserUseCase.execute(
+      createUserDto.id,
+    );
 
     expect(getCurrentUserResult).toMatchObject({
       isErr: false,
+      data: {
+        isFirstLogin: 'yes',
+      },
+    });
+  });
+
+  test('should return a valid user with firstlogin null', async () => {
+    const getCurrentUserResult = await getCurrentUserUseCase.execute(
+      createUserDto.id,
+    );
+
+    expect(getCurrentUserResult).toMatchObject({
+      isErr: false,
+      data: {
+        isFirstLogin: null,
+      },
     });
   });
 });

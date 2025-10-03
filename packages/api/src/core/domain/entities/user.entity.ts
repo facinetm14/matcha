@@ -1,4 +1,4 @@
-import { UserStatus } from "../enums/user-status.enum";
+import { UserStatus } from '../enums/user-status.enum';
 
 export type User = {
   id: string;
@@ -10,4 +10,5 @@ export type User = {
   createdAt: Date;
   updatedAt: Date;
   status: UserStatus;
+  isFirstLogin: string | null;
 };

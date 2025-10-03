@@ -12,5 +12,6 @@ export function mapUserModelToEntity(userModel: UserModel): User {
     email: userModel.email,
     passwd: userModel.passwd,
     status: userModel.status,
+    isFirstLogin: userModel.is_first_login,
   };
 }
