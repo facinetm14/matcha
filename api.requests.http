@@ -29,8 +29,8 @@ POST {{baseUrl}}/auth/login
 content-type: application/json
 
 {
- "username": "bllabla-ok",
- "passwd": "Allt.xp-c0hrhhn@yopmaill.com"
+ "username":"user42",
+ "passwd": "Allt.xp-c0hrhhn@yopmaill.comLLLL"
 }
 
 ### get current user profile
@@ -69,7 +69,8 @@ Content-Type: application/json
 
 ### confirm reset password
 # return status 200 -> success
-POST {{baseUrl}}/auth/confirm-reset-password/{{refreshToken}}
+POST {{baseUrl}}/auth/confirm-reset-password/rin7lk-mgb0mgu3-zx3ui3-qzsczq
+
 Content-Type: application/json
 
 
@@ -87,3 +88,16 @@ Content-Type: application/json
 ### logout
 POST {{baseUrl}}/auth/logout
 Authorization: Bearer {{accessToken}} {{refreshToken}}
+
+### update user infos
+PATCH {{baseUrl}}/users/update
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "user": {
+    "gender": "Male",
+    "sexualOrientation": "Hetero",
+    "bio": "lorem dkskdsd"
+  }
+}

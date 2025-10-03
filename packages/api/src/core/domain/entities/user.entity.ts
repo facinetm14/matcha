@@ -11,4 +11,7 @@ export type User = {
   updatedAt: Date;
   status: UserStatus;
   isFirstLogin: string | null;
+  gender?: string;
+  sexualOrientation?: string;
+  bio?: string;
 };

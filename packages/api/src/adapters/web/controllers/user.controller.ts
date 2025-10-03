@@ -7,6 +7,9 @@ import { inject, injectable } from 'inversify';
 import { getConnectedUserId } from '../middlewares/get-connected-user';
 import { AccessTokenService } from '@/core/ports/services/access-token.service';
 import { TYPE } from '@/infrastructure/config/inversify-type';
+import { UpdateUserProfileDtoSchema } from '@/core/domain/dto/update-user-profile.dto';
+import { UpdateUserProfileUseCase } from '@/core/usecases/users/update-user-profile.usecase';
+import { UpdateUserProfileError } from '@/core/domain/errors/update-user-profile.error';
 
 @injectable()
 export class UserController {
@@ -17,6 +20,8 @@ export class UserController {
     private readonly CheckUserIdentifierAvailabilityUseCase: CheckUserIdentifierAvailabilityUseCase,
     @inject(TYPE.AccessTokenService)
     private readonly accessTokenService: AccessTokenService,
+    @inject(UpdateUserProfileUseCase)
+    private readonly updateUserProfileUseCase: UpdateUserProfileUseCase,
   ) {}
 
   async getMe(req: Request, resp: Response) {
@@ -64,5 +69,45 @@ export class UserController {
       );
 
     resp.status(200).json({ available: isUserIdentifierAvailable });
+  }
+
+  async updateUserProfile(req: Request, resp: Response) {
+    const connectedUserResult = await getConnectedUserId(
+      this.accessTokenService,
+      req,
+      resp,
+    );
+
+    if (connectedUserResult.isErr) {
+      resp.status(401).send('Invalid token');
+      return;
+    }
+    const userId = connectedUserResult.data;
+
+    const parsedBody = UpdateUserProfileDtoSchema.safeParse(req.body);
+
+    if (!parsedBody.success) {
+      resp.status(400).send('Bad request');
+      return;
+    }
+    const updateUserProfileDto = parsedBody.data;
+    const updateUserProfileResult = await this.updateUserProfileUseCase.execute(
+      userId,
+      updateUserProfileDto,
+    );
+
+    if (updateUserProfileResult.isErr) {
+      const error = updateUserProfileResult.error;
+
+      if (error === UpdateUserProfileError.USER_NOT_FOUND) {
+        resp.status(404).send('user not found');
+        return;
+      }
+
+      resp.status(500).send('server internal error, please retry later');
+      return;
+    }
+
+    resp.status(200).send('updated user successfully');
   }
 }

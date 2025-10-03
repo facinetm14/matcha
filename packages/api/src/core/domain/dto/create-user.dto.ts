@@ -2,7 +2,7 @@ import * as z from 'zod';
 import { UserStatus } from '../enums/user-status.enum';
 
 export const CreateUserDtoSchema = z.object({
-  email: z.string(),
+  email: z.email(),
   username: z.string(),
   firstName: z.string(),
   lastName: z.string(),
