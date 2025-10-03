@@ -13,5 +13,8 @@ export function mapUserModelToEntity(userModel: UserModel): User {
     passwd: userModel.passwd,
     status: userModel.status,
     isFirstLogin: userModel.is_first_login,
+    gender: userModel.gender,
+    sexualOrientation: userModel.sexual_orientation,
+    bio: userModel.bio,
   };
 }

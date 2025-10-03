@@ -11,4 +11,7 @@ export type UserModel = {
   updated_at: Date;
   status: UserStatus;
   is_first_login: string | null;
+  gender?: string;
+  sexual_orientation?: string;
+  bio?: string;
 };

@@ -9,6 +9,7 @@ import { ResetPasswordUseCase } from '@/core/usecases/auth/reset-password.usecas
 import { ConfrimResetPasswordUseCase } from '@/core/usecases/auth/confirm-reset-password.usecase';
 import { CreateNewPasswordUseCase } from '@/core/usecases/auth/create-new-password.usecase';
 import { LogoutUseCase } from '@/core/usecases/auth/logout.usecase';
+import { UpdateUserProfileUseCase } from '@/core/usecases/users/update-user-profile.usecase';
 
 export function bindUseCases(container: Container) {
   container.bind(RegisterUserUseCase).toSelf().inSingletonScope();
@@ -24,4 +25,5 @@ export function bindUseCases(container: Container) {
   container.bind(ConfrimResetPasswordUseCase).toSelf().inSingletonScope();
   container.bind(CreateNewPasswordUseCase).toSelf().inSingletonScope();
   container.bind(LogoutUseCase).toSelf().inSingletonScope();
+  container.bind(UpdateUserProfileUseCase).toSelf().inSingletonScope();
 }
