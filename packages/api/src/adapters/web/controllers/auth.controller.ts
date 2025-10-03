@@ -4,7 +4,6 @@ import { CreateUserDtoSchema } from '../../../core/domain/dto/create-user.dto';
 import { RegisterUserUseCase } from '../../../core/usecases/auth/register-user.usecase';
 import { uuid } from '../../../../../shared/uuid';
 import { RegisterUserError } from '../../../core/domain/errors/register-user.error';
-import { baseApi } from '../consts/base.api';
 import { Logger } from '../../../core/ports/services/logger.service';
 import { TYPE } from '../../../infrastructure/config/inversify-type';
 import { VerifyUserUseCase } from '../../../core/usecases/auth/verify-user.usecase';
@@ -23,6 +22,9 @@ import { ConfrimResetPasswordUseCase } from '@/core/usecases/auth/confirm-reset-
 import { CreateNewPasswordDtoSchema } from '@/core/domain/dto/create-new-password.dto';
 import { CreateNewPasswordUseCase } from '@/core/usecases/auth/create-new-password.usecase';
 import { CreateNewPasswordError } from '@/core/domain/errors/create-new-password.error';
+import { attachTokensToSecureCookies } from '../middlewares/attach-secure-cookies';
+import { getConnectedUserId } from '../middlewares/get-connected-user';
+import { AccessTokenService } from '@/core/ports/services/access-token.service';
 
 @injectable()
 export class AuthController {
@@ -43,6 +45,8 @@ export class AuthController {
     private readonly confirmResetPasswordUseCase: ConfrimResetPasswordUseCase,
     @inject(CreateNewPasswordUseCase)
     private readonly createNewPasswordUseCase: CreateNewPasswordUseCase,
+    @inject(TYPE.AccessTokenService)
+    private readonly accessTokenService: AccessTokenService,
   ) {}
 
   async registerUser(req: Request, resp: Response) {
@@ -80,8 +84,7 @@ export class AuthController {
       return;
     }
 
-    resp.status(201).send(registerUserResult.data);
-    this.logger.info(`${baseApi}/auth/register - [201]`);
+    resp.status(201).json(registerUserResult.data);
   }
 
   private handleRegisterUserError(
@@ -155,7 +158,11 @@ export class AuthController {
       return;
     }
 
-    resp.status(200).send(loginUserResult.data);
+    const { token, refresh } = loginUserResult.data;
+
+    attachTokensToSecureCookies(resp, { token, refresh });
+
+    resp.status(200).json({ token, refresh });
   }
 
   async refreshToken(req: Request, resp: Response) {
@@ -186,7 +193,7 @@ export class AuthController {
       return;
     }
 
-    resp.status(201).send(refreshTokenResult.data);
+    resp.status(201).json(refreshTokenResult.data);
   }
 
   async resetPassword(req: Request, resp: Response) {
@@ -207,15 +214,15 @@ export class AuthController {
         return;
       }
 
-      resp.status(500).send('server internal error, please try later!');
+      resp.status(500).json('server internal error, please try later!');
       return;
     }
 
-    resp.status(200).send(resetPasswordResult.data);
+    resp.status(200).json(resetPasswordResult.data);
   }
 
   async confirmResetPassword(req: Request, resp: Response) {
-    const { validationToken } = req.body;
+    const { validationToken } = req.params;
 
     if (!validationToken) {
       resp.status(400).send('baq request');
@@ -237,7 +244,10 @@ export class AuthController {
       return;
     }
 
-    resp.status(200).send(confrimResetPasswordResult.data);
+    const accessToken = confrimResetPasswordResult.data;
+    attachTokensToSecureCookies(resp, { token: accessToken.token });
+
+    resp.status(200).json(accessToken);
   }
 
   async createNewPassword(req: Request, resp: Response) {
@@ -248,12 +258,21 @@ export class AuthController {
       return;
     }
 
-    const createNewPasswordDto = parsedBody.data;
-    const accessToken = req.token!;
+    const connectedUserResult = await getConnectedUserId(
+      this.accessTokenService,
+      req,
+      resp,
+    );
 
+    if (connectedUserResult.isErr) {
+      resp.status(401).send('invalid token');
+      return;
+    }
+
+    const createNewPasswordDto = parsedBody.data;
     const createNewPasswordResult = await this.createNewPasswordUseCase.execute(
       createNewPasswordDto,
-      accessToken,
+      connectedUserResult.data,
     );
 
     if (createNewPasswordResult.isErr) {
@@ -272,12 +291,6 @@ export class AuthController {
     switch (error) {
       case CreateNewPasswordError.MIS_MATCH_PASSWORD:
         return resp.status(400).send('mismatch password and confirm password');
-      case CreateNewPasswordError.INVALID_TOKEN:
-        return resp.status(401).send('invalid token');
-      case CreateNewPasswordError.EXPIRED_TOKEN:
-        return resp
-          .status(401)
-          .send('expired token, please refresh your token');
       case CreateNewPasswordError.USER_NOT_FOUND:
         return resp.status(404).send('user not found');
       case CreateNewPasswordError.WEAK_PASSWORD:

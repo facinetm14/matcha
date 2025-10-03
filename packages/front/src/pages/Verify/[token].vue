@@ -20,7 +20,7 @@ onMounted(async () => {
   if (result.isErr) {
     console.log('error verifying email');
   } else {
-    router.push('/loginpage');
+    router.push('/Login');
     console.log('email verified');
   }
 });

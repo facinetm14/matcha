@@ -1,10 +1,12 @@
 import { CheckUserIdentifierAvailabilityDtoSchema } from '@/core/domain/dto/check-user-identifier-availability.dto';
 import { UserUniqKeys } from '@/core/domain/enums/user-uniq-keys.enum';
-import { VerifyTokenError } from '@/core/domain/errors/verify-token.error';
 import { CheckUserIdentifierAvailabilityUseCase } from '@/core/usecases/auth/check-user-identifier-availability.usecase';
 import { GetCurrentUserUseCase } from '@/core/usecases/users/get-current-user.usecase';
 import { Request, Response } from 'express';
 import { inject, injectable } from 'inversify';
+import { getConnectedUserId } from '../middlewares/get-connected-user';
+import { AccessTokenService } from '@/core/ports/services/access-token.service';
+import { TYPE } from '@/infrastructure/config/inversify-type';
 
 @injectable()
 export class UserController {
@@ -13,20 +15,27 @@ export class UserController {
     private readonly getCurrentUserUseCase: GetCurrentUserUseCase,
     @inject(CheckUserIdentifierAvailabilityUseCase)
     private readonly CheckUserIdentifierAvailabilityUseCase: CheckUserIdentifierAvailabilityUseCase,
+    @inject(TYPE.AccessTokenService)
+    private readonly accessTokenService: AccessTokenService,
   ) {}
 
   async getMe(req: Request, resp: Response) {
-    const accessToken = req.token!;
+    const connectedUserResult = await getConnectedUserId(
+      this.accessTokenService,
+      req,
+      resp,
+    );
+
+    if (connectedUserResult.isErr) {
+      resp.status(401).send('Invalid token');
+      return;
+    }
+
     const getCurrentUserResult = await this.getCurrentUserUseCase.execute(
-      accessToken
+      connectedUserResult.data,
     );
 
     if (getCurrentUserResult.isErr) {
-      const error = getCurrentUserResult.error;
-      if (error === VerifyTokenError.INVALID_TOKEN) {
-        resp.status(401).send('Invalid token');
-        return;
-      }
       resp.status(404).send('User not found');
       return;
     }
@@ -34,7 +43,7 @@ export class UserController {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { passwd, ...user } = getCurrentUserResult.data;
 
-    resp.status(200).send(user);
+    resp.status(200).json(user);
   }
 
   async checkUserIdentifierAvailability(req: Request, resp: Response) {
@@ -54,6 +63,6 @@ export class UserController {
         value,
       );
 
-    resp.status(200).send({ available: isUserIdentifierAvailable });
+    resp.status(200).json({ available: isUserIdentifierAvailable });
   }
 }

@@ -1,8 +1,13 @@
 import { defineComponent, computed, ref } from 'vue';
 import { isPasswordStrong, MIN_SIZE_PASSWORD } from '../utils/password';
 import { isValidEmail } from '../../../shared/is-valid-email';
-import { isValidUsername, MIN_SIZE_USERNAME } from '@/utils/username';
+import {
+  isUsernameAvailable,
+  isValidUsername,
+  MIN_SIZE_USERNAME,
+} from '@/utils/username';
 import { useAuthStore } from '@/stores/auth-pinia';
+import { isEmailAvailable } from '@/utils/email';
 
 export default defineComponent({
   name: 'RegisterForm',
@@ -42,14 +47,33 @@ export default defineComponent({
 
     // rules
     const rules = {
-      required: (v: string) => (!!v && v.toString().trim().length > 0) || 'This field is required.',
-      usernameValid: (v: string) => isValidUsername(v, MIN_SIZE_USERNAME) || `Username must be at least ${MIN_SIZE_USERNAME} characters and contain only letters, numbers, and underscores.`,
-      email: (v: string) => isValidEmail(v) || 'Invalid email format.',
+      required: (v: string) =>
+        (!!v && v.toString().trim().length > 0) || 'This field is required.',
+      usernameValid: async (v: string) => {
+        if (!isValidUsername(v)) {
+          return `Username must be at least ${MIN_SIZE_USERNAME} characters and contain only letters, numbers, and underscores.`;
+        }
+        const isAvailable = await isUsernameAvailable(v);
+        if (!isAvailable) {
+          return 'username already used';
+        }
+      },
+
+      email: async (v: string) => {
+        if (!isValidEmail(v)) {
+          return 'Invalid email format.';
+        }
+
+        const isAvailable = await isEmailAvailable(v);
+        if (!isAvailable) {
+          return 'This email is already used';
+        }
+      },
       passwordStrong: (v: string) =>
-        isPasswordStrong(v, MIN_SIZE_PASSWORD) || 'Password is not strong enough.',
+        isPasswordStrong(v, MIN_SIZE_PASSWORD) ||
+        'Password is not strong enough.',
       passwordsMatch: () =>
         password.value === confirmPassword.value || 'Passwords do not match.',
-      // TODO: email exists check
     };
 
     const validateCurrentStep = async () => {
@@ -123,7 +147,6 @@ export default defineComponent({
         confirmPasswd: confirmPassword.value,
         email: email.value,
       };
-      console.log('Registering user:', user);
 
       const registerResult = await useAuthStore().register(user);
       if (registerResult.isErr) {
