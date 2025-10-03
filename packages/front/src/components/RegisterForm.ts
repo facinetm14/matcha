@@ -57,6 +57,8 @@ export default defineComponent({
         if (!isAvailable) {
           return 'username already used';
         }
+
+        return true;
       },
 
       email: async (v: string) => {
@@ -68,6 +70,8 @@ export default defineComponent({
         if (!isAvailable) {
           return 'This email is already used';
         }
+
+        return true;
       },
       passwordStrong: (v: string) =>
         isPasswordStrong(v, MIN_SIZE_PASSWORD) ||

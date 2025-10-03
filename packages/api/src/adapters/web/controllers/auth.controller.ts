@@ -22,9 +22,13 @@ import { ConfrimResetPasswordUseCase } from '@/core/usecases/auth/confirm-reset-
 import { CreateNewPasswordDtoSchema } from '@/core/domain/dto/create-new-password.dto';
 import { CreateNewPasswordUseCase } from '@/core/usecases/auth/create-new-password.usecase';
 import { CreateNewPasswordError } from '@/core/domain/errors/create-new-password.error';
-import { attachTokensToSecureCookies } from '../middlewares/attach-secure-cookies';
+import {
+  attachTokensToSecureCookies,
+  clearSessionCookies,
+} from '../middlewares/attach-secure-cookies';
 import { getConnectedUserId } from '../middlewares/get-connected-user';
 import { AccessTokenService } from '@/core/ports/services/access-token.service';
+import { LogoutUseCase } from '@/core/usecases/auth/logout.usecase';
 
 @injectable()
 export class AuthController {
@@ -47,6 +51,7 @@ export class AuthController {
     private readonly createNewPasswordUseCase: CreateNewPasswordUseCase,
     @inject(TYPE.AccessTokenService)
     private readonly accessTokenService: AccessTokenService,
+    @inject(LogoutUseCase) private readonly logoutUseCase: LogoutUseCase,
   ) {}
 
   async registerUser(req: Request, resp: Response) {
@@ -298,5 +303,13 @@ export class AuthController {
       default:
         return resp.status(500).send('unknown error, please retry later');
     }
+  }
+
+  async logout(req: Request, resp: Response) {
+    clearSessionCookies(resp);
+    const refresh = req.cookies.refresh ?? req.refresh;
+    await this.logoutUseCase.execute(refresh);
+
+    resp.status(200).send('successfully logged out');
   }
 }

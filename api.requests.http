@@ -55,7 +55,7 @@ POST {{baseUrl}}/auth/refresh-token
 Content-Type: application/json
 
 {
-  "refreshToken": {{refreshToken}}
+  "refreshToken": "{{refreshToken}}"
 }
 
 ### reset password
@@ -69,11 +69,12 @@ Content-Type: application/json
 
 ### confirm reset password
 # return status 200 -> success
-POST {{baseUrl}}/auth/confirm-reset-password/ajga68-mga1vilp-1lg8f9-dr600v
+POST {{baseUrl}}/auth/confirm-reset-password/{{refreshToken}}
 Content-Type: application/json
 
 
 ### create new password
+# return status 200 -> success
 POST {{baseUrl}}/auth/create-new-password
 Authorization: Bearer {{accessToken}}
 Content-Type: application/json
@@ -82,3 +83,7 @@ Content-Type: application/json
   "passwd": "Allt.xp-c0hrhhn@yopmaill.comLLLL",
   "confirmPasswd": "Allt.xp-c0hrhhn@yopmaill.comLLLL"
 }
+
+### logout
+POST {{baseUrl}}/auth/logout
+Authorization: Bearer {{accessToken}} {{refreshToken}}
