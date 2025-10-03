@@ -9,7 +9,7 @@
               <v-card-title>Already have an account ?</v-card-title>
               <v-card-text>Connect to your profile.</v-card-text>
               <v-card-actions>
-                <v-btn to="/loginpage">Log in</v-btn>
+                <v-btn to="/login">Log in</v-btn>
               </v-card-actions>
             </v-card>
           </v-col>

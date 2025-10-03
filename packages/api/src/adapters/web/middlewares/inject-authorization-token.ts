@@ -3,9 +3,10 @@ import { Request, Response, NextFunction } from 'express';
 declare module 'express-serve-static-core' {
   interface Request {
     token?: string;
+    refresh?: string;
   }
 }
-export function parseBearerToken(
+export function injectAuthorizationToken(
   req: Request,
   resp: Response,
   next: NextFunction,
@@ -20,6 +21,14 @@ export function parseBearerToken(
     }
 
     req.token = accessToken;
+    return next();
+  }
+
+  const { token, refresh } = req.cookies;
+  req.token = token;
+  req.refresh = refresh;
+
+  if (token) {
     return next();
   }
 
