@@ -1,4 +1,4 @@
-import { UserStatus } from "../../../core/domain/enums/user-status.enum";
+import { UserStatus } from '../../../core/domain/enums/user-status.enum';
 
 export type UserModel = {
   id: string;
@@ -10,4 +10,5 @@ export type UserModel = {
   created_at: Date;
   updated_at: Date;
   status: UserStatus;
-}
+  is_first_login: string | null;
+};
