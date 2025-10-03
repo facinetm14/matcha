@@ -8,6 +8,7 @@ import { RefreshAccessTokenUseCase } from '@/core/usecases/auth/refresh-token.us
 import { ResetPasswordUseCase } from '@/core/usecases/auth/reset-password.usecase';
 import { ConfrimResetPasswordUseCase } from '@/core/usecases/auth/confirm-reset-password.usecase';
 import { CreateNewPasswordUseCase } from '@/core/usecases/auth/create-new-password.usecase';
+import { LogoutUseCase } from '@/core/usecases/auth/logout.usecase';
 
 export function bindUseCases(container: Container) {
   container.bind(RegisterUserUseCase).toSelf().inSingletonScope();
@@ -22,4 +23,5 @@ export function bindUseCases(container: Container) {
   container.bind(ResetPasswordUseCase).toSelf().inSingletonScope();
   container.bind(ConfrimResetPasswordUseCase).toSelf().inSingletonScope();
   container.bind(CreateNewPasswordUseCase).toSelf().inSingletonScope();
+  container.bind(LogoutUseCase).toSelf().inSingletonScope();
 }

@@ -7,9 +7,8 @@ import { Response } from 'express';
 export function attachTokensToSecureCookies(
   resp: Response,
   { token, refresh }: { token: string; refresh?: string },
-) {
-  resp.clearCookie('refresh');
-  resp.clearCookie('token');
+): void {
+  clearSessionCookies(resp);
 
   resp.cookie('token', token, {
     httpOnly: true,
@@ -26,4 +25,9 @@ export function attachTokensToSecureCookies(
       maxAge: REFRESH_ACESS_TOKEN_TTL_IN_MS,
     });
   }
+}
+
+export function clearSessionCookies(resp: Response): void {
+  resp.clearCookie('refresh');
+  resp.clearCookie('token');
 }
