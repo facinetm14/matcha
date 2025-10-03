@@ -1,7 +1,7 @@
 import { defineComponent, computed, ref } from 'vue';
-import { isValidEmail } from '../../../shared/is-valid-email';
 import { isValidUsername, MIN_SIZE_USERNAME } from '@/utils/username';
 import { AuthApiError, useAuthStore } from '@/stores/auth-pinia';
+import { isValidEmail } from '../../../shared/is-valid-email';
 
 export default defineComponent({
   name: 'LoginForm',
@@ -32,7 +32,7 @@ export default defineComponent({
     const rules = {
       required: (v: string) =>
         (!!v && v.toString().trim().length > 0) || 'This field is required.',
-      email: (v: string) => isValidEmail(v) || 'Invalid email format.',
+      email: async (v: string) => isValidEmail(v) || 'Invalid email format.',
     };
 
     // actions
@@ -73,9 +73,7 @@ export default defineComponent({
         return;
       }
 
-      const { token, refresh } = loginResult.data;
-      localStorage.setItem('authToken', token);
-      localStorage.setItem('refreshToken', refresh);
+      //TODO: redirect to profile
       successMessage.value = 'Logged in successfully!';
     };
 

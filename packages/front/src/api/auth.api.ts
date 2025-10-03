@@ -21,6 +21,15 @@ const verify = async (token: string) => {
   });
 };
 
+const confirmResetPassword = async (token: string) => {
+  return fetch(`${API_BASE_ROUTE}/auth/confirm-reset-password/${token}`, {
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    method: 'POST',
+  });
+};
+
 const updatePassword = async (id: string, passwd: string) => {
   return fetch(`${API_BASE_ROUTE}/auth/new-password`, {
     headers: {
@@ -51,10 +60,23 @@ const sendResetPasswordRequest = async (email: string) => {
   });
 };
 
+const createNewPassword = async (passwd: string, confirmPasswd: string) => {
+  return fetch(`${API_BASE_ROUTE}/auth/create-new-password`, {
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    method: 'POST',
+    body: JSON.stringify({ passwd, confirmPasswd }),
+    credentials: 'include',
+  });
+};
+
 export const authApi = {
   register,
   verify,
   updatePassword,
   signIn,
   sendResetPasswordRequest,
+  confirmResetPassword,
+  createNewPassword,
 };

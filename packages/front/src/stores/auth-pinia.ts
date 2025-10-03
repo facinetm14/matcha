@@ -10,10 +10,12 @@ export enum AuthApiError {
   SIGNIN_FAILED = 'SIGNIN_FAILED',
   USER_NOT_FOUND = 'USER_NOT_FOUND',
   FAILED_TO_SEND_RESET_PASSWORD_LINK = 'RESET_PASSWORD_WISHED_BY_USER',
+  NEW_PASSWORD_CREATION_FAILED = 'NEW_PASSWORD_CREATION_FAILED',
 }
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({}),
+
   actions: {
     async register(
       newUser: CreateUserDto,
@@ -37,15 +39,26 @@ export const useAuthStore = defineStore('auth', {
       return Err(AuthApiError.VERIFY_FAILED);
     },
 
+    async confirmResetPassword(
+      token: string,
+    ): Promise<Result<null, AuthApiError>> {
+      const verifyEmailResult = await authApi.confirmResetPassword(token);
+
+      if (verifyEmailResult.status === 200) {
+        return Ok(null);
+      }
+
+      return Err(AuthApiError.VERIFY_FAILED);
+    },
+
     async signIn(
       username: string,
       passwd: string,
-    ): Promise<Result<{ token: string; refresh: string }, AuthApiError>> {
+    ): Promise<Result<null, AuthApiError>> {
       const signInResult = await authApi.signIn(username, passwd);
 
       if (signInResult.status === 200) {
-        const { token, refresh } = await signInResult.json();
-        return Ok({ token, refresh });
+        return Ok(null);
       }
 
       return Err(AuthApiError.SIGNIN_FAILED);
@@ -64,6 +77,22 @@ export const useAuthStore = defineStore('auth', {
       }
 
       return Err(AuthApiError.FAILED_TO_SEND_RESET_PASSWORD_LINK);
+    },
+
+    async createNewPassword(
+      passwd: string,
+      confirmPasswd: string,
+    ): Promise<Result<null, AuthApiError>> {
+      const createNewPasswordResult = await authApi.createNewPassword(
+        passwd,
+        confirmPasswd,
+      );
+
+      if (createNewPasswordResult.status === 200) {
+        return Ok(null);
+      }
+
+      return Err(AuthApiError.NEW_PASSWORD_CREATION_FAILED);
     },
   },
 });

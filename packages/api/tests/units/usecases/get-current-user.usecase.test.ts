@@ -1,6 +1,9 @@
 import { UserStatus } from '@/core/domain/enums/user-status.enum';
 import { UserRepository } from '@/core/ports/repositories/user.repository';
+import { AccessTokenService } from '@/core/ports/services/access-token.service';
 import { GetCurrentUserUseCase } from '@/core/usecases/users/get-current-user.usecase';
+import container from '@/infrastructure/config/inversify';
+import { TYPE } from '@/infrastructure/config/inversify-type';
 
 import {
   factoryCreateUserDto,
@@ -10,15 +13,23 @@ import {
 describe('Get current user usecase', () => {
   let getCurrentUserUseCase: GetCurrentUserUseCase;
   let userRepository: UserRepository;
+  let accessTokenService: AccessTokenService;
 
   beforeAll(() => {
     userRepository = factoryUserRepositoryInMemory();
-    getCurrentUserUseCase = new GetCurrentUserUseCase(userRepository);
+    accessTokenService = container.get<AccessTokenService>(
+      TYPE.AccessTokenService,
+    );
+
+    getCurrentUserUseCase = new GetCurrentUserUseCase(
+      userRepository,
+      accessTokenService,
+    );
   });
 
-  test('should return error when token is invalid', async () => {
+  test('should return error when user is not valid', async () => {
     const getCurrentUserResult =
-      await getCurrentUserUseCase.execute('invalid token');
+      await getCurrentUserUseCase.execute('invalid user');
 
     expect(getCurrentUserResult).toMatchObject({
       isErr: true,
@@ -44,7 +55,7 @@ describe('Get current user usecase', () => {
     });
 
     const getCurrentUserResult =
-      await getCurrentUserUseCase.execute('valid token');
+      await getCurrentUserUseCase.execute(createUserDto.id);
 
     expect(getCurrentUserResult).toMatchObject({
       isErr: false,
