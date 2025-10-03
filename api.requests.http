@@ -29,8 +29,8 @@ POST {{baseUrl}}/auth/login
 content-type: application/json
 
 {
- "username": "user42",
- "passwd": "Allt.xp-c0hrhhn@yopmaill.comLL"
+ "username": "bllabla-ok",
+ "passwd": "Allt.xp-c0hrhhn@yopmaill.com"
 }
 
 ### get current user profile

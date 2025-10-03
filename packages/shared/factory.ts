@@ -21,6 +21,7 @@ export function factoryUser(user: Partial<User>): User {
     createdAt: now,
     updatedAt: now,
     status: UserStatus.UNVERIFIED,
+    isFirstLogin: 'yes',
     ...user,
   };
 }
