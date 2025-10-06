@@ -99,15 +99,28 @@ export class UserController {
     if (updateUserProfileResult.isErr) {
       const error = updateUserProfileResult.error;
 
-      if (error === UpdateUserProfileError.USER_NOT_FOUND) {
-        resp.status(404).send('user not found');
-        return;
-      }
-
-      resp.status(500).send('server internal error, please retry later');
+      this.handleUpdateUserProfileInfosError(error, resp);
       return;
     }
 
     resp.status(200).send('updated user successfully');
+  }
+
+  private handleUpdateUserProfileInfosError(
+    error: UpdateUserProfileError,
+    resp: Response,
+  ): Response {
+    switch (error) {
+      case UpdateUserProfileError.USER_NOT_FOUND:
+        return resp.status(404).send('user not found');
+      case UpdateUserProfileError.USERNAME_ALREADY_EXISTS:
+        return resp.status(409).send('username already used');
+      case UpdateUserProfileError.EMAIL_AREDAY_EXISTS:
+        return resp.status(409).send('email already used');
+      default:
+        return resp
+          .status(500)
+          .send('server internal error, please retry later');
+    }
   }
 }

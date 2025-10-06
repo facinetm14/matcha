@@ -37,7 +37,7 @@ content-type: application/json
 # return status 200 -> successfully fetched user profile
 GET {{baseUrl}}/users/me
 Content-Type: application/json
-Authorization: Bearer {{accessToken}}
+Authorization: Bearer {{accessToken}} 8sgu7y-mgfk656s-r6ypiu-hm3gz8
 
 ### check user identifier availability
 # return status 200 -> successfully checked user identifier availability
@@ -91,12 +91,13 @@ Authorization: Bearer {{accessToken}} {{refreshToken}}
 
 ### update user infos
 PATCH {{baseUrl}}/users/update
-Authorization: Bearer {{accessToken}}
+Authorization: Bearer {{accessToken}} {{refreshToken}}
 Content-Type: application/json
 
 {
   "user": {
-    "gender": "Male",
+    "username": "user4",
+    "gender": "Femal",
     "sexualOrientation": "Hetero",
     "bio": "lorem dkskdsd"
   }

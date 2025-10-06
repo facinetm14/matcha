@@ -13,7 +13,7 @@ export function injectAuthorizationToken(
 ) {
   const authorization = req.headers['authorization'];
   if (authorization && authorization.startsWith('Bearer ')) {
-    const accessToken = authorization.split(' ')[1];
+    const [, accessToken, refresh] = authorization.split(' ');
 
     if (!accessToken) {
       resp.status(401).send('Unauthorized');
@@ -21,6 +21,7 @@ export function injectAuthorizationToken(
     }
 
     req.token = accessToken;
+    req.refresh = refresh;
     return next();
   }
 

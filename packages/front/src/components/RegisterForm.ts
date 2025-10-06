@@ -66,7 +66,6 @@ export default defineComponent({
         }
 
         const isAvailable = await isEmailAvailable(v);
-        console.log({ isAvailable });
         if (!isAvailable) {
           return 'This email is already used';
         }
