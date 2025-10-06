@@ -22,6 +22,28 @@ export class UpdateUserProfileUseCase {
     const { user, interests } = updateUserProfileDto;
 
     if (user) {
+      const isUsernameUsed = user.username
+        ? !!(await this.userRepository.findUserByUniqKey(
+            UserUniqKeys.username,
+            user.username,
+          ))
+        : false;
+
+      if (isUsernameUsed) {
+        return Err(UpdateUserProfileError.USERNAME_ALREADY_EXISTS);
+      }
+
+      const isEmailUsed = user.email
+        ? !!(await this.userRepository.findUserByUniqKey(
+            UserUniqKeys.EMAIL,
+            user.email,
+          ))
+        : false;
+
+      if (isEmailUsed) {
+        return Err(UpdateUserProfileError.USERNAME_ALREADY_EXISTS);
+      }
+
       updatedUser = await this.userRepository.update(userId, user);
     }
 
