@@ -5,6 +5,7 @@ import { UserUniqKeys } from '../../core/domain/enums/user-uniq-keys.enum';
 import { UserRepository } from '../../core/ports/repositories/user.repository';
 import { factoryUser } from '@shared/factory';
 import { hashPassword } from '../../../../shared/password';
+import { UserProfile } from '@/core/domain/entities/user-profile.entity';
 
 export class UserRepositoryInMemory implements UserRepository {
   private users: User[];
@@ -58,5 +59,14 @@ export class UserRepositoryInMemory implements UserRepository {
     }
 
     return null;
+  }
+
+  async findUserProfileById(userId: string): Promise<UserProfile | null> {
+    const user = this.users.find((user) => user.id === userId);
+    if (!user) {
+      return null;
+    }
+
+    return Promise.resolve({ user, interests: [] });
   }
 }

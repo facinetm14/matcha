@@ -1,20 +1,38 @@
+import { UserInterest } from '@/core/domain/entities/user-interest.entity';
 import { UserInterestColumns } from '@/core/domain/enums/user-interest-columns.enum';
 import { UserInterestRepository } from '@/core/ports/repositories/user-interest.repository';
 import { Logger } from '@/core/ports/services/logger.service';
 import { TYPE } from '@/infrastructure/config/inversify-type';
 import { pgClient } from '@/infrastructure/persistence/data-source';
 import { injectable, inject } from 'inversify';
+import { mapUserInterestModelToEntity } from '../mappers/map-user-interest-model-to-entity';
+import { UserInterestModel } from '@/infrastructure/persistence/models/user-interest.model';
+import { uuid } from '@shared/uuid';
 
 @injectable()
 export class UserInterestRepositoryDb implements UserInterestRepository {
   constructor(@inject(TYPE.Logger) private readonly logger: Logger) {}
 
-  async create(id: string, userId: string, interest: string): Promise<void> {
+  async bulkCreate(userId: string, interests: string[]): Promise<void> {
+    if (!interests || interests.length === 0) return;
+
+    const values: unknown[] = [];
+    const valuePlaceholders = interests
+      .map((interest, i) => {
+        const baseIndex = i * 3;
+        const id = uuid();
+        values.push(id, userId, interest);
+        return `($${baseIndex + 1}, $${baseIndex + 2}, $${baseIndex + 3})`;
+      })
+      .join(', ');
+
     const insertQuery = {
       text: `
-          INSERT INTO user_interests(id, user_id, interest)
-          VALUES($1, $2, $3);`,
-      values: [id, userId, interest],
+      INSERT INTO user_interests (id, user_id, interest)
+      VALUES ${valuePlaceholders}
+      ON CONFLICT (user_id, interest) DO NOTHING;
+    `,
+      values,
     };
 
     try {
@@ -22,7 +40,7 @@ export class UserInterestRepositoryDb implements UserInterestRepository {
       await pgClient.query(insertQuery);
       connexion.release();
     } catch (error) {
-      const errorMessage = `Failed to register user: ${error}`;
+      const errorMessage = `Failed to insert user interests: ${error}`;
       this.logger.error(errorMessage);
     }
   }
@@ -30,15 +48,32 @@ export class UserInterestRepositoryDb implements UserInterestRepository {
   async findAllByColumn(
     column: UserInterestColumns,
     value: string,
-  ): Promise<string[]> {
+  ): Promise<UserInterest[]> {
     const queryUser = {
-      text: `SELECT interest FROM user_interests WHERE ${column} = $1 LIMIT 1`,
+      text: `SELECT * FROM user_interests WHERE ${column} = $1`,
       values: [value],
     };
 
     const connexion = await pgClient.connect();
     const result = await pgClient.query(queryUser);
     connexion.release();
-    return result.rows as string[];
+
+    console.log(result.rows);
+    return [];
+  }
+
+  async findAll(): Promise<UserInterest[]> {
+    const queryUser = {
+      text: `SELECT * FROM user_interests`,
+    };
+
+    const connexion = await pgClient.connect();
+    const result = await pgClient.query(queryUser);
+    connexion.release();
+
+    const userInterestRawList = result.rows as UserInterestModel[];
+    return userInterestRawList.map((userInterest) =>
+      mapUserInterestModelToEntity(userInterest),
+    );
   }
 }

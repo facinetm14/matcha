@@ -14,4 +14,5 @@ export type User = {
   gender?: string;
   sexualOrientation?: string;
   bio?: string;
+  interests?: string[]
 };

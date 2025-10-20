@@ -46,7 +46,7 @@ export class UserController {
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { passwd, ...user } = getCurrentUserResult.data;
+    const { passwd, ...user } = getCurrentUserResult.data.user;
 
     resp.status(200).json(user);
   }
@@ -83,7 +83,6 @@ export class UserController {
       return;
     }
     const userId = connectedUserResult.data;
-
     const parsedBody = UpdateUserProfileDtoSchema.safeParse(req.body);
 
     if (!parsedBody.success) {
