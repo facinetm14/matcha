@@ -29,7 +29,7 @@ POST {{baseUrl}}/auth/login
 content-type: application/json
 
 {
- "username":"user42",
+ "username":"bllabla-ok",
  "passwd": "Allt.xp-c0hrhhn@yopmaill.comLLLL"
 }
 
@@ -37,7 +37,7 @@ content-type: application/json
 # return status 200 -> successfully fetched user profile
 GET {{baseUrl}}/users/me
 Content-Type: application/json
-Authorization: Bearer {{accessToken}} 8sgu7y-mgfk656s-r6ypiu-hm3gz8
+Authorization: Bearer {{accessToken}} {{refreshToken}}
 
 ### check user identifier availability
 # return status 200 -> successfully checked user identifier availability
@@ -64,13 +64,12 @@ POST {{baseUrl}}/auth/reset-password
 Content-Type: application/json
 
 {
-  "email": "testing-user-42@yopmail.com"
+  "email": "testing-user-42@yopmaill.com"
 }
 
 ### confirm reset password
 # return status 200 -> success
-POST {{baseUrl}}/auth/confirm-reset-password/rin7lk-mgb0mgu3-zx3ui3-qzsczq
-
+POST {{baseUrl}}/auth/confirm-reset-password/uqhw2a-mgz0ujoi-b86ye1-8hax7a
 Content-Type: application/json
 
 
@@ -96,9 +95,10 @@ Content-Type: application/json
 
 {
   "user": {
-    "username": "user4",
-    "gender": "Femal",
+    "firstName": "Petit",
+    "gender": "Male",
     "sexualOrientation": "Hetero",
     "bio": "lorem dkskdsd"
-  }
+  },
+  "interests": ["coding", "singing", "dancing"]
 }

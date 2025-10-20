@@ -3,6 +3,7 @@ import { UserProfile } from '@/core/domain/entities/user-profile.entity';
 import { UserUniqKeys } from '@/core/domain/enums/user-uniq-keys.enum';
 import { UpdateUserProfileError } from '@/core/domain/errors/update-user-profile.error';
 import { Err, Ok, Result } from '@/core/domain/utils/result';
+import { UserInterestRepository } from '@/core/ports/repositories/user-interest.repository';
 import { UserRepository } from '@/core/ports/repositories/user.repository';
 import { TYPE } from '@/infrastructure/config/inversify-type';
 import { injectable, inject } from 'inversify';
@@ -12,6 +13,8 @@ export class UpdateUserProfileUseCase {
   constructor(
     @inject(TYPE.UserRepository)
     private readonly userRepository: UserRepository,
+    @inject(TYPE.UserInterestRepository)
+    private readonly userInterestRepository: UserInterestRepository,
   ) {}
 
   async execute(
@@ -59,7 +62,7 @@ export class UpdateUserProfileUseCase {
     }
 
     if (interests) {
-      // TODO tobe implemented
+      await this.userInterestRepository.bulkCreate(updatedUser.id, interests);
     }
 
     return Ok({ user: updatedUser, interests: [] });
