@@ -25,4 +25,12 @@ UserRouter.patch(
     userController.updateUserProfile(req, resp);
   },
 );
+
+// UserRouter.post(
+//   `/pictures`,
+//   injectAuthorizationToken,
+//   (req: Request, resp: Response) => {
+//     userController.uploadPictures(req, resp);
+//   },
+// );
 export default UserRouter;
