@@ -13,4 +13,4 @@ CREATE TABLE IF NOT EXISTS users_tokens (
 
 
 --Down Migration
-DROP TABLE IF EXISTS users_tokens CASCADE;
+DROP TABLE IF EXISTS users_tokens;

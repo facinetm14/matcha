@@ -29,15 +29,15 @@ POST {{baseUrl}}/auth/login
 content-type: application/json
 
 {
- "username": "bllabla-ok",
- "passwd": "Allt.xp-c0hrhhn@yopmaill.com"
+ "username":"bllabla-ok",
+ "passwd": "Allt.xp-c0hrhhn@yopmaill.comLLLL"
 }
 
 ### get current user profile
 # return status 200 -> successfully fetched user profile
 GET {{baseUrl}}/users/me
 Content-Type: application/json
-Authorization: Bearer {{accessToken}}
+Authorization: Bearer {{accessToken}} {{refreshToken}}
 
 ### check user identifier availability
 # return status 200 -> successfully checked user identifier availability
@@ -64,12 +64,12 @@ POST {{baseUrl}}/auth/reset-password
 Content-Type: application/json
 
 {
-  "email": "testing-user-42@yopmail.com"
+  "email": "testing-user-42@yopmaill.com"
 }
 
 ### confirm reset password
 # return status 200 -> success
-POST {{baseUrl}}/auth/confirm-reset-password/{{refreshToken}}
+POST {{baseUrl}}/auth/confirm-reset-password/uqhw2a-mgz0ujoi-b86ye1-8hax7a
 Content-Type: application/json
 
 
@@ -87,3 +87,18 @@ Content-Type: application/json
 ### logout
 POST {{baseUrl}}/auth/logout
 Authorization: Bearer {{accessToken}} {{refreshToken}}
+
+### update user infos
+PATCH {{baseUrl}}/users/update
+Authorization: Bearer {{accessToken}} {{refreshToken}}
+Content-Type: application/json
+
+{
+  "user": {
+    "firstName": "Petit",
+    "gender": "Male",
+    "sexualOrientation": "Hetero",
+    "bio": "lorem dkskdsd"
+  },
+  "interests": ["coding", "singing", "dancing"]
+}

@@ -1,6 +1,6 @@
 import express, { Express } from 'express';
 import { baseApi } from './adapters/web/consts/base.api';
-import AuthRouter from './adapters/web/routes/auth.route'
+import AuthRouter from './adapters/web/routes/auth.route';
 import UserRouter from './adapters/web/routes/user.routes';
 
 import DefaultRouter from './adapters/web/routes/default.route';
@@ -22,7 +22,7 @@ export const createApp = (): Express => {
   app.use(cors());
   app.use(helmet());
   app.use(CookieParser());
-  app.use(express.json());
+  app.use(express.json({ limit: '10mb' }));
 
   app.use(`${baseApi}`, DefaultRouter);
   app.use(`${baseApi}/auth`, rateLimiter, AuthRouter);

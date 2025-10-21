@@ -16,11 +16,12 @@ export async function getConnectedUserId(
   }
 
   const verifyAccessTokenResult = await verifyAccessToken(accessToken);
+  const refreshToken = req.refresh;
+
   if (!verifyAccessTokenResult.isErr) {
     return Ok(verifyAccessTokenResult.data);
   }
 
-  const refreshToken = req.refresh;
   if (!refreshToken) {
     return Err(VerifyTokenError.INVALID_TOKEN);
   }

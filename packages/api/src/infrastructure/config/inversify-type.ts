@@ -8,4 +8,5 @@ export const TYPE = {
   EmailService: Symbol.for('EmailService'),
   CacheService: Symbol.for('CacheService'),
   AccessTokenService: Symbol.for('AccessTokenService'),
+  UserInterestRepository: Symbol.for('UserInterestRepository')
 };
