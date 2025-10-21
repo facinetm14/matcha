@@ -3,9 +3,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { authApi } from '@/api/auth.api';
-import { useAuthStore } from '@/store/authStore';
-
 import {
   Card,
   CardContent,
@@ -15,62 +12,34 @@ import {
 } from '@/components/ui/card';
 import { Heart, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
-import { useMutation } from '@tanstack/react-query';
 
-export default function Login() {
+export default function CreateNewPassword() {
   const navigate = useNavigate();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const updateLoginStatus = useAuthStore((state) => state.updateLoginStatus);
-
   const [errors, setErrors] = useState<{
     username?: string;
     password?: string;
   }>({});
-
-  const loginMutation = useMutation({
-    mutationFn: async ({
-      username,
-      password,
-    }: {
-      username: string;
-      password: string;
-    }) => {
-      const loginResult = await authApi.signIn(username, password);
-      if (loginResult.status === 200) {
-        return true;
-      }
-      throw new Error(
-        'Login failed. Please check your credentials and try again.',
-      );
-    },
-    onSuccess: (data: boolean) => {
-      toast.success("You're logged in!");
-      localStorage.setItem('isLoggedIn', 'true');
-      updateLoginStatus(data);
-      navigate('/browse');
-    },
-    onError: (error) => {
-      toast.error(error.message);
-    },
-  });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const newErrors: { username?: string; password?: string } = {};
 
     if (!username) {
-      newErrors.username = 'username is required.';
+      newErrors.username = 'This field is required.';
     }
-
     if (!password) {
-      newErrors.password = 'password is required.';
+      newErrors.password = 'This field is required.';
     }
 
     setErrors(newErrors);
 
     if (Object.keys(newErrors).length === 0) {
-      loginMutation.mutate({ username, password });
+      // Mock login - in real app, this would validate against backend
+      localStorage.setItem('isAuthenticated', 'true');
+      toast.success('Welcome back!');
+      navigate('/browse');
     }
   };
 

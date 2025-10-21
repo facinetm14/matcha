@@ -1,24 +1,40 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import ForgotPassword from "./pages/ForgotPassword";
-import Browse from "./pages/Browse";
-import Profile from "./pages/Profile";
-import ProfileView from "./pages/ProfileView";
-import Chat from "./pages/Chat";
-import Search from "./pages/Search";
-import Notifications from "./pages/Notifications";
-import NotFound from "./pages/NotFound";
+import { Toaster } from '@/components/ui/toaster';
+import { Toaster as Sonner } from '@/components/ui/sonner';
+import { TooltipProvider } from '@/components/ui/tooltip';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import ForgotPassword from './pages/ForgotPassword';
+import Browse from './pages/Browse';
+import Profile from './pages/Profile';
+import ProfileView from './pages/ProfileView';
+import Chat from './pages/Chat';
+import Search from './pages/Search';
+import Notifications from './pages/Notifications';
+import NotFound from './pages/NotFound';
+import { VerifyEmail } from './pages/VerifyEmail';
+import { useAuthStore } from './store/authStore';
+import CreateNewPassword from './pages/CreateNewPassword';
 
 const queryClient = new QueryClient();
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
-  return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
+  const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
+  return isLoggedIn || localStorage.getItem('isLoggedIn') ? (
+    <>{children}</>
+  ) : (
+    <Navigate to="/login" replace />
+  );
+};
+
+const RedirectToDashboard = ({ children }: { children: React.ReactNode }) => {
+  const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
+  return !isLoggedIn && !localStorage.getItem('isLoggedIn') ? (
+    <>{children}</>
+  ) : (
+    <Navigate to="/browse" replace />
+  );
 };
 
 const App = () => (
@@ -29,16 +45,83 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Navigate to="/browse" replace />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/browse" element={<ProtectedRoute><Browse /></ProtectedRoute>} />
-          <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-          <Route path="/profile/:id" element={<ProtectedRoute><ProfileView /></ProtectedRoute>} />
-          <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
-          <Route path="/search" element={<ProtectedRoute><Search /></ProtectedRoute>} />
-          <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          <Route
+            path="/login"
+            element={
+              <RedirectToDashboard>
+                <Login />
+              </RedirectToDashboard>
+            }
+          />
+          <Route
+            path="/register"
+            element={
+              <RedirectToDashboard>
+                <Register />
+              </RedirectToDashboard>
+            }
+          />
+          <Route path="/verify/:token" element={<VerifyEmail />} />
+          <Route
+            path="/confirm-reset-password/:token"
+            element={<CreateNewPassword />}
+          />
+          <Route
+            path="/forgot-password"
+            element={
+              <RedirectToDashboard>
+                <ForgotPassword />
+              </RedirectToDashboard>
+            }
+          />
+          <Route
+            path="/browse"
+            element={
+              <ProtectedRoute>
+                <Browse />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile/:id"
+            element={
+              <ProtectedRoute>
+                <ProfileView />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/chat"
+            element={
+              <ProtectedRoute>
+                <Chat />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/search"
+            element={
+              <ProtectedRoute>
+                <Search />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/notifications"
+            element={
+              <ProtectedRoute>
+                <Notifications />
+              </ProtectedRoute>
+            }
+          />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

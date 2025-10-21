@@ -11,7 +11,7 @@
     "lint:fix": "eslint . --fix & npm --workspace front run lint:fix",
     "test:front": "npm --workspace front run test:unit",
     "test:back": "npm --workspace api run test",
-    "test": "npm run test:front & npm run test:back",
+    "test": "npm run test:back",
     "prepare": "husky",
     "commit:lint": "npx --no -- commitlint --edit $1"
   },

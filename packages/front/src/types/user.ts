@@ -1,7 +1,7 @@
 export type Gender = 'male' | 'female' | 'non-binary';
 export type SexualPreference = 'male' | 'female' | 'both';
 
-export interface User {
+export interface UserProfile {
 	id: string;
 	username: string;
 	email: string;

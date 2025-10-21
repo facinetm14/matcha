@@ -3,22 +3,34 @@ import { Navigation } from '@/components/Navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Heart, X, Flag, Ban, MapPin, Star, Circle } from 'lucide-react';
-import { mockUsers, mockNotifications, mockMessages } from '@/lib/mockData';
+import {
+  ArrowLeft,
+  Heart,
+  X,
+  Flag,
+  Ban,
+  MapPin,
+  Star,
+  Circle,
+} from 'lucide-react';
+import { mockUsers, mockNotifications, mockMessages } from '@/utils/mockData';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
 
 export default function ProfileView() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const user = mockUsers.find(u => u.id === id);
-  const unreadNotifications = mockNotifications.filter(n => !n.read).length;
-  const unreadMessages = mockMessages.filter(m => !m.read).length;
+  const user = mockUsers.find((u) => u.id === id);
+  const unreadNotifications = mockNotifications.filter((n) => !n.read).length;
+  const unreadMessages = mockMessages.filter((m) => !m.read).length;
 
   if (!user) {
     return (
       <div className="min-h-screen bg-background pb-20 md:pt-20">
-        <Navigation unreadNotifications={unreadNotifications} unreadMessages={unreadMessages} />
+        <Navigation
+          unreadNotifications={unreadNotifications}
+          unreadMessages={unreadMessages}
+        />
         <div className="flex items-center justify-center h-[calc(100vh-10rem)]">
           <p className="text-muted-foreground">User not found</p>
         </div>
@@ -45,14 +57,13 @@ export default function ProfileView() {
 
   return (
     <div className="min-h-screen bg-background pb-20 md:pt-20">
-      <Navigation unreadNotifications={unreadNotifications} unreadMessages={unreadMessages} />
-      
+      <Navigation
+        unreadNotifications={unreadNotifications}
+        unreadMessages={unreadMessages}
+      />
+
       <div className="max-w-4xl mx-auto px-4 pt-6 md:pt-8">
-        <Button 
-          variant="ghost" 
-          onClick={() => navigate(-1)}
-          className="mb-4"
-        >
+        <Button variant="ghost" onClick={() => navigate(-1)} className="mb-4">
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back
         </Button>
@@ -70,12 +81,14 @@ export default function ProfileView() {
                 {user.isOnline && (
                   <div className="absolute top-4 left-4 flex items-center gap-2 bg-background/20 backdrop-blur-sm px-3 py-2 rounded-full">
                     <Circle className="w-2 h-2 fill-green-500 text-green-500" />
-                    <span className="text-white text-sm font-medium">Online</span>
+                    <span className="text-white text-sm font-medium">
+                      Online
+                    </span>
                   </div>
                 )}
               </div>
             </Card>
-            
+
             <div className="grid grid-cols-2 gap-4">
               {user.photos.slice(1, 5).map((photo, index) => (
                 <Card key={index} className="overflow-hidden shadow-card">
@@ -106,7 +119,10 @@ export default function ProfileView() {
                     </div>
                     {!user.isOnline && user.lastSeen && (
                       <p className="text-sm text-muted-foreground">
-                        Active {formatDistanceToNow(user.lastSeen, { addSuffix: true })}
+                        Active{' '}
+                        {formatDistanceToNow(user.lastSeen, {
+                          addSuffix: true,
+                        })}
                       </p>
                     )}
                   </div>
@@ -125,7 +141,11 @@ export default function ProfileView() {
                   <h3 className="font-semibold mb-3">Interests</h3>
                   <div className="flex flex-wrap gap-2">
                     {user.tags.map((tag, index) => (
-                      <Badge key={index} variant="secondary" className="bg-gradient-romantic text-white">
+                      <Badge
+                        key={index}
+                        variant="secondary"
+                        className="bg-gradient-romantic text-white"
+                      >
                         {tag}
                       </Badge>
                     ))}
@@ -148,15 +168,15 @@ export default function ProfileView() {
                 </div>
 
                 <div className="flex gap-3">
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     className="flex-1"
                     onClick={handlePass}
                   >
                     <X className="w-4 h-4 mr-2" />
                     Pass
                   </Button>
-                  <Button 
+                  <Button
                     className="flex-1 bg-gradient-romantic"
                     onClick={handleLike}
                   >
@@ -170,8 +190,8 @@ export default function ProfileView() {
             <Card className="shadow-card">
               <CardContent className="p-4">
                 <div className="flex gap-2">
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     size="sm"
                     className="flex-1"
                     onClick={handleReport}
@@ -179,8 +199,8 @@ export default function ProfileView() {
                     <Flag className="w-4 h-4 mr-2" />
                     Report
                   </Button>
-                  <Button 
-                    variant="destructive" 
+                  <Button
+                    variant="destructive"
                     size="sm"
                     className="flex-1"
                     onClick={handleBlock}
