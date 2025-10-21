@@ -63,7 +63,7 @@ const App = () => (
           />
           <Route path="/verify/:token" element={<VerifyEmail />} />
           <Route
-            path="/confirm-reset-password/:token"
+            path="/new-password/:token"
             element={<CreateNewPassword />}
           />
           <Route

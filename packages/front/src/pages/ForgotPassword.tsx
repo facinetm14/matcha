@@ -3,24 +3,47 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Heart, Sparkles, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
+import { authApi } from '@/api/auth.api';
+import { useMutation } from '@tanstack/react-query';
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
 
+  const sendResetPasswordLinkMutation = useMutation({
+    mutationFn: async (email: string) => {
+      const response = await authApi.sendResetPasswordRequest(email);
+      if (response.status === 200) {
+        return true;
+      }
+      throw new Error('Failed to send reset password link. Please try again.');
+    },
+    onSuccess: () => {
+      toast.success('Password reset link sent to your email!');
+      setSubmitted(true);
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!email) {
       toast.error('Please enter your email address');
       return;
     }
-    
-    setSubmitted(true);
-    toast.success('Password reset link sent to your email!');
+    sendResetPasswordLinkMutation.mutate(email);
   };
 
   if (submitted) {
@@ -81,13 +104,16 @@ export default function ForgotPassword() {
               />
             </div>
 
-            <Button type="submit" className="w-full h-12 text-base font-semibold">
+            <Button
+              type="submit"
+              className="w-full h-12 text-base font-semibold"
+            >
               SEND RESET LINK
             </Button>
 
             <div className="text-center">
-              <Link 
-                to="/login" 
+              <Link
+                to="/login"
                 className="text-sm text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-2"
               >
                 <ArrowLeft className="w-4 h-4" />
