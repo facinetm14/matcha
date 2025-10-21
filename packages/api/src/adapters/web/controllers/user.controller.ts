@@ -124,7 +124,7 @@ export class UserController {
   }
 
   async uploadPictures(req: Request, resp: Response) {
-
+    console.log({req, resp})
   }
 
 

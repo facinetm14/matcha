@@ -1,4 +1,4 @@
-import { User, Match, Message, Notification } from '@/types/user';
+import { User, Match, Message, Notification, UserProfile } from '@/types/user';
 
 const firstNames = ['Emma', 'Liam', 'Olivia', 'Noah', 'Ava', 'Ethan', 'Sophia', 'Mason', 'Isabella', 'William', 'Mia', 'James', 'Charlotte', 'Benjamin', 'Amelia', 'Lucas', 'Harper', 'Henry', 'Evelyn', 'Alexander'];
 const lastNames = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis', 'Rodriguez', 'Martinez', 'Hernandez', 'Lopez', 'Gonzalez', 'Wilson', 'Anderson', 'Thomas', 'Taylor', 'Moore', 'Jackson', 'Martin'];
@@ -58,7 +58,7 @@ export const generateMockUsers = (count: number = 50): User[] => {
   return users;
 };
 
-export const mockCurrentUser: User = {
+export const mockCurrentUser: UserProfile = {
   id: 'current-user',
   username: 'johndoe',
   email: 'john.doe@example.com',

@@ -26,6 +26,7 @@ export async function verifyAccessToken(
       return Ok(payload.sub as string);
     }
     return Err(VerifyTokenError.INVALID_TOKEN);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (_) {
     return Err(VerifyTokenError.TOKEN_EXPIRED);
   }

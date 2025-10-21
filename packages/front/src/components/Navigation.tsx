@@ -1,19 +1,31 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Heart, Search, MessageCircle, User, Bell, LogOut } from 'lucide-react';
 import { Badge } from './ui/badge';
-import { logout } from '@/lib/auth';
-import { cn } from '@/lib/utils';
+import { logout } from '@/utils/auth';
+import { cn } from '@/utils/utils';
 
 interface NavigationProps {
   unreadNotifications?: number;
   unreadMessages?: number;
 }
 
-type LinkItem = { path: string; icon: React.ElementType; label: string; badge?: number };
-type ActionItem = { action: () => void; icon: React.ElementType; label: string };
+type LinkItem = {
+  path: string;
+  icon: React.ElementType;
+  label: string;
+  badge?: number;
+};
+type ActionItem = {
+  action: () => void;
+  icon: React.ElementType;
+  label: string;
+};
 type NavItem = LinkItem | ActionItem;
 
-export const Navigation = ({ unreadNotifications = 0, unreadMessages = 0 }: NavigationProps) => {
+export const Navigation = ({
+  unreadNotifications = 0,
+  unreadMessages = 0,
+}: NavigationProps) => {
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -22,8 +34,18 @@ export const Navigation = ({ unreadNotifications = 0, unreadMessages = 0 }: Navi
   const navItems: NavItem[] = [
     { path: '/browse', icon: Heart, label: 'Browse' },
     { path: '/search', icon: Search, label: 'Search' },
-    { path: '/chat', icon: MessageCircle, label: 'Chat', badge: unreadMessages },
-    { path: '/notifications', icon: Bell, label: 'Notifications', badge: unreadNotifications },
+    {
+      path: '/chat',
+      icon: MessageCircle,
+      label: 'Chat',
+      badge: unreadMessages,
+    },
+    {
+      path: '/notifications',
+      icon: Bell,
+      label: 'Notifications',
+      badge: unreadNotifications,
+    },
     { path: '/profile', icon: User, label: 'Profile' },
     { action: () => logout(navigate), icon: LogOut, label: 'Logout' },
   ];
@@ -54,7 +76,9 @@ export const Navigation = ({ unreadNotifications = 0, unreadMessages = 0 }: Navi
                     to={item.path}
                     className={cn(
                       baseClasses,
-                      active ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
+                      active
+                        ? 'text-primary'
+                        : 'text-muted-foreground hover:text-foreground',
                     )}
                   >
                     <div className="relative">
@@ -75,7 +99,10 @@ export const Navigation = ({ unreadNotifications = 0, unreadMessages = 0 }: Navi
                   key={item.label}
                   type="button"
                   onClick={item.action}
-                  className={cn(baseClasses, 'text-muted-foreground hover:text-foreground')}
+                  className={cn(
+                    baseClasses,
+                    'text-muted-foreground hover:text-foreground',
+                  )}
                   aria-label={item.label}
                 >
                   <Icon className="w-6 h-6" />
