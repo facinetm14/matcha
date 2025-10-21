@@ -1,6 +1,6 @@
 import { UserIdentifier } from '../../../shared/user-identifier';
 
-const API_BASE_ROUTE = import.meta.env.VITE_API_BASE_ROUTE || '/api/v1';
+const API_BASE_ROUTE = '/api/v1';
 
 const getMe = async () => {
   return fetch(`${API_BASE_ROUTE}/users/me`, {

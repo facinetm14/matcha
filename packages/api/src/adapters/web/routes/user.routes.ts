@@ -6,12 +6,31 @@ const userController = container.get(UserController);
 
 const UserRouter = Router();
 
-UserRouter.get(`/me`, injectAuthorizationToken, (req: Request, resp: Response) => {
-  userController.getMe(req, resp);
-});
+UserRouter.get(
+  `/me`,
+  injectAuthorizationToken,
+  (req: Request, resp: Response) => {
+    userController.getMe(req, resp);
+  },
+);
 
 UserRouter.post(`/check-identifier`, (req: Request, resp: Response) => {
   userController.checkUserIdentifierAvailability(req, resp);
 });
 
+UserRouter.patch(
+  `/update`,
+  injectAuthorizationToken,
+  (req: Request, resp: Response) => {
+    userController.updateUserProfile(req, resp);
+  },
+);
+
+UserRouter.post(
+  `/pictures`,
+  injectAuthorizationToken,
+  (req: Request, resp: Response) => {
+    userController.uploadPictures(req, resp);
+  },
+);
 export default UserRouter;

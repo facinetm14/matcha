@@ -1,10 +1,9 @@
-import { User } from '../../domain/entities/user.entity';
 import { Err, Ok, Result } from '../../domain/utils/result';
 import { VerifyTokenError } from '../../domain/errors/verify-token.error';
 import { inject, injectable } from 'inversify';
 import { TYPE } from '../../../infrastructure/config/inversify-type';
 import { UserRepository } from '../../ports/repositories/user.repository';
-import { UserUniqKeys } from '../../domain/enums/user-uniq-keys.enum';
+import { UserProfile } from '@/core/domain/entities/user-profile.entity';
 
 @injectable()
 export class GetCurrentUserUseCase {
@@ -13,20 +12,21 @@ export class GetCurrentUserUseCase {
     private readonly userRepository: UserRepository,
   ) {}
 
-  async execute(userId: string): Promise<Result<User, VerifyTokenError>> {
-    const user = await this.userRepository.findUserByUniqKey(
-      UserUniqKeys.ID,
-      userId,
-    );
+  async execute(
+    userId: string,
+  ): Promise<Result<UserProfile, VerifyTokenError>> {
+    const userProfile = await this.userRepository.findUserProfileById(userId);
 
-    if (!user) {
+    await this.userRepository.findUserProfileById(userId);
+
+    if (!userProfile) {
       return Err(VerifyTokenError.USER_NOT_FOUND);
     }
 
-    if (user.isFirstLogin) {
-      await this.userRepository.update(user.id, { isFirstLogin: null });
+    if (userProfile.user.isFirstLogin) {
+      await this.userRepository.update(userId, { isFirstLogin: null });
     }
 
-    return Ok(user);
+    return Ok(userProfile);
   }
 }

@@ -4,7 +4,12 @@ import { UserUniqKeys } from '../../core/domain/enums/user-uniq-keys.enum';
 import { UserRepository } from '../../core/ports/repositories/user.repository';
 import { pgClient } from '../../infrastructure/persistence/data-source';
 import { inject, injectable } from 'inversify';
-import { mapUserModelToEntity } from '../mappers/user-model-to-entity';
+import { UserProfile } from '@/core/domain/entities/user-profile.entity';
+
+import {
+  buildUserProfileFromUserAggregate,
+  mapUserModelToEntity,
+} from '../mappers/user-model-to-entity';
 import { Logger } from '../../core/ports/services/logger.service';
 import { TYPE } from '../../infrastructure/config/inversify-type';
 import { mapEnityOrDtoToModel } from '../mappers/map-entity-or-dto-to-model';
@@ -112,5 +117,26 @@ export class UserRepositoryDb implements UserRepository {
     connexion.release();
 
     return this.findUserByUniqKey(UserUniqKeys.ID, id);
+  }
+
+  async findUserProfileById(id: string): Promise<UserProfile | null> {
+    const queryUser = {
+      text: `
+              SELECT u.*, ui.interest FROM users as u
+              LEFT JOIN user_interests as ui ON u.id = ui.user_id 
+              WHERE u.id = $1
+            `,
+      values: [id],
+    };
+
+    const connexion = await pgClient.connect();
+    const result = await pgClient.query(queryUser);
+    connexion.release();
+    const userProfileRawList = result.rows;
+    if (!userProfileRawList.length) {
+      return null;
+    }
+
+    return buildUserProfileFromUserAggregate(userProfileRawList)[0];
   }
 }

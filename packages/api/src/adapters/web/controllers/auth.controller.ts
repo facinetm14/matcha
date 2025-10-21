@@ -306,10 +306,10 @@ export class AuthController {
   }
 
   async logout(req: Request, resp: Response) {
-    clearSessionCookies(resp);
     const refresh = req.cookies.refresh ?? req.refresh;
     await this.logoutUseCase.execute(refresh);
 
+    clearSessionCookies(resp);
     resp.status(200).send('successfully logged out');
   }
 }
