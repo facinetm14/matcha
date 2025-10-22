@@ -11,17 +11,16 @@ export async function getConnectedUserId(
   resp: Response,
 ): Promise<Result<string, VerifyTokenError>> {
   const accessToken = req.token;
-  if (!accessToken) {
-    return Err(VerifyTokenError.INVALID_TOKEN);
+
+  if (accessToken) {
+    const verifyAccessTokenResult = await verifyAccessToken(accessToken);
+
+    if (!verifyAccessTokenResult.isErr) {
+      return Ok(verifyAccessTokenResult.data);
+    }
   }
 
-  const verifyAccessTokenResult = await verifyAccessToken(accessToken);
   const refreshToken = req.refresh;
-
-  if (!verifyAccessTokenResult.isErr) {
-    return Ok(verifyAccessTokenResult.data);
-  }
-
   if (!refreshToken) {
     return Err(VerifyTokenError.INVALID_TOKEN);
   }
@@ -39,7 +38,6 @@ export async function getConnectedUserId(
   });
 
   await accessTokenService.revokeToken(refreshToken);
-
   attachTokensToSecureCookies(resp, newAccessToken);
 
   return Ok(userToken.userId);

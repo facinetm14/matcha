@@ -67,6 +67,18 @@ export class UserRepositoryInMemory implements UserRepository {
       return null;
     }
 
-    return Promise.resolve({ user, interests: [] });
+    return Promise.resolve({
+      ...user,
+      tags: [],
+      photos: [],
+      profilePhoto: '',
+      fameRating: 0,
+      isOnline: false,
+      reported: false,
+      lastSeen: null,
+      likedBy: [],
+      blocked: [],
+      viewedBy: [],
+    });
   }
 }

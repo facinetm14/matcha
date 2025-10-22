@@ -15,7 +15,6 @@ export const VerifyEmail = () => {
       }
 
       const verifyEmailResult = await authApi.verify(token);
-
       if (verifyEmailResult.status === 200) {
         return true;
       }

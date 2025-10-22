@@ -13,4 +13,4 @@ CREATE TABLE IF NOT EXISTS users (
 
 
 -- Down Migration
-DROP TABLE IF EXISTS users CASCADE;
+DROP TABLE IF EXISTS users;

@@ -3,11 +3,13 @@ import type { NavigateFunction } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
 import { UserIdentifier } from '../../../shared/user-identifier';
 import { userApi } from '@/api/user.api';
+import { authApi } from '@/api/auth.api';
 
 export function logout(navigate: NavigateFunction) {
   localStorage.removeItem('isLoggedIn');
   useAuthStore.getState().updateLoginStatus(false);
   toast.success("You're logged out.");
+  authApi.logout();
   navigate('/login');
 }
 

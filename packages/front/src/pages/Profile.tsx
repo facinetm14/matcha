@@ -24,29 +24,28 @@ import {
   Heart as HeartIcon,
   Camera,
 } from 'lucide-react';
-import {
-  mockCurrentUser,
-  mockNotifications,
-  mockMessages,
-} from '@/utils/mockData';
+import { mockNotifications, mockMessages } from '@/utils/mockData';
 import { toast } from 'sonner';
 import { logout } from '@/utils/auth';
-import { Gender, UserProfile } from '@/types/user';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { userApi } from '@/api/user.api';
+import Login from './Login';
+import { useAuthStore } from '@/store/authStore';
+import { useProfileStore } from '@/store/profileStore';
+import { getInitials } from '@/utils/get-initials';
 import { UpdateUserDto } from '@/types/dto/update-user.dto';
-import { useMutation } from '@tanstack/react-query';
-import { userProfileApi } from '@/api/user.api';
+import { Gender } from '@/types/user';
 
 export default function Profile() {
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
-  const [profile, setProfile] = useState(mockCurrentUser);
   const [draft, setDraft] = useState<UpdateUserDto | null>(null);
   const unreadNotifications = mockNotifications.filter(n => !n.read).length;
   const unreadMessages = mockMessages.filter(m => !m.read).length;
 
   const updateProfileMutation = useMutation({
     mutationFn: async (updateUserDto: UpdateUserDto) => {
-      const response = await userProfileApi.updateUserProfile(updateUserDto);
+      const response = await userApi.updateUserProfile(updateUserDto);
       if (response.status === 200) {
         return true;
       }
@@ -54,11 +53,28 @@ export default function Profile() {
     },
     onSuccess: () => {
       toast.success('Profile updated successfully! 🎉');
-      setProfile((prev) => ({ ...prev, ...draft } as UserProfile));
       setIsEditing(false);
     },
     onError: (error) => {
       toast.error(error.message);
+    }
+  });
+  const updateCurrentUserProfile = useProfileStore(
+    (state) => state.updateUserProfile,
+  );
+
+  const profile = useProfileStore((state) => state.user);
+
+  const { isPending, error } = useQuery({
+    queryKey: ['fetchUserProfile'],
+    queryFn: async () => {
+      const currentUserResponse = await userApi.getMe();
+      if (currentUserResponse.status === 200) {
+        const user = await currentUserResponse.json();
+        updateCurrentUserProfile(user);
+        return user;
+      }
+      throw new Error('Failed to fetch user profile');
     },
   });
 
@@ -66,6 +82,17 @@ export default function Profile() {
     if (!draft) return;
     updateProfileMutation.mutate(draft);
   };
+
+  if (isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    toast.error('Failed to load profile. Please try again later.');
+    localStorage.removeItem('isLoggedIn');
+    useAuthStore.getState().updateLoginStatus(false);
+    return <Login />;
+  }
 
   return (
     <div className="min-h-screen bg-background pb-20 md:pt-20">
@@ -82,11 +109,17 @@ export default function Profile() {
               {/* Profile Photo */}
               <div className="relative mx-auto md:mx-0">
                 <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-primary">
-                  <img
-                    src={profile.profilePhoto}
-                    alt={profile.firstName}
-                    className="w-full h-full object-cover"
-                  />
+                  {profile.profilePhoto ? (
+                    <img
+                      src={profile.profilePhoto}
+                      alt={profile.firstName}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-muted text-3xl font-bold text-primary">
+                      {getInitials(profile.firstName, profile.lastName)}
+                    </div>
+                  )}
                 </div>
                 {isEditing && (
                   <Button
@@ -107,7 +140,7 @@ export default function Profile() {
                     </h1>
                     <div className="flex items-center justify-center md:justify-start gap-2 text-muted-foreground mb-2">
                       <MapPin className="w-4 h-4" />
-                      <span>{profile.location.city}</span>
+                      <span>{profile.location?.city ?? 'not defined'}</span>
                     </div>
                     <div className="flex items-center justify-center md:justify-start gap-2">
                       <Star className="w-4 h-4 fill-primary text-primary" />
@@ -126,8 +159,8 @@ export default function Profile() {
                             firstName: profile.firstName,
                             lastName: profile.lastName,
                             gender: profile.gender as Gender,
-                            sexualPreferences: profile.sexualPreferences,
-                            biography: profile.biography,
+                            sexualOrientation: profile.sexualOrientation,
+                            bio: profile.bio,
                             photos: profile.photos,
                             profilePhoto: profile.profilePhoto,
                           });
@@ -164,14 +197,19 @@ export default function Profile() {
                       <Eye className="w-4 h-4" />
                       <span className="text-sm">Views</span>
                     </div>
-                    <p className="text-2xl font-bold text-primary">127</p>
+                    <p className="text-2xl font-bold text-primary">
+                      {' '}
+                      {profile.viewedBy.length}{' '}
+                    </p>
                   </div>
                   <div className="text-center">
                     <div className="flex items-center gap-1 text-muted-foreground">
                       <HeartIcon className="w-4 h-4" />
                       <span className="text-sm">Likes</span>
                     </div>
-                    <p className="text-2xl font-bold text-secondary">43</p>
+                    <p className="text-2xl font-bold text-secondary">
+                      {profile.likedBy.length}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -246,14 +284,14 @@ export default function Profile() {
                   {(['male', 'female', 'non-binary'] as const).map((preference) => (
                     <Button
                     key={preference}
-                    variant={draft.sexualPreferences?.includes(preference) ? "default" : "outline"}
+                    variant={draft.sexualOrientation?.includes(preference) ? "default" : "outline"}
                     onClick={() => {
-                      const currentPreferences = draft?.sexualPreferences ?? [];
+                      const currentPreferences = draft?.sexualOrientation ?? [];
                       const newPreferences = currentPreferences.includes(preference)
                       ? currentPreferences.filter(pref => pref !== preference)
                       : [...currentPreferences, preference];
                       
-                      setDraft({ ...draft, sexualPreferences: newPreferences });
+                      setDraft({ ...draft, sexualOrientation: newPreferences });
                     }}
                     >
                     {preference === 'male' ? 'Male' : preference === 'female' ? 'Female' : 'Non-binary'}
@@ -265,7 +303,7 @@ export default function Profile() {
                   {(['male', 'female', 'non-binary'] as const).map((preference) => (
                     <Button
                     key={preference}
-                    variant={profile.sexualPreferences?.includes(preference) ? "default" : "outline"}
+                    variant={profile.sexualOrientation?.includes(preference) ? "default" : "outline"}
                     >
                     {preference === 'male' ? 'Male' : preference === 'female' ? 'Female' : 'Non-binary'}
                     </Button>
@@ -279,12 +317,12 @@ export default function Profile() {
               <Label>Biography</Label>
               {isEditing ? (
                 <Textarea 
-                  value={draft?.biography ?? ''} 
-                  onChange={(e) => setDraft((d) => ({...(d ?? {}), biography: e.target.value}))}
+                  value={draft?.bio ?? ''} 
+                  onChange={(e) => setDraft((d) => ({...(d ?? {}), bio: e.target.value}))}
                   rows={4}
                 />
               ) : (
-                <p className="p-2 bg-muted rounded">{profile.biography}</p>
+                <p className="p-2 bg-muted rounded">{profile.bio}</p>
               )}
             </div>
 
@@ -307,7 +345,7 @@ export default function Profile() {
             <div className="space-y-2">
               <Label>Photo Gallery</Label>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {profile.photos.map((photo, index) => (
+                {profile.photos?.map((photo, index) => (
                   <div
                     key={index}
                     className="relative aspect-square rounded-lg overflow-hidden border-2 border-border hover:border-primary transition-colors"
