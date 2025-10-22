@@ -17,13 +17,11 @@ export class GetCurrentUserUseCase {
   ): Promise<Result<UserProfile, VerifyTokenError>> {
     const userProfile = await this.userRepository.findUserProfileById(userId);
 
-    await this.userRepository.findUserProfileById(userId);
-
     if (!userProfile) {
       return Err(VerifyTokenError.USER_NOT_FOUND);
     }
 
-    if (userProfile.user.isFirstLogin) {
+    if (userProfile.isFirstLogin) {
       await this.userRepository.update(userId, { isFirstLogin: null });
     }
 

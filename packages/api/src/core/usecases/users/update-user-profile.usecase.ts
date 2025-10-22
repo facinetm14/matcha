@@ -21,7 +21,6 @@ export class UpdateUserProfileUseCase {
     userId: string,
     updateUserProfileDto: UpdateUserProfileDto,
   ): Promise<Result<UserProfile, UpdateUserProfileError>> {
-    let updatedUser = null;
     const { user, interests } = updateUserProfileDto;
 
     if (user) {
@@ -47,24 +46,20 @@ export class UpdateUserProfileUseCase {
         return Err(UpdateUserProfileError.USERNAME_ALREADY_EXISTS);
       }
 
-      updatedUser = await this.userRepository.update(userId, user);
-    }
-
-    if (!updatedUser) {
-      updatedUser = await this.userRepository.findUserByUniqKey(
-        UserUniqKeys.ID,
-        userId,
-      );
-    }
-
-    if (!updatedUser) {
-      return Err(UpdateUserProfileError.USER_NOT_FOUND);
+      await this.userRepository.update(userId, user);
     }
 
     if (interests) {
-      await this.userInterestRepository.bulkCreate(updatedUser.id, interests);
+      await this.userInterestRepository.bulkCreate(userId, interests);
     }
 
-    return Ok({ user: updatedUser, interests: [] });
+    const updatedUserProfileResult =
+      await this.userRepository.findUserProfileById(userId);
+
+    if (!updatedUserProfileResult) {
+      return Err(UpdateUserProfileError.USER_NOT_FOUND);
+    }
+
+    return Ok(updatedUserProfileResult);
   }
 }

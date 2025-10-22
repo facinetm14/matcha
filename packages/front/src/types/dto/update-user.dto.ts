@@ -1,11 +1,13 @@
+import { Gender } from '../user';
+
 export interface UpdateUserDto {
   email?: string;
   firstName?: string;
   lastName?: string;
   age?: number;
-  gender?: 'male' | 'female' | 'non-binary';
-  sexualPreferences?: Array<'male' | 'female' | 'non-binary'>;
-  biography?: string;
+  gender?: Gender;
+  sexualOrientation?: Gender[];
+  bio?: string;
   tags?: string[];
   location?: {
     city?: string;

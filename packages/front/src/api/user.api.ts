@@ -26,10 +26,6 @@ const checkUserIdentifierAvailability = async (
   });
 };
 
-export const userApi = {
-  getMe,
-  checkUserIdentifierAvailability,
-};
 
 const updateUserProfile = async (
   updateUserDto: UpdateUserDto
@@ -44,6 +40,8 @@ const updateUserProfile = async (
   });
 };
 
-export const userProfileApi = {
-  updateUserProfile,
+export const userApi = {
+  getMe,
+  checkUserIdentifierAvailability,
+  updateUserProfile
 };
