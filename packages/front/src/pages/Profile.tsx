@@ -15,18 +15,17 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import {
-  LogOut,
   Edit,
   Save,
   MapPin,
   Star,
   Eye,
   Heart as HeartIcon,
+  X as Cancel,
   Camera,
 } from 'lucide-react';
 import { mockNotifications, mockMessages } from '@/utils/mockData';
 import { toast } from 'sonner';
-import { logout } from '@/utils/auth';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { userApi } from '@/api/user.api';
 import Login from './Login';
@@ -37,11 +36,26 @@ import { UpdateUserDto } from '@/types/dto/update-user.dto';
 import { Gender } from '@/types/user';
 
 export default function Profile() {
-  const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [draft, setDraft] = useState<UpdateUserDto | null>(null);
-  const unreadNotifications = mockNotifications.filter(n => !n.read).length;
-  const unreadMessages = mockMessages.filter(m => !m.read).length;
+  const unreadNotifications = mockNotifications.filter((n) => !n.read).length;
+  const unreadMessages = mockMessages.filter((m) => !m.read).length;
+
+  const { isPending, error, refetch } = useQuery({
+    queryKey: ['fetchUserProfile'],
+    queryFn: async () => {
+      const currentUserResponse = await userApi.getMe();
+      if (currentUserResponse.status === 200) {
+        const user = await currentUserResponse.json();
+        updateCurrentUserProfile({
+          ...user,
+          sexualOrientation: user.sexualOrientation?.split(' ') ?? [],
+        });
+        return user;
+      }
+      throw new Error('Failed to fetch user profile');
+    },
+  });
 
   const updateProfileMutation = useMutation({
     mutationFn: async (updateUserDto: UpdateUserDto) => {
@@ -54,29 +68,19 @@ export default function Profile() {
     onSuccess: () => {
       toast.success('Profile updated successfully! 🎉');
       setIsEditing(false);
+      setDraft(null);
+      refetch();
     },
     onError: (error) => {
       toast.error(error.message);
-    }
+    },
   });
+
   const updateCurrentUserProfile = useProfileStore(
     (state) => state.updateUserProfile,
   );
 
   const profile = useProfileStore((state) => state.user);
-
-  const { isPending, error } = useQuery({
-    queryKey: ['fetchUserProfile'],
-    queryFn: async () => {
-      const currentUserResponse = await userApi.getMe();
-      if (currentUserResponse.status === 200) {
-        const user = await currentUserResponse.json();
-        updateCurrentUserProfile(user);
-        return user;
-      }
-      throw new Error('Failed to fetch user profile');
-    },
-  });
 
   const handleSave = () => {
     if (!draft) return;
@@ -153,39 +157,42 @@ export default function Profile() {
                   <div className="flex gap-2 mt-4 md:mt-0 justify-center">
                     {!isEditing ? (
                       <>
-                        <Button variant="outline" onClick={() => {
-                          setDraft({
-                            email: profile.email,
-                            firstName: profile.firstName,
-                            lastName: profile.lastName,
-                            gender: profile.gender as Gender,
-                            sexualOrientation: profile.sexualOrientation,
-                            bio: profile.bio,
-                            photos: profile.photos,
-                            profilePhoto: profile.profilePhoto,
-                          });
-                          setIsEditing(true);
-                          }}>
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            setDraft({
+                              email: profile.email,
+                              firstName: profile.firstName,
+                              lastName: profile.lastName,
+                              gender: profile.gender as Gender,
+                              sexualOrientation: profile.sexualOrientation,
+                              bio: profile.bio,
+                              photos: profile.photos,
+                            });
+                            setIsEditing(true);
+                          }}
+                        >
                           <Edit className="w-4 h-4 mr-2" />
                           Edit Profile
                         </Button>
-                        <Button
-                          variant="destructive"
-                          onClick={() => logout(navigate)}
-                        >
-                          <LogOut className="w-4 h-4 mr-2" />
-                          Logout
-                        </Button>
                       </>
                     ) : (
-                      <Button
-                        onClick={handleSave}
-                        className="bg-gradient-romantic"
-                        disabled={updateProfileMutation.isPending}
-                      >
-                        <Save className="w-4 h-4 mr-2" />
-                        {updateProfileMutation.isPending ? 'Saving...' : 'Save Changes'}
-                      </Button>
+                      <>
+                        <Button
+                          onClick={handleSave}
+                          disabled={updateProfileMutation.isPending}
+                        >
+                          <Save className="w-4 h-4" />
+                          Save Changes
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          onClick={() => setIsEditing(false)}
+                        >
+                          <Cancel className="w-4 h-4" />
+                          Cancel
+                        </Button>
+                      </>
                     )}
                   </div>
                 </div>
@@ -198,8 +205,7 @@ export default function Profile() {
                       <span className="text-sm">Views</span>
                     </div>
                     <p className="text-2xl font-bold text-primary">
-                      {' '}
-                      {profile.viewedBy.length}{' '}
+                      {` ${profile.viewedBy.length} `}
                     </p>
                   </div>
                   <div className="text-center">
@@ -208,7 +214,7 @@ export default function Profile() {
                       <span className="text-sm">Likes</span>
                     </div>
                     <p className="text-2xl font-bold text-secondary">
-                      {profile.likedBy.length}
+                      {` ${profile.likedBy.length} `}
                     </p>
                   </div>
                 </div>
@@ -228,10 +234,18 @@ export default function Profile() {
                 <Label>First Name</Label>
                 {isEditing ? (
                   <Input
-                  value={draft?.firstName ?? ''}
-                  onChange={(e) => setDraft((d) => ({...(d ?? {}), firstName: e.target.value}))} />
+                    value={draft?.firstName ?? ''}
+                    onChange={(e) =>
+                      setDraft((d) => ({
+                        ...(d ?? {}),
+                        firstName: e.target.value,
+                      }))
+                    }
+                  />
                 ) : (
-                  <p className="p-2 bg-muted rounded">{profile.firstName}</p>
+                  <p className="p-2 bg-muted rounded read-only">
+                    {profile.firstName}
+                  </p>
                 )}
               </div>
 
@@ -239,10 +253,18 @@ export default function Profile() {
                 <Label>Last Name</Label>
                 {isEditing ? (
                   <Input
-                  value={draft?.lastName ?? ''}
-                  onChange={(e) => setDraft((d) => ({...(d ?? {}), lastName: e.target.value}))} />
+                    value={draft?.lastName ?? ''}
+                    onChange={(e) =>
+                      setDraft((d) => ({
+                        ...(d ?? {}),
+                        lastName: e.target.value,
+                      }))
+                    }
+                  />
                 ) : (
-                  <p className="p-2 bg-muted rounded">{profile.lastName}</p>
+                  <p className="p-2 bg-muted rounded read-only">
+                    {profile.lastName}
+                  </p>
                 )}
               </div>
             </div>
@@ -250,9 +272,17 @@ export default function Profile() {
             <div className="space-y-2">
               <Label>Email</Label>
               {isEditing ? (
-                <Input type="email" value={draft.email} onChange={(e) => setDraft((d) => ({...(d ?? {}), email: e.target.value}))} />
+                <Input
+                  type="email"
+                  value={draft.email}
+                  onChange={(e) =>
+                    setDraft((d) => ({ ...(d ?? {}), email: e.target.value }))
+                  }
+                />
               ) : (
-                <p className="p-2 bg-muted rounded">{profile.email}</p>
+                <p className="p-2 bg-muted rounded read-only">
+                  {profile.email}
+                </p>
               )}
             </div>
 
@@ -260,7 +290,12 @@ export default function Profile() {
               <div className="space-y-2">
                 <Label>I am</Label>
                 {isEditing ? (
-                  <Select value={draft?.gender ?? ''} onValueChange={(value: string) => setDraft({...draft, gender: value as Gender})}>
+                  <Select
+                    value={draft?.gender || profile.gender || ''}
+                    onValueChange={(value: string) =>
+                      setDraft({ ...draft, gender: value as Gender })
+                    }
+                  >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -271,43 +306,62 @@ export default function Profile() {
                     </SelectContent>
                   </Select>
                 ) : (
-                  <p className="p-2 bg-muted rounded capitalize">
+                  <p className="p-2 bg-muted rounded capitalize read-only">
                     {profile.gender}
                   </p>
                 )}
-            </div>
-                  
-            <div className="space-y-2">
+              </div>
+
+              <div className="space-y-2">
                 <Label>I'm interested in</Label>
                 {isEditing ? (
                   <div className="flex flex-wrap gap-2">
-                  {(['male', 'female', 'non-binary'] as const).map((preference) => (
-                    <Button
-                    key={preference}
-                    variant={draft.sexualOrientation?.includes(preference) ? "default" : "outline"}
-                    onClick={() => {
-                      const currentPreferences = draft?.sexualOrientation ?? [];
-                      const newPreferences = currentPreferences.includes(preference)
-                      ? currentPreferences.filter(pref => pref !== preference)
-                      : [...currentPreferences, preference];
-                      
-                      setDraft({ ...draft, sexualOrientation: newPreferences });
-                    }}
-                    >
-                    {preference === 'male' ? 'Male' : preference === 'female' ? 'Female' : 'Non-binary'}
-                    </Button>
-                  ))}
+                    {(['male', 'female', 'non-binary'] as const).map(
+                      (preference) => (
+                        <Button
+                          key={preference}
+                          variant={
+                            draft.sexualOrientation?.includes(preference)
+                              ? 'default'
+                              : 'outline'
+                          }
+                          onClick={() => {
+                            const currentPreferences =
+                              draft?.sexualOrientation ?? [];
+                            const newPreferences = currentPreferences.includes(
+                              preference,
+                            )
+                              ? currentPreferences.filter(
+                                  (pref) => pref !== preference,
+                                )
+                              : [...currentPreferences, preference];
+
+                            setDraft({
+                              ...draft,
+                              sexualOrientation: newPreferences,
+                            });
+                          }}
+                        >
+                          {preference === 'male'
+                            ? 'Male'
+                            : preference === 'female'
+                              ? 'Female'
+                              : 'Non-binary'}
+                        </Button>
+                      ),
+                    )}
                   </div>
                 ) : (
                   <div className="flex flex-wrap gap-2">
-                  {(['male', 'female', 'non-binary'] as const).map((preference) => (
-                    <Button
-                    key={preference}
-                    variant={profile.sexualOrientation?.includes(preference) ? "default" : "outline"}
-                    >
-                    {preference === 'male' ? 'Male' : preference === 'female' ? 'Female' : 'Non-binary'}
-                    </Button>
-                  ))}
+                    {profile.sexualOrientation.map((preference) => (
+                      <Button key={preference} className="cursor-not-allowed">
+                        {preference === 'male'
+                          ? 'Male'
+                          : preference === 'female'
+                            ? 'Female'
+                            : 'Non-binary'}
+                      </Button>
+                    ))}
                   </div>
                 )}
               </div>
@@ -316,13 +370,15 @@ export default function Profile() {
             <div className="space-y-2">
               <Label>Biography</Label>
               {isEditing ? (
-                <Textarea 
-                  value={draft?.bio ?? ''} 
-                  onChange={(e) => setDraft((d) => ({...(d ?? {}), bio: e.target.value}))}
+                <Textarea
+                  value={draft?.bio ?? ''}
+                  onChange={(e) =>
+                    setDraft((d) => ({ ...(d ?? {}), bio: e.target.value }))
+                  }
                   rows={4}
                 />
               ) : (
-                <p className="p-2 bg-muted rounded">{profile.bio}</p>
+                <p className="p-2 bg-muted rounded read-only">{profile.bio}</p>
               )}
             </div>
 
@@ -332,10 +388,10 @@ export default function Profile() {
                 {profile.tags.map((tag, index) => (
                   <Badge
                     key={index}
-                    variant="secondary"
-                    className="bg-gradient-romantic text-white"
+                    variant="default"
+                    className="cursor-not-allowed"
                   >
-                    {tag}
+                    #{tag}
                   </Badge>
                 ))}
               </div>

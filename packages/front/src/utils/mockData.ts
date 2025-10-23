@@ -3,7 +3,6 @@ import {
   UserProfile,
   Message,
   Notification,
-  User,
   UserStatus,
 } from '@/types/user';
 
