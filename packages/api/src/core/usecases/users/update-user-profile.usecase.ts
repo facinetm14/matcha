@@ -21,50 +21,58 @@ export class UpdateUserProfileUseCase {
     userId: string,
     updateUserProfileDto: UpdateUserProfileDto,
   ): Promise<Result<UserProfile, UpdateUserProfileError>> {
-    let updatedUser = null;
-    const { user, interests } = updateUserProfileDto;
+    const { tags, photos: _, ...user } = updateUserProfileDto;
 
     if (user) {
-      const isUsernameUsed = user.username
-        ? !!(await this.userRepository.findUserByUniqKey(
+      const existingUsername = user.username
+        ? await this.userRepository.findUserByUniqKey(
             UserUniqKeys.username,
             user.username,
-          ))
-        : false;
+          )
+        : null;
+
+      const isUsernameUsed = existingUsername && existingUsername.id !== userId;
 
       if (isUsernameUsed) {
         return Err(UpdateUserProfileError.USERNAME_ALREADY_EXISTS);
       }
 
-      const isEmailUsed = user.email
-        ? !!(await this.userRepository.findUserByUniqKey(
+      const existingEmail = user.email
+        ? await this.userRepository.findUserByUniqKey(
             UserUniqKeys.EMAIL,
             user.email,
-          ))
-        : false;
+          )
+        : null;
+
+      const isEmailUsed = existingEmail && existingEmail.id !== userId;
 
       if (isEmailUsed) {
-        return Err(UpdateUserProfileError.USERNAME_ALREADY_EXISTS);
+        return Err(UpdateUserProfileError.EMAIL_AREDAY_EXISTS);
       }
 
-      updatedUser = await this.userRepository.update(userId, user);
+      const updatedUser = await this.userRepository.update(userId, {
+        ...user,
+        sexualOrientation: user.sexualOrientation
+          ? user.sexualOrientation.join(' ')
+          : '',
+      });
+
+      if (!updatedUser) {
+        return Err(UpdateUserProfileError.UNKNOWN_ERROR);
+      }
     }
 
-    if (!updatedUser) {
-      updatedUser = await this.userRepository.findUserByUniqKey(
-        UserUniqKeys.ID,
-        userId,
-      );
+    if (tags) {
+      await this.userInterestRepository.bulkCreate(userId, tags);
     }
 
-    if (!updatedUser) {
+    const updatedUserProfileResult =
+      await this.userRepository.findUserProfileById(userId);
+
+    if (!updatedUserProfileResult) {
       return Err(UpdateUserProfileError.USER_NOT_FOUND);
     }
 
-    if (interests) {
-      await this.userInterestRepository.bulkCreate(updatedUser.id, interests);
-    }
-
-    return Ok({ user: updatedUser, interests: [] });
+    return Ok(updatedUserProfileResult);
   }
 }

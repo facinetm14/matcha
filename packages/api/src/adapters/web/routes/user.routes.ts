@@ -27,6 +27,14 @@ UserRouter.patch(
 );
 
 UserRouter.post(
+  `/interaction`,
+  injectAuthorizationToken,
+  (req: Request, resp: Response) => {
+    userController.addUserInteraction(req, resp);
+  },
+);
+
+UserRouter.post(
   `/pictures`,
   injectAuthorizationToken,
   (req: Request, resp: Response) => {

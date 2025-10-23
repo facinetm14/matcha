@@ -40,8 +40,7 @@ export default function Register() {
       }
       throw new Error('Registration failed. Please try again.');
     },
-    onSuccess: (data: boolean) => {
-      console.log(data);
+    onSuccess: () => {
       toast.success('Account created! Please check your email to verify.');
       navigate('/login');
     },

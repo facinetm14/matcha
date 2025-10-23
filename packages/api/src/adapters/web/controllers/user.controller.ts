@@ -10,6 +10,11 @@ import { TYPE } from '@/infrastructure/config/inversify-type';
 import { UpdateUserProfileDtoSchema } from '@/core/domain/dto/update-user-profile.dto';
 import { UpdateUserProfileUseCase } from '@/core/usecases/users/update-user-profile.usecase';
 import { UpdateUserProfileError } from '@/core/domain/errors/update-user-profile.error';
+import { CreateInteractionDtoSchema } from '@/core/domain/dto/create-interaction.dto';
+import {
+  AddUserInteractionError,
+  AddUserInteractionUseCase,
+} from '@/core/usecases/users/add-user-interaction.usecase';
 
 @injectable()
 export class UserController {
@@ -22,6 +27,8 @@ export class UserController {
     private readonly accessTokenService: AccessTokenService,
     @inject(UpdateUserProfileUseCase)
     private readonly updateUserProfileUseCase: UpdateUserProfileUseCase,
+    @inject(AddUserInteractionUseCase)
+    private readonly addUserInteractionUseCase: AddUserInteractionUseCase,
   ) {}
 
   async getMe(req: Request, resp: Response) {
@@ -46,7 +53,7 @@ export class UserController {
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { passwd, ...user } = getCurrentUserResult.data.user;
+    const { passwd, ...user } = getCurrentUserResult.data;
 
     resp.status(200).json(user);
   }
@@ -124,10 +131,58 @@ export class UserController {
   }
 
   async uploadPictures(req: Request, resp: Response) {
-    console.log({req, resp})
+    console.log({ req, resp });
   }
 
+  async addUserInteraction(req: Request, resp: Response) {
+    const connectedUserResult = await getConnectedUserId(
+      this.accessTokenService,
+      req,
+      resp,
+    );
 
+    if (connectedUserResult.isErr) {
+      resp.status(401).send('Invalid token');
+      return;
+    }
+
+    const userId = connectedUserResult.data;
+    const parsedBody = CreateInteractionDtoSchema.safeParse(req.body);
+    if (!parsedBody.success) {
+      resp.status(400).send('Bad request');
+      return;
+    }
+
+    const addInteractionResult = await this.addUserInteractionUseCase.execute(
+      parsedBody.data,
+      userId,
+    );
+
+    if (addInteractionResult.isErr) {
+      const error = addInteractionResult.error;
+      this.handleAddUserInteractionError(error, resp);
+      return;
+    }
+
+    resp.status(201).send('user interaction sucessfully added');
+  }
+
+  private handleAddUserInteractionError(
+    error: AddUserInteractionError,
+    resp: Response,
+  ): Response {
+    switch (error) {
+      case 'author_not_found':
+      case 'recipient_not_found':
+        return resp.status(404).send('user not found');
+      case 'unauthorized':
+        return resp.status(401).send('unauthorized');
+      case 'unknow_error':
+        return resp
+          .status(500)
+          .send('server internal error, please retry later');
+    }
+  }
 }
 
 // import express from 'express';
@@ -191,9 +246,3 @@ export class UserController {
 //     res.status(500).json({ error: 'Failed to upload images.' });
 //   }
 // });
-
-// // Start server
-// app.listen(3000, () => {
-//   console.log('Server running on http://localhost:3000');
-// });
-

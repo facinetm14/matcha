@@ -50,6 +50,16 @@ const signIn = async (username: string, passwd: string) => {
   });
 };
 
+const logout = async () => {
+  return fetch(`${API_BASE_ROUTE}/auth/logout`, {
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    method: 'POST',
+    credentials: 'include',
+  });
+};
+
 const sendResetPasswordRequest = async (email: string) => {
   return fetch(`${API_BASE_ROUTE}/auth/reset-password`, {
     headers: {
@@ -79,4 +89,5 @@ export const authApi = {
   sendResetPasswordRequest,
   confirmResetPassword,
   createNewPassword,
+  logout,
 };
