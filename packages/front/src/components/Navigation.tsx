@@ -93,22 +93,20 @@ export const Navigation = ({
                   </Link>
                 );
               }
-
-              return (
-                <button
-                  key={item.label}
-                  type="button"
-                  onClick={item.action}
-                  className={cn(
-                    baseClasses,
-                    'text-muted-foreground hover:text-foreground',
-                  )}
-                  aria-label={item.label}
-                >
+              else {
+                return (
+                  <button
+                    key={item.label}
+                    type="button"
+                    onClick={item.action}
+                    className={cn(baseClasses, 'text-muted-foreground hover:text-foreground')}
+                    aria-label={item.label}
+                  >
                   <Icon className="w-6 h-6" />
                   <span className="text-xs md:text-sm">{item.label}</span>
-                </button>
-              );
+                  </button>
+                );
+              }
             })}
           </div>
         </div>
