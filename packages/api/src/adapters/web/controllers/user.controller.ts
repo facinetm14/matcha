@@ -246,8 +246,3 @@ export class UserController {
 //     res.status(500).json({ error: 'Failed to upload images.' });
 //   }
 // });
-
-// // Start server
-// app.listen(3000, () => {
-//   console.log('Server running on http://localhost:3000');
-// });

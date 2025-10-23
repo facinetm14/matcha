@@ -115,3 +115,16 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
   }
 }
+
+.read-only {
+  cursor: not-allowed;
+}
+
+.no-cliclabale-btn:hover{
+  background-color: initial;
+  cursor: not-allowed;
+}
+
+.profile-sexual-orientation-view {
+  display: flex;
+}
