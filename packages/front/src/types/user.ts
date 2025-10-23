@@ -1,5 +1,5 @@
 export type Gender = 'male' | 'female' | 'non-binary';
-export type SexualPreference = 'male' | 'female' | 'both';
+export type SexualPreferences = Array<'male' | 'female' | 'non-binary'>;
 
 export interface UserProfile {
 	id: string;
@@ -9,7 +9,7 @@ export interface UserProfile {
 	lastName: string;
 	age: number;
 	gender: Gender;
-	sexualPreference: SexualPreference;
+	sexualPreferences: SexualPreferences;
 	biography: string;
 	tags: string[];
 	photos: string[];
