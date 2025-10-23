@@ -31,18 +31,40 @@ import {
 } from '@/utils/mockData';
 import { toast } from 'sonner';
 import { logout } from '@/utils/auth';
-import { Gender, SexualPreference } from '@/types/user';
+import { Gender, UserProfile } from '@/types/user';
+import { UpdateUserDto } from '@/types/dto/update-user.dto';
+import { useMutation } from '@tanstack/react-query';
+import { userProfileApi } from '@/api/user.api';
 
 export default function Profile() {
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [profile, setProfile] = useState(mockCurrentUser);
-  const unreadNotifications = mockNotifications.filter((n) => !n.read).length;
-  const unreadMessages = mockMessages.filter((m) => !m.read).length;
+  const [draft, setDraft] = useState<UpdateUserDto | null>(null);
+  const unreadNotifications = mockNotifications.filter(n => !n.read).length;
+  const unreadMessages = mockMessages.filter(m => !m.read).length;
+
+  const updateProfileMutation = useMutation({
+    mutationFn: async (updateUserDto: UpdateUserDto) => {
+      const response = await userProfileApi.updateUserProfile(updateUserDto);
+      if (response.status === 200) {
+        return true;
+      }
+      throw new Error('Failed to update profile. Please try again.');
+    },
+    onSuccess: () => {
+      toast.success('Profile updated successfully! 🎉');
+      setProfile((prev) => ({ ...prev, ...draft } as UserProfile));
+      setIsEditing(false);
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
 
   const handleSave = () => {
-    setIsEditing(false);
-    toast.success('Profile updated successfully! 🎉');
+    if (!draft) return;
+    updateProfileMutation.mutate(draft);
   };
 
   return (
@@ -98,10 +120,19 @@ export default function Profile() {
                   <div className="flex gap-2 mt-4 md:mt-0 justify-center">
                     {!isEditing ? (
                       <>
-                        <Button
-                          variant="outline"
-                          onClick={() => setIsEditing(true)}
-                        >
+                        <Button variant="outline" onClick={() => {
+                          setDraft({
+                            email: profile.email,
+                            firstName: profile.firstName,
+                            lastName: profile.lastName,
+                            gender: profile.gender as Gender,
+                            sexualPreferences: profile.sexualPreferences,
+                            biography: profile.biography,
+                            photos: profile.photos,
+                            profilePhoto: profile.profilePhoto,
+                          });
+                          setIsEditing(true);
+                          }}>
                           <Edit className="w-4 h-4 mr-2" />
                           Edit Profile
                         </Button>
@@ -117,9 +148,10 @@ export default function Profile() {
                       <Button
                         onClick={handleSave}
                         className="bg-gradient-romantic"
+                        disabled={updateProfileMutation.isPending}
                       >
                         <Save className="w-4 h-4 mr-2" />
-                        Save Changes
+                        {updateProfileMutation.isPending ? 'Saving...' : 'Save Changes'}
                       </Button>
                     )}
                   </div>
@@ -158,11 +190,8 @@ export default function Profile() {
                 <Label>First Name</Label>
                 {isEditing ? (
                   <Input
-                    value={profile.firstName}
-                    onChange={(e) =>
-                      setProfile({ ...profile, firstName: e.target.value })
-                    }
-                  />
+                  value={draft?.firstName ?? ''}
+                  onChange={(e) => setDraft((d) => ({...(d ?? {}), firstName: e.target.value}))} />
                 ) : (
                   <p className="p-2 bg-muted rounded">{profile.firstName}</p>
                 )}
@@ -172,11 +201,8 @@ export default function Profile() {
                 <Label>Last Name</Label>
                 {isEditing ? (
                   <Input
-                    value={profile.lastName}
-                    onChange={(e) =>
-                      setProfile({ ...profile, lastName: e.target.value })
-                    }
-                  />
+                  value={draft?.lastName ?? ''}
+                  onChange={(e) => setDraft((d) => ({...(d ?? {}), lastName: e.target.value}))} />
                 ) : (
                   <p className="p-2 bg-muted rounded">{profile.lastName}</p>
                 )}
@@ -186,13 +212,7 @@ export default function Profile() {
             <div className="space-y-2">
               <Label>Email</Label>
               {isEditing ? (
-                <Input
-                  type="email"
-                  value={profile.email}
-                  onChange={(e) =>
-                    setProfile({ ...profile, email: e.target.value })
-                  }
-                />
+                <Input type="email" value={draft.email} onChange={(e) => setDraft((d) => ({...(d ?? {}), email: e.target.value}))} />
               ) : (
                 <p className="p-2 bg-muted rounded">{profile.email}</p>
               )}
@@ -200,21 +220,16 @@ export default function Profile() {
 
             <div className="grid md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Gender</Label>
+                <Label>I am</Label>
                 {isEditing ? (
-                  <Select
-                    value={profile.gender}
-                    onValueChange={(value: Gender) =>
-                      setProfile({ ...profile, gender: value })
-                    }
-                  >
+                  <Select value={draft?.gender ?? ''} onValueChange={(value: string) => setDraft({...draft, gender: value as Gender})}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="male">Male</SelectItem>
                       <SelectItem value="female">Female</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
+                      <SelectItem value="non-binary">Non-binary</SelectItem>
                     </SelectContent>
                   </Select>
                 ) : (
@@ -222,30 +237,40 @@ export default function Profile() {
                     {profile.gender}
                   </p>
                 )}
-              </div>
-
-              <div className="space-y-2">
-                <Label>Sexual Preference</Label>
+            </div>
+                  
+            <div className="space-y-2">
+                <Label>I'm interested in</Label>
                 {isEditing ? (
-                  <Select
-                    value={profile.sexualPreference}
-                    onValueChange={(value: SexualPreference) =>
-                      setProfile({ ...profile, sexualPreference: value })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="male">Male</SelectItem>
-                      <SelectItem value="female">Female</SelectItem>
-                      <SelectItem value="both">Both</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <div className="flex flex-wrap gap-2">
+                  {(['male', 'female', 'non-binary'] as const).map((preference) => (
+                    <Button
+                    key={preference}
+                    variant={draft.sexualPreferences?.includes(preference) ? "default" : "outline"}
+                    onClick={() => {
+                      const currentPreferences = draft?.sexualPreferences ?? [];
+                      const newPreferences = currentPreferences.includes(preference)
+                      ? currentPreferences.filter(pref => pref !== preference)
+                      : [...currentPreferences, preference];
+                      
+                      setDraft({ ...draft, sexualPreferences: newPreferences });
+                    }}
+                    >
+                    {preference === 'male' ? 'Male' : preference === 'female' ? 'Female' : 'Non-binary'}
+                    </Button>
+                  ))}
+                  </div>
                 ) : (
-                  <p className="p-2 bg-muted rounded capitalize">
-                    {profile.sexualPreference}
-                  </p>
+                  <div className="flex flex-wrap gap-2">
+                  {(['male', 'female', 'non-binary'] as const).map((preference) => (
+                    <Button
+                    key={preference}
+                    variant={profile.sexualPreferences?.includes(preference) ? "default" : "outline"}
+                    >
+                    {preference === 'male' ? 'Male' : preference === 'female' ? 'Female' : 'Non-binary'}
+                    </Button>
+                  ))}
+                  </div>
                 )}
               </div>
             </div>
@@ -253,11 +278,9 @@ export default function Profile() {
             <div className="space-y-2">
               <Label>Biography</Label>
               {isEditing ? (
-                <Textarea
-                  value={profile.biography}
-                  onChange={(e) =>
-                    setProfile({ ...profile, biography: e.target.value })
-                  }
+                <Textarea 
+                  value={draft?.biography ?? ''} 
+                  onChange={(e) => setDraft((d) => ({...(d ?? {}), biography: e.target.value}))}
                   rows={4}
                 />
               ) : (
@@ -296,7 +319,7 @@ export default function Profile() {
                     />
                   </div>
                 ))}
-                {isEditing && profile.photos.length < 5 && (
+                {isEditing && draft.photos.length < 5 && (
                   <button className="aspect-square rounded-lg border-2 border-dashed border-border hover:border-primary transition-colors flex items-center justify-center">
                     <Camera className="w-8 h-8 text-muted-foreground" />
                   </button>
