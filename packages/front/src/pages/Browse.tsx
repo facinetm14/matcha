@@ -4,21 +4,26 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Heart, X, MapPin, Star, Info } from 'lucide-react';
-import { mockUsers, mockNotifications, mockMessages } from '@/utils/mockData';
-import { User } from '@/types/user';
+import { mockUsers, mockNotifications, mockMessages, mockCurrentUser } from '@/utils/mockData';
+import { UserProfile } from '@/types/user';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 
 export default function Browse() {
   const navigate = useNavigate();
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [users] = useState<User[]>(
-    mockUsers.filter(
-      (u) => u.sexualPreference !== 'male' || u.gender === 'female',
-    ),
-  );
-  const unreadNotifications = mockNotifications.filter((n) => !n.read).length;
-  const unreadMessages = mockMessages.filter((m) => !m.read).length;
+  const [users] = useState<UserProfile[]>(mockUsers.filter(user => {
+    const myPreferences = mockCurrentUser.sexualPreferences;
+    const theirGender = user.gender;
+    const theirPreferences = user.sexualPreferences;
+
+    return (
+      myPreferences.includes(theirGender) && 
+      theirPreferences.includes(mockCurrentUser.gender)
+    );
+	}));
+  const unreadNotifications = mockNotifications.filter(n => !n.read).length;
+  const unreadMessages = mockMessages.filter(m => !m.read).length;
 
   const currentUser = users[currentIndex];
 

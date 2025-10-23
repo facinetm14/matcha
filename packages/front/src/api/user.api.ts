@@ -1,3 +1,4 @@
+import { UpdateUserDto } from '@/types/dto/update-user.dto';
 import { UserIdentifier } from '../../../shared/user-identifier';
 
 const API_BASE_ROUTE = '/api/v1';
@@ -28,4 +29,21 @@ const checkUserIdentifierAvailability = async (
 export const userApi = {
   getMe,
   checkUserIdentifierAvailability,
+};
+
+const updateUserProfile = async (
+  updateUserDto: UpdateUserDto
+) => {
+  return fetch(`${API_BASE_ROUTE}/users/update`, {
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    method: 'PATCH',
+    body: JSON.stringify(updateUserDto),
+    credentials: 'include',
+  });
+};
+
+export const userProfileApi = {
+  updateUserProfile,
 };
