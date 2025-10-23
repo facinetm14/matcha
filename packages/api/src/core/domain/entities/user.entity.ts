@@ -7,12 +7,12 @@ export type User = {
   lastName: string;
   username: string;
   passwd: string;
-  createdAt: Date;
-  updatedAt: Date;
   status: UserStatus;
   isFirstLogin: string | null;
   gender?: string;
   sexualOrientation?: string;
   bio?: string;
-  interests?: string[]
+  age?: number;
+  createdAt: Date;
+  updatedAt: Date;
 };

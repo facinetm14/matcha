@@ -16,7 +16,7 @@ export function injectAuthorizationToken(
     const [, accessToken, refresh] = authorization.split(' ');
 
     if (!accessToken) {
-      resp.status(401).send('Unauthorized');
+      resp.status(401).send('No authorization token provided');
       return;
     }
 
@@ -29,11 +29,11 @@ export function injectAuthorizationToken(
   req.token = token;
   req.refresh = refresh;
 
-  if (token) {
+  if (token || refresh) {
     return next();
   }
 
-  resp.status(401).send('Unauthorized');
+  resp.status(401).send('No authorization token provided');
 }
 
 export function injectAuthorizationTokenForLogout(

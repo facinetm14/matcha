@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,34 +12,91 @@ import {
 } from '@/components/ui/card';
 import { Heart, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { authApi } from '@/api/auth.api';
+import { useParams } from 'react-router-dom';
+import NotFound from './NotFound';
 
 export default function CreateNewPassword() {
   const navigate = useNavigate();
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const [passwd, setPassword] = useState('');
+  const [confirmPasswd, setConfirmPassword] = useState('');
+
   const [errors, setErrors] = useState<{
-    username?: string;
-    password?: string;
+    passwd?: string;
+    confirmPasswd?: string;
   }>({});
+
+  const { token } = useParams();
+
+  const { isPending, error } = useQuery({
+    queryKey: ['confirmResetPassword', token],
+    queryFn: async () => {
+      if (!token) {
+        throw new Error('No token provided');
+      }
+
+      const verifyEmailResult = await authApi.confirmResetPassword(token);
+      if (verifyEmailResult.status === 200) {
+        return true;
+      }
+
+      throw new Error('Verification failed');
+    },
+  });
+
+  const createNewPasswordMutation = useMutation({
+    mutationFn: async ({
+      passwd,
+      confirmPasswd,
+    }: {
+      passwd: string;
+      confirmPasswd: string;
+    }) => {
+      const updatePassword = await authApi.createNewPassword(
+        passwd,
+        confirmPasswd,
+      );
+      if (updatePassword.status === 200) {
+        return true;
+      }
+      throw new Error('update password failed. Please try again.');
+    },
+    onSuccess: () => {
+      toast.success('Your passwd has been updated!');
+      navigate('/login');
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
+
+  if (isPending) return 'Loading...';
+
+  if (error) {
+    return <NotFound />;
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const newErrors: { username?: string; password?: string } = {};
+    const newErrors: { passwd?: string; confirmPasswd?: string } = {};
 
-    if (!username) {
-      newErrors.username = 'This field is required.';
+    if (!passwd) {
+      newErrors.passwd = 'Please enter your new passwd.';
     }
-    if (!password) {
-      newErrors.password = 'This field is required.';
+
+    if (!confirmPasswd) {
+      newErrors.confirmPasswd = 'Please confirm your new passwd.';
+    }
+
+    if (passwd !== confirmPasswd) {
+      newErrors.confirmPasswd = 'Passwords do not match.';
     }
 
     setErrors(newErrors);
 
     if (Object.keys(newErrors).length === 0) {
-      // Mock login - in real app, this would validate against backend
-      localStorage.setItem('isAuthenticated', 'true');
-      toast.success('Welcome back!');
-      navigate('/browse');
+      createNewPasswordMutation.mutate({ passwd, confirmPasswd });
     }
   };
 
@@ -55,40 +112,42 @@ export default function CreateNewPassword() {
           </div>
           <CardTitle className="text-2xl flex items-center justify-center gap-2">
             <Sparkles className="w-5 h-5 text-primary" />
-            Welcome back
+            New Password
             <Sparkles className="w-5 h-5 text-primary" />
           </CardTitle>
-          <CardDescription>Sign in to find your perfect match</CardDescription>
+          <CardDescription>Create a new passwd</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
+              <Label htmlFor="passwd">Password</Label>
               <Input
-                id="username"
+                id="passwd"
                 type="text"
                 placeholder="Username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                className={errors.username ? 'border-destructive' : ''}
+                value={passwd}
+                onChange={(e) => setPassword(e.target.value)}
+                className={errors.passwd ? 'border-destructive' : ''}
               />
-              {errors.username && (
-                <p className="text-sm text-destructive">{errors.username}</p>
+              {errors.passwd && (
+                <p className="text-sm text-destructive">{errors.passwd}</p>
               )}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="passwd">Confirm Password</Label>
               <Input
-                id="password"
-                type="password"
+                id="confirm-passwd"
+                type="passwd"
                 placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className={errors.password ? 'border-destructive' : ''}
+                value={confirmPasswd}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className={errors.confirmPasswd ? 'border-destructive' : ''}
               />
-              {errors.password && (
-                <p className="text-sm text-destructive">{errors.password}</p>
+              {errors.confirmPasswd && (
+                <p className="text-sm text-destructive">
+                  {errors.confirmPasswd}
+                </p>
               )}
             </div>
 
@@ -96,29 +155,8 @@ export default function CreateNewPassword() {
               type="submit"
               className="w-full h-12 text-base font-semibold"
             >
-              SIGN IN
+              SUBMIT
             </Button>
-
-            <div className="text-center space-y-4">
-              <Link
-                to="/forgot-password"
-                className="text-sm text-muted-foreground hover:text-foreground transition-colors block"
-              >
-                PASSWORD FORGOTTEN ?
-              </Link>
-
-              <div className="pt-4 border-t">
-                <p className="text-sm text-muted-foreground">
-                  Don't have an account?{' '}
-                  <Link
-                    to="/register"
-                    className="text-primary font-semibold hover:underline"
-                  >
-                    Sign up
-                  </Link>
-                </p>
-              </div>
-            </div>
           </form>
         </CardContent>
       </Card>

@@ -52,9 +52,7 @@ describe('Get current user usecase', () => {
     expect(getCurrentUserResult).toMatchObject({
       isErr: false,
       data: {
-        user: {
-          isFirstLogin: 'yes',
-        },
+        isFirstLogin: 'yes',
       },
     });
   });
@@ -67,9 +65,7 @@ describe('Get current user usecase', () => {
     expect(getCurrentUserResult).toMatchObject({
       isErr: false,
       data: {
-        user: {
-          isFirstLogin: null,
-        },
+        isFirstLogin: null,
       },
     });
   });

@@ -102,3 +102,15 @@ Content-Type: application/json
   },
   "interests": ["coding", "singing", "dancing"]
 }
+
+
+### user interaction
+
+POST {{baseUrl}}/users/interaction
+Authorization: Bearer {{accessToken}} {{refreshToken}}
+Content-Type: application/json
+
+{
+  "recipient": "2jtgok-mh0qljsv-g884ib-bwc65m",
+  "category": "view"
+}

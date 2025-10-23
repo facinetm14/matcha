@@ -1,4 +1,3 @@
-
 export const TYPE = {
   Logger: Symbol.for('Logger'),
   UserRepository: Symbol.for('UserRepository'),
@@ -8,5 +7,6 @@ export const TYPE = {
   EmailService: Symbol.for('EmailService'),
   CacheService: Symbol.for('CacheService'),
   AccessTokenService: Symbol.for('AccessTokenService'),
-  UserInterestRepository: Symbol.for('UserInterestRepository')
+  UserInterestRepository: Symbol.for('UserInterestRepository'),
+  UserInteractionRepository: Symbol.for('UserInteractionRepository'),
 };
