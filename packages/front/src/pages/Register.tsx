@@ -12,13 +12,16 @@ import {
 } from '@/components/ui/card';
 import { Heart, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
-import { isPasswordStrong, MIN_SIZE_PASSWORD } from '@/utils/password';
-import { isValidEmail } from '../../../shared/is-valid-email';
 import { authApi } from '@/api/auth.api';
 import { UserIdentifier } from '../../../shared/user-identifier';
 import { isUserIdentifierAvailable } from '@/utils/auth';
 import { useMutation } from '@tanstack/react-query';
 import { CreateUserDto } from '@/types/dto/create-user.dto';
+import { isValidEmail } from '../../../shared/input-validation/is-valid-email';
+import { isValidUsername } from '../../../shared/input-validation/is-valid-username';
+import { isValidFirstname } from '../../../shared/input-validation/is-valid-firstname';
+import { isValidLastname } from '../../../shared/input-validation/is-valid-lastname';
+import { isValidPassword } from '../../../shared/input-validation/is-valid-password';
 
 export default function Register() {
   const navigate = useNavigate();
@@ -59,21 +62,15 @@ export default function Register() {
   const validateForm = async () => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.email) newErrors.email = 'Email is required';
-    else if (!isValidEmail(formData.email))
-      newErrors.email = 'Email is invalid';
-    else {
-      const isUsernameAvailable = await isUserIdentifierAvailable(
-        UserIdentifier.EMAIL,
-        formData.email,
-      );
-      if (!isUsernameAvailable) {
-        newErrors.email = 'email is already used';
-      }
+    const validateEmailResult = isValidEmail(formData.email);
+    if (!validateEmailResult.valid) {
+      newErrors.email = validateEmailResult.error || 'Email is invalid';
     }
 
-    if (!formData.username) newErrors.username = 'Username is required';
-    else {
+    const validateUsernameResult = isValidUsername(formData.username);
+    if (!validateUsernameResult.valid) {
+      newErrors.username = validateUsernameResult.error || 'Username is invalid';
+    } else {
       const isUsernameAvailable = await isUserIdentifierAvailable(
         UserIdentifier.USERNAME,
         formData.username,
@@ -82,12 +79,21 @@ export default function Register() {
         newErrors.username = 'Username is already used';
       }
     }
-    if (!formData.firstName) newErrors.firstName = 'First name is required';
-    if (!formData.lastName) newErrors.lastName = 'Last name is required';
 
-    if (!formData.password) newErrors.password = 'Password is required';
-    else if (!isPasswordStrong(formData.password, MIN_SIZE_PASSWORD))
-      newErrors.password = 'Password is not strong enough.';
+    const validateFirstNameResult = isValidFirstname(formData.firstName);
+    if (!validateFirstNameResult.valid) {
+      newErrors.firstName = validateFirstNameResult.error || 'First name is invalid';
+    }
+
+    const validateLastNameResult = isValidLastname(formData.lastName);
+    if (!validateLastNameResult.valid) {
+      newErrors.lastName = validateLastNameResult.error || 'Last name is invalid';
+    }
+
+    const validatePasswordResult = isValidPassword(formData.password);
+    if (!validatePasswordResult.valid) {
+      newErrors.password = validatePasswordResult.error || 'Password is invalid';
+    }
 
     if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = 'Passwords do not match';
@@ -99,6 +105,8 @@ export default function Register() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const newErrors = await validateForm();
+
+    setErrors(newErrors);
 
     if (Object.keys(newErrors).length === 0) {
       RegisterMutation.mutate({
