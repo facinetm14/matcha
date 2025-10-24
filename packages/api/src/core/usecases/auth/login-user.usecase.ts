@@ -21,7 +21,7 @@ export class LoginUserUseCase {
     private readonly userRepository: UserRepository,
     @inject(TYPE.UserTokenRepository)
     private readonly userTokenRepository: UserTokenRepository,
-  ) {}
+  ) { }
 
   async execute(
     loginUserDto: LoginUserDto,
