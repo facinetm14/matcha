@@ -4,7 +4,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Heart, X, MapPin, Star, Info } from 'lucide-react';
-import { mockUsers, mockNotifications, mockMessages, mockCurrentUser } from '@/utils/mockData';
+import { mockUsers, mockNotifications, mockMessages } from '@/utils/mockData';
 import { UserProfile } from '@/types/user';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
@@ -12,18 +12,9 @@ import { useNavigate } from 'react-router-dom';
 export default function Browse() {
   const navigate = useNavigate();
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [users] = useState<UserProfile[]>(mockUsers.filter(user => {
-    const myPreferences = mockCurrentUser.sexualOrientation;
-    const theirGender = user.gender;
-    const theirPreferences = user.sexualOrientation;
-
-    return (
-      myPreferences.includes(theirGender) && 
-      theirPreferences.includes(mockCurrentUser.gender)
-    );
-	}));
-  const unreadNotifications = mockNotifications.filter(n => !n.read).length;
-  const unreadMessages = mockMessages.filter(m => !m.read).length;
+  const [users] = useState<UserProfile[]>(mockUsers);
+  const unreadNotifications = mockNotifications.filter((n) => !n.read).length;
+  const unreadMessages = mockMessages.filter((m) => !m.read).length;
 
   const currentUser = users[currentIndex];
 
@@ -121,9 +112,7 @@ export default function Browse() {
                 </div>
               </div>
 
-              <p className="text-sm mb-3 line-clamp-2">
-                {currentUser.bio}
-              </p>
+              <p className="text-sm mb-3 line-clamp-2">{currentUser.bio}</p>
 
               <div className="flex flex-wrap gap-2">
                 {currentUser.tags.slice(0, 5).map((tag, index) => (

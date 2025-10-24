@@ -16,6 +16,12 @@ import {
   AddUserInteractionUseCase,
 } from '@/core/usecases/users/add-user-interaction.usecase';
 
+import { createReadStream, existsSync, statSync } from 'node:fs';
+import { join } from 'node:path';
+import { UPLOAD_DEST } from '@/core/domain/consts/upload-dest';
+import { AcceptedMimeType } from '@/core/domain/consts/accepted-mimetype';
+import { extractFileExtension } from '@shared/extract-file-extension';
+
 @injectable()
 export class UserController {
   constructor(
@@ -96,6 +102,7 @@ export class UserController {
       resp.status(400).send('Bad request');
       return;
     }
+
     const updateUserProfileDto = parsedBody.data;
     const updateUserProfileResult = await this.updateUserProfileUseCase.execute(
       userId,
@@ -128,10 +135,6 @@ export class UserController {
           .status(500)
           .send('server internal error, please retry later');
     }
-  }
-
-  async uploadPictures(req: Request, resp: Response) {
-    console.log({ req, resp });
   }
 
   async addUserInteraction(req: Request, resp: Response) {
@@ -183,66 +186,35 @@ export class UserController {
           .send('server internal error, please retry later');
     }
   }
+
+  async getImage(req: Request, resp: Response) {
+    const { filename } = req.params;
+
+    if (!filename) {
+      resp.status(400).send('bad request');
+      return;
+    }
+
+    const path = join(process.cwd(), UPLOAD_DEST, filename);
+    if (!existsSync(path)) {
+      resp.status(404).send('image not found');
+      return;
+    }
+
+    const fileStream = createReadStream(path);
+    const type = AcceptedMimeType.get(extractFileExtension(path));
+
+    if (!type) {
+      resp.status(400).send('wrong extension');
+      return;
+    }
+
+    resp.writeHead(200, {
+      'Content-Type': `image/${type}`,
+      'Content-Length': statSync(path).size,
+      'Access-Control-Allow-Origin': '*',
+    });
+
+    fileStream.pipe(resp);
+  }
 }
-
-// import express from 'express';
-// import fs from 'fs-extra';
-// import path from 'path';
-
-// const app = express();
-
-// // Middleware to parse JSON bodies
-// app.use(express.json({ limit: '10mb' })); // Limit total payload size
-
-// // Utility function to validate Base64 image
-// const isValidBase64Image = (base64) => {
-//   const regex = /^data:image\/(jpeg|png|gif);base64,[A-Za-z0-9+/]+=*$/;
-//   return regex.test(base64);
-// };
-
-// Endpoint to upload up to 5 profile pictures via Base64
-// app.post('/upload-profile-pics-base64', async (req, res) => {
-//   try {
-//     const { images } = req.body;
-
-//     if (!images || !Array.isArray(images) || images.length === 0) {
-//       return res.status(400).json({ error: 'No images provided.' });
-//     }
-
-//     if (images.length > 5) {
-//       return res.status(400).json({ error: 'Maximum 5 images allowed.' });
-//     }
-
-//     const uploadDir = path.join(process.cwd(), 'uploads', 'profile-pics');
-//     await fs.ensureDir(uploadDir);
-
-//     const savedFiles = [];
-
-//     for (const base64 of images) {
-//       if (!isValidBase64Image(base64)) {
-//         return res.status(400).json({ error: 'Invalid image format. Only JPEG, PNG, GIF are allowed.' });
-//       }
-
-//       // Extract file extension and base64 data
-//       const matches = base64.match(/^data:image\/(jpeg|png|gif);base64,(.+)$/);
-//       const ext = matches[1] === 'jpeg' ? 'jpg' : matches[1];
-//       const data = matches[2];
-//       const buffer = Buffer.from(data, 'base64');
-
-//       if (buffer.length > 2 * 1024 * 1024) { // 2MB limit
-//         return res.status(400).json({ error: 'Image size exceeds 2MB.' });
-//       }
-
-//       const filename = `profile-${Date.now()}-${Math.round(Math.random() * 1e9)}.${ext}`;
-//       const filepath = path.join(uploadDir, filename);
-
-//       await fs.writeFile(filepath, buffer);
-//       savedFiles.push(filename);
-//     }
-
-//     res.status(200).json({ message: 'Images uploaded successfully.', files: savedFiles });
-//   } catch (err) {
-//     console.error(err);
-//     res.status(500).json({ error: 'Failed to upload images.' });
-//   }
-// });

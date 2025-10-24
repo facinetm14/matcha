@@ -114,3 +114,6 @@ Content-Type: application/json
   "recipient": "2jtgok-mh0qljsv-g884ib-bwc65m",
   "category": "view"
 }
+
+### Get image
+GET {{baseUrl}}/users/images/9w29xp-mgz05g31-wwmy1x-he3qk8-1761319499065-274524685.png

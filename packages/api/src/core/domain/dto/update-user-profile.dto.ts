@@ -11,7 +11,14 @@ export const UpdateUserProfileDtoSchema = z.object({
   sexualOrientation: z.array(z.string()).optional(),
   bio: z.string().trim().optional(),
   tags: z.array(z.string()).optional(),
-  photos: z.array(z.string()).optional(),
+  photos: z
+    .array(
+      z.object({
+        dataInBase64: z.string(),
+        position: z.number(),
+      }),
+    )
+    .optional(),
 });
 
 export type UpdateUserProfileDto = z.infer<typeof UpdateUserProfileDtoSchema>;

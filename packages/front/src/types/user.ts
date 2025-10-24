@@ -1,3 +1,5 @@
+import { UserImage } from "./user-image";
+
 export enum UserStatus {
   UNVERIFIED = 'UNVERIFIED',
   VERIFIED = 'VERIFIED',
@@ -16,7 +18,7 @@ export type User = {
   bio?: string;
   age?: number;
   tags?: string[];
-  photos?: string[];
+  photos?: UserImage[];
   createdAt?: Date;
   updatedAt?: Date;
 };
