@@ -2,7 +2,8 @@ import { CreateNewPasswordDto } from '@/core/domain/dto/create-new-password.dto'
 import { CreateNewPasswordError } from '@/core/domain/errors/create-new-password.error';
 import { inject, injectable } from 'inversify';
 import { Result, Err, Ok } from '@/core/domain/utils/result';
-import { hashPassword, isPasswordStrong } from '@shared/password';
+import { hashPassword } from '@shared/password';
+import { isPasswordStrong } from '@shared/input-validation/is-valid-password';
 import { TYPE } from '@/infrastructure/config/inversify-type';
 import { UserRepository } from '@/core/ports/repositories/user.repository';
 import { UserUniqKeys } from '@/core/domain/enums/user-uniq-keys.enum';
@@ -12,7 +13,7 @@ export class CreateNewPasswordUseCase {
   constructor(
     @inject(TYPE.UserRepository)
     private readonly userRepository: UserRepository,
-  ) {}
+  ) { }
 
   async execute(
     createNewPasswordDto: CreateNewPasswordDto,

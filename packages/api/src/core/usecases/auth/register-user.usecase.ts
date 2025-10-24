@@ -6,12 +6,12 @@ import { RegisterUserError } from '../../domain/errors/register-user.error';
 import { Err, Ok, Result } from '../../domain/utils/result';
 import { UserUniqKeys } from '../../domain/enums/user-uniq-keys.enum';
 import {
-  hashPassword,
   isPasswordStrong,
-  MIN_SIZE_PASSWORD,
-} from '../../../../../shared/password';
+  PASSWORD_MIN_LENGTH,
+} from '../../../../../shared/input-validation/is-valid-password';
+import { hashPassword } from '../../../../../shared/password';
 
-import { isValidEmail } from '../../../../../shared/is-valid-email';
+import { isValidEmail } from '../../../../../shared/input-validation/is-valid-email';
 import { Logger } from '../../ports/services/logger.service';
 import { EventBus } from '../../ports/services/event-bus';
 import { EventType } from '../../domain/enums/event-type';
@@ -26,7 +26,7 @@ export class RegisterUserUseCase {
     private readonly userRepository: UserRepository,
     @inject(TYPE.Logger) private readonly logger: Logger,
     @inject(TYPE.EventBus) private readonly eventBus: EventBus,
-  ) {}
+  ) { }
   async execute(
     createUserDto: CreateUserDto,
     userToken: UserToken,
@@ -51,7 +51,7 @@ export class RegisterUserUseCase {
       return Err(RegisterUserError.MISMATCH_CONFIRM_PASSWD_WITH_PASSWD);
     }
 
-    const isStrongPasswd = isPasswordStrong(passwd, MIN_SIZE_PASSWORD);
+    const isStrongPasswd = isPasswordStrong(passwd, PASSWORD_MIN_LENGTH);
     if (!isStrongPasswd) {
       return Err(RegisterUserError.USER_PASSWD_WEAK);
     }
