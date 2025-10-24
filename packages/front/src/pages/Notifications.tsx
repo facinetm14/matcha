@@ -1,11 +1,15 @@
+import { useState } from 'react';
 import { Navigation } from '@/components/Navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
 import { Heart, Eye, MessageCircle, Users, HeartOff } from 'lucide-react';
 import { mockNotifications, mockUsers, mockMessages } from '@/utils/mockData';
 import { formatDistanceToNow } from 'date-fns';
 
 export default function Notifications() {
+  const [filter, setFilter] = useState<string | null>(null);
+
   const unreadNotifications = mockNotifications.filter((n) => !n.read).length;
   const unreadMessages = mockMessages.filter((m) => !m.read).length;
 
@@ -46,6 +50,11 @@ export default function Notifications() {
     }
   };
 
+  // Filtrage
+  const filteredNotifications = filter
+    ? mockNotifications.filter((n) => n.type === filter)
+    : mockNotifications;
+
   return (
     <div className="min-h-screen bg-background pb-20 md:pt-20">
       <Navigation
@@ -56,8 +65,31 @@ export default function Notifications() {
       <div className="max-w-3xl mx-auto px-4 pt-6 md:pt-8">
         <h1 className="text-3xl font-bold mb-6">Notifications</h1>
 
+        {/* --- Boutons de filtrage --- */}
+        <div className="flex gap-3 mb-6">
+          <Button
+            variant={filter === 'like' ? 'default' : 'outline'}
+            onClick={() => setFilter(filter === 'like' ? null : 'like')}
+          >
+            <Heart className="w-4 h-4 mr-2" /> Likes
+          </Button>
+          <Button
+            variant={filter === 'view' ? 'default' : 'outline'}
+            onClick={() => setFilter(filter === 'view' ? null : 'view')}
+          >
+            <Eye className="w-4 h-4 mr-2" /> Views
+          </Button>
+          <Button
+            variant={filter === 'match' ? 'default' : 'outline'}
+            onClick={() => setFilter(filter === 'match' ? null : 'match')}
+          >
+            <Users className="w-4 h-4 mr-2" /> Matchs
+          </Button>
+        </div>
+
+        {/* --- Liste des notifications --- */}
         <div className="space-y-3">
-          {mockNotifications.map((notification) => {
+          {filteredNotifications.map((notification) => {
             const user = mockUsers.find(
               (u) => u.id === notification.fromUserId,
             );
