@@ -11,12 +11,15 @@ interface TagInputProps {
 
 export function TagInput({ tags, onChange, disabled = false }: TagInputProps) {
   const [inputValue, setInputValue] = useState('');
+  const MAX_TAGS = 15;
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && inputValue.trim()) {
       e.preventDefault();
       const newTag = inputValue.trim().toLowerCase();
-      
+
+      if (tags.length >= MAX_TAGS) return;
+
       if (!tags.includes(newTag)) {
         onChange([...tags, newTag]);
       }
@@ -51,7 +54,7 @@ export function TagInput({ tags, onChange, disabled = false }: TagInputProps) {
             )}
           </Badge>
         ))}
-        {!disabled && (
+        {!disabled && tags.length < MAX_TAGS && (
           <Input
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
@@ -61,10 +64,21 @@ export function TagInput({ tags, onChange, disabled = false }: TagInputProps) {
           />
         )}
       </div>
-      {!disabled && inputValue && (
-        <p className="text-xs text-muted-foreground">
-          Press Enter to create tag "{inputValue.trim()}"
-        </p>
+
+      {/* message d’aide */}
+      {!disabled && (
+        <>
+          {inputValue && tags.length < MAX_TAGS && (
+            <p className="text-xs text-muted-foreground">
+              Press Enter to create tag "{inputValue.trim()}"
+            </p>
+          )}
+          {tags.length >= MAX_TAGS && (
+            <p className="text-xs text-destructive">
+              Maximum {MAX_TAGS} tags reached.
+            </p>
+          )}
+        </>
       )}
     </div>
   );

@@ -383,11 +383,11 @@ export default function Profile() {
               )}
             </div>
 
-                       <div className="space-y-2">
+            <div className="space-y-2">
               <Label>Interests</Label>
               {isEditing ? (
                 <TagInput
-                  tags={draft?.tags ?? []}
+                  tags={draft?.tags ?? profile.tags ?? []}
                   onChange={(tags) => setDraft((d) => ({ ...(d ?? {}), tags }))}
                 />
               ) : (
@@ -404,20 +404,6 @@ export default function Profile() {
                 </div>
               )}
             </div>
-            {/* <div className="space-y-2">
-              <Label>Interests</Label>
-              <div className="flex flex-wrap gap-2 p-2 bg-muted rounded">
-                {profile.tags.map((tag, index) => (
-                  <Badge
-                    key={index}
-                    variant="default"
-                    className="cursor-not-allowed"
-                  >
-                    #{tag}
-                  </Badge>
-                ))}
-              </div>
-            </div> */}
 
             {/* Photo Gallery */}
             <div className="space-y-2">
