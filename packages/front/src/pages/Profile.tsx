@@ -34,6 +34,7 @@ import { useProfileStore } from '@/store/profileStore';
 import { getInitials } from '@/utils/get-initials';
 import { UpdateUserDto } from '@/types/dto/update-user.dto';
 import { Gender } from '@/types/user';
+import { TagInput } from '@/components/ui/tag-input';
 
 export default function Profile() {
   const [isEditing, setIsEditing] = useState(false);
@@ -384,17 +385,24 @@ export default function Profile() {
 
             <div className="space-y-2">
               <Label>Interests</Label>
-              <div className="flex flex-wrap gap-2 p-2 bg-muted rounded">
-                {profile.tags.map((tag, index) => (
-                  <Badge
-                    key={index}
-                    variant="default"
-                    className="cursor-not-allowed"
-                  >
-                    #{tag}
-                  </Badge>
-                ))}
-              </div>
+              {isEditing ? (
+                <TagInput
+                  tags={draft?.tags ?? profile.tags ?? []}
+                  onChange={(tags) => setDraft((d) => ({ ...(d ?? {}), tags }))}
+                />
+              ) : (
+                <div className="flex flex-wrap gap-2 p-2 bg-muted rounded">
+                  {profile.tags.map((tag, index) => (
+                    <Badge
+                      key={index}
+                      variant="secondary"
+                      className="bg-gradient-romantic text-white"
+                    >
+                      #{tag}
+                    </Badge>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Photo Gallery */}
