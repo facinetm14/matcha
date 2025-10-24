@@ -21,7 +21,6 @@ import {
   Eye,
   Heart as HeartIcon,
   X as Cancel,
-  Camera,
 } from 'lucide-react';
 import { mockNotifications, mockMessages } from '@/utils/mockData';
 import { toast } from 'sonner';
@@ -34,12 +33,13 @@ import { getInitials } from '@/utils/get-initials';
 import { UpdateUserDto } from '@/types/dto/update-user.dto';
 import { Gender } from '@/types/user';
 import { TagInput } from '@/components/ui/tag-input';
+import { PhotoGallery } from '@/components/PhotoGalery';
 
 export default function Profile() {
   const [isEditing, setIsEditing] = useState(false);
-  const [draft, setDraft] = useState<UpdateUserDto | null>(null);
   const unreadNotifications = mockNotifications.filter((n) => !n.read).length;
   const unreadMessages = mockMessages.filter((m) => !m.read).length;
+  const { draft, updateUserDraft } = useProfileStore((state) => state);
 
   const { isPending, error, refetch } = useQuery({
     queryKey: ['fetchUserProfile'],
@@ -63,12 +63,14 @@ export default function Profile() {
       if (response.status === 200) {
         return true;
       }
-      throw new Error('Failed to update profile. Please try again.');
+
+      const error = await response.text();
+      throw new Error(error);
     },
     onSuccess: () => {
       toast.success('Profile updated successfully! 🎉');
       setIsEditing(false);
-      setDraft(null);
+      updateUserDraft(null);
       refetch();
     },
     onError: (error) => {
@@ -125,14 +127,6 @@ export default function Profile() {
                     </div>
                   )}
                 </div>
-                {isEditing && (
-                  <Button
-                    size="icon"
-                    className="absolute bottom-0 right-0 rounded-full shadow-soft"
-                  >
-                    <Camera className="w-4 h-4" />
-                  </Button>
-                )}
               </div>
 
               {/* Profile Info */}
@@ -160,14 +154,13 @@ export default function Profile() {
                         <Button
                           variant="outline"
                           onClick={() => {
-                            setDraft({
+                            updateUserDraft({
                               email: profile.email,
                               firstName: profile.firstName,
                               lastName: profile.lastName,
                               gender: profile.gender as Gender,
                               sexualOrientation: profile.sexualOrientation,
                               bio: profile.bio,
-                              photos: profile.photos,
                             });
                             setIsEditing(true);
                           }}
@@ -236,10 +229,10 @@ export default function Profile() {
                   <Input
                     value={draft?.firstName ?? ''}
                     onChange={(e) =>
-                      setDraft((d) => ({
-                        ...(d ?? {}),
+                      updateUserDraft({
+                        ...(draft ?? {}),
                         firstName: e.target.value,
-                      }))
+                      })
                     }
                   />
                 ) : (
@@ -255,10 +248,10 @@ export default function Profile() {
                   <Input
                     value={draft?.lastName ?? ''}
                     onChange={(e) =>
-                      setDraft((d) => ({
-                        ...(d ?? {}),
+                      updateUserDraft({
+                        ...(draft ?? {}),
                         lastName: e.target.value,
-                      }))
+                      })
                     }
                   />
                 ) : (
@@ -274,9 +267,12 @@ export default function Profile() {
               {isEditing ? (
                 <Input
                   type="email"
-                  value={draft.email}
+                  value={draft?.email ?? ''}
                   onChange={(e) =>
-                    setDraft((d) => ({ ...(d ?? {}), email: e.target.value }))
+                    updateUserDraft({
+                      ...(draft ?? {}),
+                      email: e.target.value,
+                    })
                   }
                 />
               ) : (
@@ -293,7 +289,10 @@ export default function Profile() {
                   <Select
                     value={draft?.gender || profile.gender || ''}
                     onValueChange={(value: string) =>
-                      setDraft({ ...draft, gender: value as Gender })
+                      updateUserDraft({
+                        ...(draft ?? {}),
+                        gender: value as Gender,
+                      })
                     }
                   >
                     <SelectTrigger>
@@ -321,7 +320,7 @@ export default function Profile() {
                         <Button
                           key={preference}
                           variant={
-                            draft.sexualOrientation?.includes(preference)
+                            draft?.sexualOrientation?.includes(preference)
                               ? 'default'
                               : 'outline'
                           }
@@ -336,7 +335,7 @@ export default function Profile() {
                                 )
                               : [...currentPreferences, preference];
 
-                            setDraft({
+                            updateUserDraft({
                               ...draft,
                               sexualOrientation: newPreferences,
                             });
@@ -373,7 +372,10 @@ export default function Profile() {
                 <Textarea
                   value={draft?.bio ?? ''}
                   onChange={(e) =>
-                    setDraft((d) => ({ ...(d ?? {}), bio: e.target.value }))
+                    updateUserDraft({
+                      ...(draft ?? {}),
+                      bio: e.target.value,
+                    })
                   }
                   rows={4}
                 />
@@ -387,7 +389,12 @@ export default function Profile() {
               {isEditing ? (
                 <TagInput
                   tags={draft?.tags ?? profile.tags ?? []}
-                  onChange={(tags) => setDraft((d) => ({ ...(d ?? {}), tags }))}
+                  onChange={(tags) =>
+                    updateUserDraft({
+                      ...draft,
+                      tags: tags,
+                    })
+                  }
                 />
               ) : (
                 <div className="flex flex-wrap gap-2 p-2 bg-muted rounded">
@@ -405,26 +412,7 @@ export default function Profile() {
 
             {/* Photo Gallery */}
             <div className="space-y-2">
-              <Label>Photo Gallery</Label>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {profile.photos?.map((photo, index) => (
-                  <div
-                    key={index}
-                    className="relative aspect-square rounded-lg overflow-hidden border-2 border-border hover:border-primary transition-colors"
-                  >
-                    <img
-                      src={photo}
-                      alt={`Photo ${index + 1}`}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                ))}
-                {isEditing && draft.photos.length < 5 && (
-                  <button className="aspect-square rounded-lg border-2 border-dashed border-border hover:border-primary transition-colors flex items-center justify-center">
-                    <Camera className="w-8 h-8 text-muted-foreground" />
-                  </button>
-                )}
-              </div>
+              <PhotoGallery isEditing={isEditing} />
             </div>
           </CardContent>
         </Card>

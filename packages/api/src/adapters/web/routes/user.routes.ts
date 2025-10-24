@@ -34,11 +34,11 @@ UserRouter.post(
   },
 );
 
-UserRouter.post(
-  `/pictures`,
+UserRouter.get(
+  `/images/:filename`,
   injectAuthorizationToken,
   (req: Request, resp: Response) => {
-    userController.uploadPictures(req, resp);
+    userController.getImage(req, resp);
   },
 );
 export default UserRouter;
