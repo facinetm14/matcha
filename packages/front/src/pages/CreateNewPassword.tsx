@@ -123,8 +123,8 @@ export default function CreateNewPassword() {
               <Label htmlFor="passwd">Password</Label>
               <Input
                 id="passwd"
-                type="text"
-                placeholder="Username"
+                type="password"
+                placeholder="New password"
                 value={passwd}
                 onChange={(e) => setPassword(e.target.value)}
                 className={errors.passwd ? 'border-destructive' : ''}
@@ -138,8 +138,8 @@ export default function CreateNewPassword() {
               <Label htmlFor="passwd">Confirm Password</Label>
               <Input
                 id="confirm-passwd"
-                type="passwd"
-                placeholder="Password"
+                type="password"
+                placeholder="Confirm password"
                 value={confirmPasswd}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 className={errors.confirmPasswd ? 'border-destructive' : ''}
