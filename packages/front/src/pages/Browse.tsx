@@ -13,9 +13,9 @@ export default function Browse() {
   const navigate = useNavigate();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [users] = useState<UserProfile[]>(mockUsers.filter(user => {
-    const myPreferences = mockCurrentUser.sexualPreferences;
+    const myPreferences = mockCurrentUser.sexualOrientation;
     const theirGender = user.gender;
-    const theirPreferences = user.sexualPreferences;
+    const theirPreferences = user.sexualOrientation;
 
     return (
       myPreferences.includes(theirGender) && 
@@ -122,7 +122,7 @@ export default function Browse() {
               </div>
 
               <p className="text-sm mb-3 line-clamp-2">
-                {currentUser.biography}
+                {currentUser.bio}
               </p>
 
               <div className="flex flex-wrap gap-2">

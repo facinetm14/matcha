@@ -11,7 +11,7 @@ export type User = {
   username: string;
   status: UserStatus;
   isFirstLogin: string | null;
-  gender?: string;
+  gender?: Gender;
   sexualOrientation?: Gender[];
   bio?: string;
   age?: number;
