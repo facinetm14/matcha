@@ -354,13 +354,13 @@ export default function Profile() {
                 ) : (
                   <div className="flex flex-wrap gap-2">
                     {profile.sexualOrientation.map((preference) => (
-                      <Button key={preference} className="cursor-not-allowed">
+                      <p className="p-2 bg-muted rounded read-only">
                         {preference === 'male'
                           ? 'Male'
                           : preference === 'female'
                             ? 'Female'
                             : 'Non-binary'}
-                      </Button>
+                      </p>
                     ))}
                   </div>
                 )}
