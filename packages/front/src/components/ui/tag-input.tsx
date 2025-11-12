@@ -35,12 +35,12 @@ export function TagInput({ tags, onChange, disabled = false }: TagInputProps) {
 
   return (
     <div className="space-y-2">
-      <div className="flex flex-wrap gap-2 p-3 bg-muted rounded-md border border-input min-h-[42px]">
+      <div className="flex flex-wrap gap-2 p-3 bg-background rounded-md border border-input min-h-[42px]">
         {tags.map((tag) => (
           <Badge
             key={tag}
             variant="secondary"
-            className="bg-gradient-romantic text-white pl-3 pr-1 py-1 flex items-center gap-1"
+            className="pl-3 pr-1 py-1 flex items-center gap-1"
           >
             {tag}
             {!disabled && (
@@ -60,12 +60,11 @@ export function TagInput({ tags, onChange, disabled = false }: TagInputProps) {
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={tags.length === 0 ? "Type and press Enter to add tags..." : "Add tag..."}
-            className="flex-1 min-w-[120px] border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 p-0 h-6"
           />
         )}
       </div>
 
-      {/* message d’aide */}
+      {/* help message */}
       {!disabled && (
         <>
           {inputValue && tags.length < MAX_TAGS && (
