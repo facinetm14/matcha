@@ -394,8 +394,7 @@ export default function Profile() {
                   {profile.tags.map((tag, index) => (
                     <Badge
                       key={index}
-                      variant="secondary"
-                      className="bg-gradient-romantic text-white"
+                      variant="outline"
                     >
                       #{tag}
                     </Badge>
