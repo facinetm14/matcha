@@ -1,4 +1,5 @@
 import { Gender } from '../user';
+import { UserImageDto } from './user-image.dto';
 
 export interface UpdateUserDto {
   email?: string;
@@ -9,7 +10,7 @@ export interface UpdateUserDto {
   sexualOrientation?: Gender[];
   bio?: string;
   tags?: string[];
-  photos?: string[];
+  photos?: UserImageDto[];
   passwd?: string;
   confirmPasswd?: string;
 }

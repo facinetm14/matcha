@@ -33,6 +33,9 @@ export type UserAggregate = UserModel & {
   interest: string;
   author: string;
   category: InteractionCategory;
+  img_position: string;
+  img_preview: string;
+  img_id: string;
 };
 export function buildUserProfileFromUserAggregate(
   userAggregate: UserAggregate[],
@@ -40,6 +43,7 @@ export function buildUserProfileFromUserAggregate(
   const userProfilesMap: Map<string, UserProfile> = new Map();
   const interactors: Set<string> = new Set();
   const visitedTags: Set<string> = new Set();
+  const visitedImages: Set<string> = new Set();
 
   for (const user of userAggregate) {
     const interactionKey = `${user.id}+${user.author}+${user.category}`;
@@ -59,12 +63,22 @@ export function buildUserProfileFromUserAggregate(
           : [],
         reported: false,
         lastSeen: null,
-        photos: [],
+        photos: user.img_id
+          ? [
+              {
+                id: user.img_id,
+                userId: user.id,
+                position: +user.img_position,
+                preview: `http://localhost:5000/api/v1/users/images/${user.img_preview}`,
+              },
+            ]
+          : [],
         profilePhoto: '',
       });
 
       interactors.add(interactionKey);
       visitedTags.add(tagKey);
+      visitedImages.add(user.img_id);
       continue;
     }
 
@@ -85,7 +99,18 @@ export function buildUserProfileFromUserAggregate(
 
       interactors.add(interactionKey);
     }
+
+    if (user.img_id && !visitedImages.has(user.img_id)) {
+      existingProfile.photos.push({
+        id: user.img_id,
+        userId: user.id,
+        position: +user.img_position,
+        preview: `http://localhost:5000/api/v1/users/images/${user.img_preview}`,
+      });
+
+      visitedImages.add(user.img_id);
+    }
   }
 
-  return [...userProfilesMap.values()];
+  return [...userProfilesMap.values()].map(profile => ({...profile, photos: profile.photos.sort((a, b) => a.position - b.position)}));
 }

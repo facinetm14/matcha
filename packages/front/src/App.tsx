@@ -16,6 +16,7 @@ import NotFound from './pages/NotFound';
 import { VerifyEmail } from './pages/VerifyEmail';
 import { useAuthStore } from './store/authStore';
 import CreateNewPassword from './pages/CreateNewPassword';
+import './api/socket.api';
 
 const queryClient = new QueryClient();
 
@@ -62,10 +63,7 @@ const App = () => (
             }
           />
           <Route path="/verify/:token" element={<VerifyEmail />} />
-          <Route
-            path="/new-password/:token"
-            element={<CreateNewPassword />}
-          />
+          <Route path="/new-password/:token" element={<CreateNewPassword />} />
           <Route
             path="/forgot-password"
             element={

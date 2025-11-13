@@ -1,6 +1,6 @@
 import type { CreateUserDto } from '@/types/dto/create-user.dto';
 
-const API_BASE_ROUTE = '/api/v1';
+const API_BASE_ROUTE = import.meta.env.VITE_BASE_API;
 
 const register = async (user: CreateUserDto) => {
   return fetch(`${API_BASE_ROUTE}/auth/register`, {

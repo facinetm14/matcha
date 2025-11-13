@@ -1,3 +1,4 @@
+import { UserImage } from './user-image.entity';
 import { User } from './user.entity';
 
 export type Gender = 'male' | 'female' | 'non-binary';
@@ -12,7 +13,7 @@ export type Location = {
 
 export type UserProfile = User & {
   tags: string[];
-  photos: string[];
+  photos: UserImage[];
   profilePhoto: string;
   location?: Location;
   fameRating: number;

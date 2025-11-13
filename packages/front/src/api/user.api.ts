@@ -1,7 +1,7 @@
 import { UpdateUserDto } from '@/types/dto/update-user.dto';
 import { UserIdentifier } from '../../../shared/user-identifier';
 
-const API_BASE_ROUTE = '/api/v1';
+const API_BASE_ROUTE = import.meta.env.VITE_BASE_API;
 
 const getMe = async () => {
   return fetch(`${API_BASE_ROUTE}/users/me`, {
@@ -26,10 +26,7 @@ const checkUserIdentifierAvailability = async (
   });
 };
 
-
-const updateUserProfile = async (
-  updateUserDto: UpdateUserDto
-) => {
+const updateUserProfile = async (updateUserDto: UpdateUserDto) => {
   return fetch(`${API_BASE_ROUTE}/users/update`, {
     headers: {
       'Content-Type': 'application/json',
@@ -43,5 +40,5 @@ const updateUserProfile = async (
 export const userApi = {
   getMe,
   checkUserIdentifierAvailability,
-  updateUserProfile
+  updateUserProfile,
 };

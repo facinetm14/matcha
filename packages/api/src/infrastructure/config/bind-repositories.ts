@@ -8,6 +8,8 @@ import { UserInterestRepository } from '@/core/ports/repositories/user-interest.
 import { UserInterestRepositoryDb } from '@/adapters/repositories/user-interest-repository-db';
 import { UserInteractionRepository } from '@/core/ports/repositories/user-profile-interaction.repository';
 import { UserInteractionRepositoryDb } from '@/adapters/repositories/user-interaction-repository-db';
+import { UserImageRepository } from '@/core/ports/repositories/user-image.repository';
+import { UserImageRepositoryDb } from '@/adapters/repositories/user-image-repository-db';
 
 export function bindRepositories(container: Container) {
   container
@@ -28,5 +30,10 @@ export function bindRepositories(container: Container) {
   container
     .bind<UserInteractionRepository>(TYPE.UserInteractionRepository)
     .to(UserInteractionRepositoryDb)
+    .inSingletonScope();
+
+  container
+    .bind<UserImageRepository>(TYPE.UserImageRepository)
+    .to(UserImageRepositoryDb)
     .inSingletonScope();
 }

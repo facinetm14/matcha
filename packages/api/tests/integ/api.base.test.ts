@@ -1,5 +1,4 @@
 import request from 'supertest';
-import { Server } from 'http';
 import { createApp } from '../../src/app';
 import { Logger } from '../../src/core/ports/services/logger.service';
 import container from '../../src/infrastructure/config/inversify';
@@ -7,12 +6,11 @@ import { TYPE } from '../../src/infrastructure/config/inversify-type';
 
 const logger = container.get<Logger>(TYPE.Logger);
 
-let server: Server;
-const app = createApp();
+const { server, app } = createApp();
 const PORT = 5001;
 
 beforeAll(() => {
-  server = app.listen(PORT, () => {
+  server.listen(PORT, () => {
     logger.info(`Server running at http://localhost:${PORT}`);
   });
 });
