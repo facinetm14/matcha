@@ -22,20 +22,16 @@ import { PhotoSlot } from './PhotoSlot';
 import { UserImageDto } from '@/types/dto/user-image.dto';
 import { useProfileStore } from '@/store/profileStore';
 import { convertFIleToBase64t } from '@/utils/convert-file-to-base64';
-
-interface Photo {
-  id: string;
-  file: File;
-  preview: string;
-}
+import { UserImage } from '@/types/user-image';
+import { uuid } from '../../../shared/uuid';
 
 const MAX_PHOTOS = 5;
 const ACCEPTED_FORMATS = ['image/jpeg', 'image/jpg', 'image/png'];
 
 export const PhotoGallery = ({ isEditing }: { isEditing: boolean }) => {
-  const [photos, setPhotos] = useState<Photo[]>([]);
+  const { user, draft, photos, updateUserDraft, updateUserPhotos } =
+    useProfileStore((state) => state);
   const { toast } = useToast();
-  const { user, draft, updateUserDraft } = useProfileStore((state) => state);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -45,7 +41,7 @@ export const PhotoGallery = ({ isEditing }: { isEditing: boolean }) => {
   );
 
   const onDrop = (acceptedFiles: File[]) => {
-    if (photos.length >= MAX_PHOTOS) {
+    if (draft.photos?.length >= MAX_PHOTOS) {
       toast({
         title: 'Maximum photos reached',
         description: `You can only upload up to ${MAX_PHOTOS} photos.`,
@@ -66,25 +62,28 @@ export const PhotoGallery = ({ isEditing }: { isEditing: boolean }) => {
       });
     }
 
-    const remainingSlots = MAX_PHOTOS - photos.length;
+    const remainingSlots = MAX_PHOTOS - draft.photos?.length;
     const filesToAdd = validFiles.slice(0, remainingSlots);
+    const lastImage = draft.photos?.at(-1) ?? user.photos?.at(-1);
+    const lastPosition = lastImage ? lastImage.position + 1 : 1;
 
-    const newPhotos: Photo[] = filesToAdd.map((file) => ({
-      id: `photo-${Date.now()}-${Math.random()}`,
+    const newPhotos: UserImage[] = filesToAdd.map((file, i) => ({
       file,
       preview: URL.createObjectURL(file),
+      position: lastPosition + i,
+      userId: user.id,
+      id: `photo-${uuid()}`,
     }));
 
-    setPhotos((prev) => [...prev, ...newPhotos]);
+    updateUserPhotos([...photos, ...newPhotos]);
+    uploadPhotos(filesToAdd, lastPosition);
 
-    uploadPhotos(filesToAdd);
-
-    if (filesToAdd.length < validFiles.length) {
-      toast({
-        title: 'Some photos not added',
-        description: `Only ${remainingSlots} slot(s) available.`,
-      });
-    }
+    // if (filesToAdd.length < validFiles.length) {
+    //   toast({
+    //     title: 'Some photos not added',
+    //     description: `Only ${remainingSlots} slot(s) available.`,
+    //   });
+    // }
   };
 
   const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
@@ -97,19 +96,16 @@ export const PhotoGallery = ({ isEditing }: { isEditing: boolean }) => {
     noKeyboard: true,
   });
 
-  const uploadPhotos = async (files: File[]) => {
+  const uploadPhotos = async (files: File[], lastPosition: number) => {
     const photoList: UserImageDto[] = [];
-
-    const lastImage = user.photos?.at(-1);
-    let pos = lastImage ? lastImage.position + 1 : 1;
 
     for (const f of files) {
       const image: UserImageDto = {
         dataInBase64: await convertFIleToBase64t(f),
-        position: pos,
+        position: lastPosition,
       };
 
-      pos += 1;
+      lastPosition += 1;
       photoList.push(image);
     }
     updateUserDraft({
@@ -118,9 +114,9 @@ export const PhotoGallery = ({ isEditing }: { isEditing: boolean }) => {
     });
   };
 
-  const mockDeletePhoto = async (photoId: string) => {
+  const mockDeletePhoto = async (preview: string) => {
     // Mock API call - replace with your actual API
-    console.log('Deleting photo:', photoId);
+    console.log('Deleting photo:', preview);
     await new Promise((resolve) => setTimeout(resolve, 500));
     console.log('Photo deleted successfully');
   };
@@ -132,29 +128,27 @@ export const PhotoGallery = ({ isEditing }: { isEditing: boolean }) => {
     console.log('Photos reordered successfully');
   };
 
-  const removePhoto = (id: string) => {
-    const photo = photos.find((p) => p.id === id);
+  const removePhoto = (preview: string) => {
+    const photo = photos.find((p) => p.preview === preview);
     if (photo) {
       URL.revokeObjectURL(photo.preview);
-      mockDeletePhoto(id);
+      mockDeletePhoto(preview);
     }
-    setPhotos((prev) => prev.filter((p) => p.id !== id));
+    updateUserPhotos(photos.filter((p) => p.preview !== preview));
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
 
     if (over && active.id !== over.id) {
-      setPhotos((items) => {
-        const oldIndex = items.findIndex((item) => item.id === active.id);
-        const newIndex = items.findIndex((item) => item.id === over.id);
-        const newOrder = arrayMove(items, oldIndex, newIndex);
-
-        // Mock API call with new order
-        mockReorderPhotos(newOrder.map((p) => p.id));
-
-        return newOrder;
-      });
+      // setPhotos((items) => {
+      //   const oldIndex = items.findIndex((item) => item.id === active.id);
+      //   const newIndex = items.findIndex((item) => item.id === over.id);
+      //   const newOrder = arrayMove(items, oldIndex, newIndex);
+      //   // Mock API call with new order
+      //   mockReorderPhotos(newOrder.map((p) => p.id));
+      //   return newOrder;
+      // });
     }
   };
 
@@ -235,7 +229,8 @@ export const PhotoGallery = ({ isEditing }: { isEditing: boolean }) => {
                 id={photo.id}
                 preview={photo.preview}
                 isProfile={index === 0}
-                onRemove={() => removePhoto(photo.id)}
+                isEditing={isEditing}
+                onRemove={() => removePhoto(photo.preview)}
               />
             ))}
 

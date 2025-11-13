@@ -34,12 +34,22 @@ import { UpdateUserDto } from '@/types/dto/update-user.dto';
 import { Gender } from '@/types/user';
 import { TagInput } from '@/components/ui/tag-input';
 import { PhotoGallery } from '@/components/PhotoGalery';
+import { getGenderLabel } from '@/utils/get-gender-label';
+import { connectSocket } from '@/api/socket.api';
 
 export default function Profile() {
   const [isEditing, setIsEditing] = useState(false);
   const unreadNotifications = mockNotifications.filter((n) => !n.read).length;
   const unreadMessages = mockMessages.filter((m) => !m.read).length;
-  const { draft, updateUserDraft } = useProfileStore((state) => state);
+  const {
+    draft,
+    user: profile,
+    photos,
+    updateUserDraft,
+    updateUserProfile,
+  } = useProfileStore((state) => state);
+
+  const socket = connectSocket();
 
   const { isPending, error, refetch } = useQuery({
     queryKey: ['fetchUserProfile'],
@@ -47,7 +57,7 @@ export default function Profile() {
       const currentUserResponse = await userApi.getMe();
       if (currentUserResponse.status === 200) {
         const user = await currentUserResponse.json();
-        updateCurrentUserProfile({
+        updateUserProfile({
           ...user,
           sexualOrientation: user.sexualOrientation?.split(' ') ?? [],
         });
@@ -78,15 +88,22 @@ export default function Profile() {
     },
   });
 
-  const updateCurrentUserProfile = useProfileStore(
-    (state) => state.updateUserProfile,
-  );
-
-  const profile = useProfileStore((state) => state.user);
-
   const handleSave = () => {
-    if (!draft) return;
-    updateProfileMutation.mutate(draft);
+    const toUpdate = {};
+
+    for (const [key, value] of Object.entries(draft)) {
+      if (draft[key] !== profile[key]) {
+        toUpdate[key] = value;
+      }
+    }
+
+    if (!Object.keys(toUpdate).length) {
+      console.log('Nothing to update');
+      setIsEditing(false);
+      return;
+    }
+
+    updateProfileMutation.mutate(toUpdate);
   };
 
   if (isPending) {
@@ -99,6 +116,10 @@ export default function Profile() {
     useAuthStore.getState().updateLoginStatus(false);
     return <Login />;
   }
+
+  socket.on('user_image_uploaded', () => {
+    toast.success('Images successfully uploaded! 🎉');
+  });
 
   return (
     <div className="min-h-screen bg-background pb-20 md:pt-20">
@@ -115,9 +136,9 @@ export default function Profile() {
               {/* Profile Photo */}
               <div className="relative mx-auto md:mx-0">
                 <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-primary">
-                  {profile.profilePhoto ? (
+                  {photos.length ? (
                     <img
-                      src={profile.profilePhoto}
+                      src={photos[0].preview}
                       alt={profile.firstName}
                       className="w-full h-full object-cover"
                     />
@@ -341,26 +362,20 @@ export default function Profile() {
                             });
                           }}
                         >
-                          {preference === 'male'
-                            ? 'Male'
-                            : preference === 'female'
-                              ? 'Female'
-                              : 'Non-binary'}
+                          {getGenderLabel(preference)}
                         </Button>
                       ),
                     )}
                   </div>
                 ) : (
                   <div className="flex flex-wrap gap-2">
-                    {profile.sexualOrientation.map((preference) => (
-                      <p className="p-2 bg-muted rounded read-only">
-                        {preference === 'male'
-                          ? 'Male'
-                          : preference === 'female'
-                            ? 'Female'
-                            : 'Non-binary'}
-                      </p>
-                    ))}
+                    {profile.sexualOrientation
+                      .filter((pre) => pre)
+                      .map((preference) => (
+                        <Button key={preference} className="cursor-not-allowed">
+                          {getGenderLabel(preference)}
+                        </Button>
+                      ))}
                   </div>
                 )}
               </div>

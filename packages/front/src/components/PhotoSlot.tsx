@@ -10,6 +10,7 @@ interface PhotoSlotProps {
   id: string;
   preview: string;
   isProfile: boolean;
+  isEditing: boolean;
   onRemove: () => void;
 }
 
@@ -17,6 +18,7 @@ export const PhotoSlot = ({
   id,
   preview,
   isProfile,
+  isEditing,
   onRemove,
 }: PhotoSlotProps) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -68,35 +70,39 @@ export const PhotoSlot = ({
           </Badge>
         )}
 
-        {/* Drag handle */}
-        <div
-          {...attributes}
-          {...listeners}
-          className="absolute top-2 right-2 p-1.5 bg-background/90 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing hover:bg-background shadow-lg"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <GripVertical className="w-5 h-5 text-foreground" />
-        </div>
+        {isEditing && (
+          <>
+            {/* Drag handle */}
+            <div
+              {...attributes}
+              {...listeners}
+              className="absolute top-2 right-2 p-1.5 bg-background/90 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing hover:bg-background shadow-lg"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <GripVertical className="w-5 h-5 text-foreground" />
+            </div>
 
-        {/* Remove button */}
-        <Button
-          size="icon"
-          variant="destructive"
-          className="absolute bottom-2 right-2 w-8 h-8 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
-          onClick={(e) => {
-            e.stopPropagation();
-            onRemove();
-          }}
-        >
-          <X className="w-4 h-4" />
-        </Button>
+            {/* Remove button */}
+            <Button
+              size="icon"
+              variant="destructive"
+              className="absolute bottom-2 right-2 w-8 h-8 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+              onClick={(e) => {
+                e.stopPropagation();
+                onRemove();
+              }}
+            >
+              <X className="w-4 h-4" />
+            </Button>
 
-        {/* Position indicator */}
-        <div className="absolute bottom-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity">
-          <div className="px-2 py-1 bg-background/90 rounded-md text-xs font-medium text-foreground shadow-lg">
-            Drag to reorder
-          </div>
-        </div>
+            {/* Position indicator */}
+            <div className="absolute bottom-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="px-2 py-1 bg-background/90 rounded-md text-xs font-medium text-foreground shadow-lg">
+                Drag to reorder
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
