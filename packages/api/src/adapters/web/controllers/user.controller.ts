@@ -21,6 +21,8 @@ import { join } from 'node:path';
 import { UPLOAD_DEST } from '@/core/domain/consts/upload-dest';
 import { AcceptedMimeType } from '@/core/domain/consts/accepted-mimetype';
 import { extractFileExtension } from '@shared/extract-file-extension';
+import { DeleteUserImageDtoSchema } from '@/core/domain/dto/delete-user-image.dto';
+import { DeleteUserImageUsceCase } from '@/core/usecases/users/delete-user-image.usecase';
 
 @injectable()
 export class UserController {
@@ -35,6 +37,8 @@ export class UserController {
     private readonly updateUserProfileUseCase: UpdateUserProfileUseCase,
     @inject(AddUserInteractionUseCase)
     private readonly addUserInteractionUseCase: AddUserInteractionUseCase,
+    @inject(DeleteUserImageUsceCase)
+    private readonly deleteImageUseCase: DeleteUserImageUsceCase,
   ) {}
 
   async getMe(req: Request, resp: Response) {
@@ -102,6 +106,8 @@ export class UserController {
       resp.status(400).send('Bad request');
       return;
     }
+
+    console.log({ data: parsedBody.data });
 
     const updateUserProfileDto = parsedBody.data;
     const updateUserProfileResult = await this.updateUserProfileUseCase.execute(
@@ -188,6 +194,17 @@ export class UserController {
   }
 
   async getImage(req: Request, resp: Response) {
+    const connectedUserResult = await getConnectedUserId(
+      this.accessTokenService,
+      req,
+      resp,
+    );
+
+    if (connectedUserResult.isErr) {
+      resp.status(401).send('Invalid token');
+      return;
+    }
+
     const { filename } = req.params;
 
     if (!filename) {
@@ -212,9 +229,35 @@ export class UserController {
     resp.writeHead(200, {
       'Content-Type': `image/${type}`,
       'Content-Length': statSync(path).size,
-      'Access-Control-Allow-Origin': '*',
+      'Cross-Origin-Resource-Policy': 'same-site | same-origin | cross-origin',
     });
 
     fileStream.pipe(resp);
+  }
+
+  async deleteImages(req: Request, resp: Response) {
+    const connectedUserResult = await getConnectedUserId(
+      this.accessTokenService,
+      req,
+      resp,
+    );
+
+    if (connectedUserResult.isErr) {
+      resp.status(401).send('Invalid token');
+      return;
+    }
+
+    const parsedBody = DeleteUserImageDtoSchema.safeParse(req.body);
+
+    if (!parsedBody.success) {
+      resp.status(400).send('bad request');
+      return;
+    }
+
+    const userId = connectedUserResult.data;
+    const imageListToDelete = parsedBody.data.images;
+
+    await this.deleteImageUseCase.execute(userId, imageListToDelete);
+    resp.status(200).send('image sucessfully deleted');
   }
 }

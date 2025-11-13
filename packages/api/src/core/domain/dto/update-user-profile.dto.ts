@@ -18,6 +18,7 @@ export const UpdateUserProfileDtoSchema = z.object({
         position: z.number(),
       }),
     )
+    .max(5, { message: 'You can upload up to 5 photos only.' })
     .optional(),
 });
 

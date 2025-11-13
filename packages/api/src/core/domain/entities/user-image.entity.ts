@@ -1,5 +1,5 @@
 export interface UserImage {
-  id?: string;
+  id: string;
   userId: string;
   position: number;
   file?: File;

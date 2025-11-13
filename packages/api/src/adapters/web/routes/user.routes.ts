@@ -41,4 +41,13 @@ UserRouter.get(
     userController.getImage(req, resp);
   },
 );
+
+UserRouter.post(
+  `/images/remove`,
+  injectAuthorizationToken,
+  (req: Request, resp: Response) => {
+    userController.deleteImages(req, resp);
+  },
+);
+
 export default UserRouter;

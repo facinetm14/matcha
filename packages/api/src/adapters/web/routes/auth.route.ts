@@ -1,7 +1,10 @@
 import { Request, Response, Router } from 'express';
 import container from '../../../infrastructure/config/inversify';
 import { AuthController } from '../controllers/auth.controller';
-import { injectAuthorizationToken, injectAuthorizationTokenForLogout } from '../middlewares/inject-authorization-token';
+import {
+  injectAuthorizationToken,
+  injectAuthorizationTokenForLogout,
+} from '../middlewares/inject-authorization-token';
 
 const authController = container.get(AuthController);
 

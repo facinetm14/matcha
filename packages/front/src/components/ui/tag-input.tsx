@@ -30,7 +30,7 @@ export function TagInput({ tags, onChange, disabled = false }: TagInputProps) {
   };
 
   const removeTag = (tagToRemove: string) => {
-    onChange(tags.filter(tag => tag !== tagToRemove));
+    onChange(tags.filter((tag) => tag !== tagToRemove));
   };
 
   return (

@@ -4,6 +4,7 @@ import { Result, Ok, Err } from '@/core/domain/utils/result';
 import { verifyAccessToken } from '@/infrastructure/utils/jwt';
 import { AccessTokenService } from '@/core/ports/services/access-token.service';
 import { attachTokensToSecureCookies } from './attach-secure-cookies';
+import { Socket } from 'socket.io';
 
 export async function getConnectedUserId(
   accessTokenService: AccessTokenService,
@@ -39,6 +40,45 @@ export async function getConnectedUserId(
 
   await accessTokenService.revokeToken(refreshToken);
   attachTokensToSecureCookies(resp, newAccessToken);
+
+  return Ok(userToken.userId);
+}
+
+export async function getConnectedUserIdFromSocket(
+  socket: Socket,
+  accessTokenService: AccessTokenService,
+): Promise<Result<string, VerifyTokenError>> {
+  const cookies = socket.handshake.headers.cookie;
+  if (!cookies) {
+    return Err(VerifyTokenError.INVALID_TOKEN);
+  }
+
+  const [token, refresh] = cookies
+    .split(';')
+    .map((item) => item.slice(item.indexOf('=') + 1));
+
+  if (!token) {
+    return Err(VerifyTokenError.INVALID_TOKEN);
+  }
+
+  const verifyAccessTokenResult = await verifyAccessToken(token);
+  if (!verifyAccessTokenResult.isErr) {
+    return Ok(verifyAccessTokenResult.data);
+  }
+
+  if (refresh) {
+    const userToken = await accessTokenService.find(refresh);
+    if (!userToken) {
+      return Err(VerifyTokenError.INVALID_TOKEN);
+    }
+
+    return Ok(userToken.userId);
+  }
+
+  const userToken = await accessTokenService.find(token);
+  if (!userToken) {
+    return Err(VerifyTokenError.INVALID_TOKEN);
+  }
 
   return Ok(userToken.userId);
 }

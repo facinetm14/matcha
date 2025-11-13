@@ -14,7 +14,7 @@ export class UserInterestRepositoryDb implements UserInterestRepository {
   constructor(@inject(TYPE.Logger) private readonly logger: Logger) {}
 
   async bulkCreate(userId: string, interests: string[]): Promise<void> {
-    if (!interests || interests.length === 0) return;
+    if (interests.length === 0) return;
 
     const values: unknown[] = [];
     const valuePlaceholders = interests
@@ -58,8 +58,10 @@ export class UserInterestRepositoryDb implements UserInterestRepository {
     const result = await pgClient.query(queryUser);
     connexion.release();
 
-    console.log(result.rows);
-    return [];
+    const userInterestRawList = result.rows as UserInterestModel[];
+    return userInterestRawList.map((userInterest) =>
+      mapUserInterestModelToEntity(userInterest),
+    );
   }
 
   async findAll(): Promise<UserInterest[]> {

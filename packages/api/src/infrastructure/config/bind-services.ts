@@ -12,8 +12,10 @@ import { CacheService } from '../../core/ports/services/cache.service';
 import { RedisCacheApi } from '../../adapters/services/redis-cache-api';
 import { AccessTokenService } from '@/core/ports/services/access-token.service';
 import { AccessTokenHelper } from '@/adapters/services/access-token-helper';
+import { SocketIoListener } from '../events-listeners/socket-io.listener';
 
 export function bindServices(container: Container) {
+  container.bind(SocketIoListener).toSelf().inSingletonScope();
   container.bind<Logger>(TYPE.Logger).to(LoggerStd).inSingletonScope();
   container.bind<EventBus>(TYPE.EventBus).to(NodeEventBus).inSingletonScope();
   container

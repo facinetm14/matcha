@@ -11,6 +11,7 @@ import { CreateNewPasswordUseCase } from '@/core/usecases/auth/create-new-passwo
 import { LogoutUseCase } from '@/core/usecases/auth/logout.usecase';
 import { UpdateUserProfileUseCase } from '@/core/usecases/users/update-user-profile.usecase';
 import { AddUserInteractionUseCase } from '@/core/usecases/users/add-user-interaction.usecase';
+import { DeleteUserImageUsceCase } from '@/core/usecases/users/delete-user-image.usecase';
 
 export function bindUseCases(container: Container) {
   container.bind(RegisterUserUseCase).toSelf().inSingletonScope();
@@ -28,4 +29,5 @@ export function bindUseCases(container: Container) {
   container.bind(LogoutUseCase).toSelf().inSingletonScope();
   container.bind(UpdateUserProfileUseCase).toSelf().inSingletonScope();
   container.bind(AddUserInteractionUseCase).toSelf().inSingletonScope();
+  container.bind(DeleteUserImageUsceCase).toSelf().inSingletonScope();
 }
