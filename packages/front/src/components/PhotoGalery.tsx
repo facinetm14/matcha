@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import {
   DndContext,
@@ -10,7 +9,6 @@ import {
   DragEndEvent,
 } from '@dnd-kit/core';
 import {
-  arrayMove,
   SortableContext,
   sortableKeyboardCoordinates,
   rectSortingStrategy,
@@ -41,7 +39,9 @@ export const PhotoGallery = ({ isEditing }: { isEditing: boolean }) => {
   );
 
   const onDrop = (acceptedFiles: File[]) => {
-    if (draft.photos?.length >= MAX_PHOTOS) {
+    const draftPhotos = draft.photos ?? [];
+
+    if (draftPhotos.length === MAX_PHOTOS) {
       toast({
         title: 'Maximum photos reached',
         description: `You can only upload up to ${MAX_PHOTOS} photos.`,
@@ -62,9 +62,9 @@ export const PhotoGallery = ({ isEditing }: { isEditing: boolean }) => {
       });
     }
 
-    const remainingSlots = MAX_PHOTOS - draft.photos?.length;
+    const remainingSlots = MAX_PHOTOS - draftPhotos.length;
     const filesToAdd = validFiles.slice(0, remainingSlots);
-    const lastImage = draft.photos?.at(-1) ?? user.photos?.at(-1);
+    const lastImage = draftPhotos.at(-1) ?? user.photos?.at(-1);
     const lastPosition = lastImage ? lastImage.position + 1 : 1;
 
     const newPhotos: UserImage[] = filesToAdd.map((file, i) => ({
@@ -77,13 +77,6 @@ export const PhotoGallery = ({ isEditing }: { isEditing: boolean }) => {
 
     updateUserPhotos([...photos, ...newPhotos]);
     uploadPhotos(filesToAdd, lastPosition);
-
-    // if (filesToAdd.length < validFiles.length) {
-    //   toast({
-    //     title: 'Some photos not added',
-    //     description: `Only ${remainingSlots} slot(s) available.`,
-    //   });
-    // }
   };
 
   const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
@@ -121,12 +114,12 @@ export const PhotoGallery = ({ isEditing }: { isEditing: boolean }) => {
     console.log('Photo deleted successfully');
   };
 
-  const mockReorderPhotos = async (photoIds: string[]) => {
-    // Mock API call - replace with your actual API
-    console.log('Reordering photos:', photoIds);
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    console.log('Photos reordered successfully');
-  };
+  // const mockReorderPhotos = async (photoIds: string[]) => {
+  //   // Mock API call - replace with your actual API
+  //   console.log('Reordering photos:', photoIds);
+  //   await new Promise((resolve) => setTimeout(resolve, 500));
+  //   console.log('Photos reordered successfully');
+  // };
 
   const removePhoto = (preview: string) => {
     const photo = photos.find((p) => p.preview === preview);
@@ -140,16 +133,8 @@ export const PhotoGallery = ({ isEditing }: { isEditing: boolean }) => {
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
 
-    if (over && active.id !== over.id) {
-      // setPhotos((items) => {
-      //   const oldIndex = items.findIndex((item) => item.id === active.id);
-      //   const newIndex = items.findIndex((item) => item.id === over.id);
-      //   const newOrder = arrayMove(items, oldIndex, newIndex);
-      //   // Mock API call with new order
-      //   mockReorderPhotos(newOrder.map((p) => p.id));
-      //   return newOrder;
-      // });
-    }
+    // if (over && active.id !== over.id) {
+    // }
   };
 
   const emptySlots = Math.max(0, MAX_PHOTOS - photos.length);
