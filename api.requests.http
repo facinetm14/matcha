@@ -112,5 +112,18 @@ Content-Type: application/json
 
 {
   "recipient": "2jtgok-mh0qljsv-g884ib-bwc65m",
-  "category": "view"
+  "category": "like"
+}
+
+### Get image
+GET {{baseUrl}}/users/images/9w29xp-mgz05g31-wwmy1x-he3qk8-image-1761376337952-719116665.jpg
+Authorization: Bearer {{accessToken}} {{refreshToken}}
+
+### Delete images
+POST {{baseUrl}}/users/images/remove
+Authorization: Bearer {{accessToken}} {{refreshToken}}
+Content-Type: application/json
+
+{
+  "images": ["9w29xp-mgz05g31-wwmy1x-he3qk8-image-1761376337952-719116665.jpg"]
 }

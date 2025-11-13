@@ -36,6 +36,7 @@ services:
       - ./packages/api:/usr/src/app/packages/api
       - ./packages/shared:/usr/src/app/packages/shared
       - /usr/src/app/packages/back/node_modules
+      - ./packages/api/pics:/usr/src/app/packages/api/pics
 
   front:
     build:

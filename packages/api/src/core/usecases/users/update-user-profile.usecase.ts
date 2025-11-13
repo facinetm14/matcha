@@ -1,10 +1,12 @@
 import { UpdateUserProfileDto } from '@/core/domain/dto/update-user-profile.dto';
 import { UserProfile } from '@/core/domain/entities/user-profile.entity';
+import { EventType } from '@/core/domain/enums/event-type';
 import { UserUniqKeys } from '@/core/domain/enums/user-uniq-keys.enum';
 import { UpdateUserProfileError } from '@/core/domain/errors/update-user-profile.error';
 import { Err, Ok, Result } from '@/core/domain/utils/result';
 import { UserInterestRepository } from '@/core/ports/repositories/user-interest.repository';
 import { UserRepository } from '@/core/ports/repositories/user.repository';
+import { EventBus } from '@/core/ports/services/event-bus';
 import { TYPE } from '@/infrastructure/config/inversify-type';
 import { injectable, inject } from 'inversify';
 
@@ -15,13 +17,15 @@ export class UpdateUserProfileUseCase {
     private readonly userRepository: UserRepository,
     @inject(TYPE.UserInterestRepository)
     private readonly userInterestRepository: UserInterestRepository,
+    @inject(TYPE.EventBus)
+    private readonly eventBus: EventBus,
   ) {}
 
   async execute(
     userId: string,
     updateUserProfileDto: UpdateUserProfileDto,
   ): Promise<Result<UserProfile, UpdateUserProfileError>> {
-    const { tags, photos: _, ...user } = updateUserProfileDto;
+    const { tags, photos, ...user } = updateUserProfileDto;
 
     if (user) {
       const existingUsername = user.username
@@ -60,6 +64,13 @@ export class UpdateUserProfileUseCase {
       if (!updatedUser) {
         return Err(UpdateUserProfileError.UNKNOWN_ERROR);
       }
+    }
+
+    if (photos) {
+      this.eventBus.emitEvent(
+        EventType.UPLOAD_USER_IMAGE,
+        JSON.stringify({ author: userId, photos }),
+      );
     }
 
     if (tags) {

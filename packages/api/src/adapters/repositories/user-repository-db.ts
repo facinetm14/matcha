@@ -122,7 +122,8 @@ export class UserRepositoryDb implements UserRepository {
   async findUserProfileById(id: string): Promise<UserProfile | null> {
     const queryUser = {
       text: `
-              SELECT u.*, ui.interest, upi.author, upi.category, upi.created_at as interaction_created_at FROM users as u
+              SELECT u.*, uim.id as img_id, uim.position as img_position, uim.preview as img_preview, ui.interest, upi.author, upi.category, upi.created_at as interaction_created_at FROM users as u
+              LEFT JOIN user_images as uim ON u.id = uim.user_id
               LEFT JOIN user_interests as ui ON u.id = ui.user_id 
               LEFT JOIN user_profile_interactions as upi ON upi.recipient = u.id
               WHERE u.id = $1
