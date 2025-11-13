@@ -130,8 +130,8 @@ export const PhotoGallery = ({ isEditing }: { isEditing: boolean }) => {
     updateUserPhotos(photos.filter((p) => p.preview !== preview));
   };
 
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
+  const handleDragEnd = (_event: DragEndEvent) => {
+    // const { active, over } = event;
 
     // if (over && active.id !== over.id) {
     // }

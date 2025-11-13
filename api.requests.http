@@ -112,7 +112,7 @@ Content-Type: application/json
 
 {
   "recipient": "2jtgok-mh0qljsv-g884ib-bwc65m",
-  "category": "view"
+  "category": "like"
 }
 
 ### Get image
