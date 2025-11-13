@@ -8,7 +8,9 @@ export const UpdateUserProfileDtoSchema = z.object({
   passwd: z.string().optional(),
   confirmPasswd: z.string().optional(),
   gender: z.enum(['male', 'female', 'non-binary']).optional(),
-  sexualOrientation: z.array(z.string()).optional(),
+  sexualOrientation: z
+    .array(z.enum(['male', 'female', 'non-binary']))
+    .optional(),
   bio: z.string().trim().optional(),
   tags: z.array(z.string()).optional(),
   photos: z

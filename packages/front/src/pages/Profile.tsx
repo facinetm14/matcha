@@ -35,7 +35,6 @@ import { Gender } from '@/types/user';
 import { TagInput } from '@/components/ui/tag-input';
 import { PhotoGallery } from '@/components/PhotoGalery';
 import { getGenderLabel } from '@/utils/get-gender-label';
-import { connectSocket } from '@/api/socket.api';
 
 export default function Profile() {
   const [isEditing, setIsEditing] = useState(false);
@@ -49,7 +48,6 @@ export default function Profile() {
     updateUserProfile,
   } = useProfileStore((state) => state);
 
-  const socket = connectSocket();
 
   const { isPending, error, refetch } = useQuery({
     queryKey: ['fetchUserProfile'],
@@ -117,10 +115,6 @@ export default function Profile() {
     return <Login />;
   }
 
-  socket.on('user_image_uploaded', () => {
-    toast.success('Images successfully uploaded! 🎉');
-  });
-
   return (
     <div className="min-h-screen bg-background pb-20 md:pt-20">
       <Navigation
@@ -182,6 +176,7 @@ export default function Profile() {
                               gender: profile.gender as Gender,
                               sexualOrientation: profile.sexualOrientation,
                               bio: profile.bio,
+                              photos: [],
                             });
                             setIsEditing(true);
                           }}
