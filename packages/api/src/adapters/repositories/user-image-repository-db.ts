@@ -58,9 +58,42 @@ export class UserImageRepositoryDb implements UserImageRepository {
     }
   }
 
-  // switchPosition(
-  //   userId: string,
-  //   position1: number,
-  //   position2: number,
-  // ): Promise<void> {}
+  async reorderImages(
+    userId: string,
+    imageList: { preview: string; position: number }[],
+  ): Promise<void> {
+    const values: unknown[] = [];
+    const casesPosition: string[] = [];
+
+    let argIndex = 1;
+    imageList.forEach((img) => {
+      values.push(img.preview);
+      values.push(img.position);
+      casesPosition.push(`WHEN preview = $${argIndex} THEN $${argIndex + 1}`);
+      argIndex += 2;
+    });
+
+    values.push(userId);
+
+    const query = {
+      text: `
+      UPDATE user_images
+      SET position = CASE
+        ${casesPosition.join('\n')}
+         ELSE position
+      END
+      WHERE user_id = $${argIndex}
+    `,
+      values,
+    };
+
+    try {
+      const connection = await pgClient.connect();
+      await connection.query(query);
+      connection.release();
+    } catch (error) {
+      const errorMessage = `Failed to update user image positions: ${error}`;
+      this.logger.error(errorMessage);
+    }
+  }
 }
