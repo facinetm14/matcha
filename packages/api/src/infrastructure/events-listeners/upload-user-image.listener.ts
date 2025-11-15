@@ -9,6 +9,7 @@ import { join } from 'node:path';
 import { UPLOAD_DEST } from '@/core/domain/consts/upload-dest';
 import { UserImageRepository } from '@/core/ports/repositories/user-image.repository';
 import { Server as SocketIoServer } from 'socket.io';
+import { existsSync, mkdirSync } from 'node:fs';
 
 const eventBus = container.get<EventBus>(TYPE.EventBus);
 const logger = container.get<Logger>(TYPE.Logger);
@@ -54,7 +55,11 @@ eventBus.listenTo(EventType.UPLOAD_USER_IMAGE, async (payload: string) => {
     const buffer = Buffer.from(data, 'base64');
 
     const filename = `${userImagePayload.author}-image-${Date.now()}-${Math.round(Math.random() * 1e9)}.${ext}`;
-    const path = join(process.cwd(), UPLOAD_DEST, filename);
+    const uploadDirectory = join(process.cwd(), UPLOAD_DEST);
+    if (!existsSync(uploadDirectory)) {
+      mkdirSync(uploadDirectory, { recursive: true });
+    }
+    const path = join(uploadDirectory, filename);
     try {
       await writeFile(path, buffer);
       userImageList.push({ position: image.position, preview: filename });
