@@ -13,7 +13,7 @@ import {
   sortableKeyboardCoordinates,
   rectSortingStrategy,
 } from '@dnd-kit/sortable';
-import { Camera, Upload, Image as ImageIcon } from 'lucide-react';
+import { Upload, Image as ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { PhotoSlot } from './PhotoSlot';
@@ -22,13 +22,23 @@ import { useProfileStore } from '@/store/profileStore';
 import { convertFIleToBase64t } from '@/utils/convert-file-to-base64';
 import { UserImage } from '@/types/user-image';
 import { uuid } from '../../../shared/uuid';
+import { ImagePosition } from '@/types/dto/update-image-position.dto';
 
 const MAX_PHOTOS = 5;
 const ACCEPTED_FORMATS = ['image/jpeg', 'image/jpg', 'image/png'];
 
 export const PhotoGallery = ({ isEditing }: { isEditing: boolean }) => {
-  const { user, draft, photos, updateUserDraft, updateUserPhotos } =
-    useProfileStore((state) => state);
+  const {
+    user,
+    draft,
+    photos,
+    imagesToDelete,
+    imagesPositionToUpdate,
+    updateUserDraft,
+    updateUserPhotos,
+    updateImagesToDelete,
+    updateImagesPositionToUpdate,
+  } = useProfileStore((state) => state);
   const { toast } = useToast();
 
   const sensors = useSensors(
@@ -37,6 +47,10 @@ export const PhotoGallery = ({ isEditing }: { isEditing: boolean }) => {
       coordinateGetter: sortableKeyboardCoordinates,
     }),
   );
+
+  const cleanPreview = (preview: string): string => {
+    return preview.slice(preview.lastIndexOf('/') + 1);
+  };
 
   const onDrop = (acceptedFiles: File[]) => {
     const draftPhotos = draft.photos ?? [];
@@ -101,40 +115,68 @@ export const PhotoGallery = ({ isEditing }: { isEditing: boolean }) => {
       lastPosition += 1;
       photoList.push(image);
     }
+
     updateUserDraft({
       ...(draft ?? {}),
       photos: [...(draft.photos ?? []), ...photoList],
     });
   };
 
-  const mockDeletePhoto = async (preview: string) => {
-    // Mock API call - replace with your actual API
-    console.log('Deleting photo:', preview);
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    console.log('Photo deleted successfully');
-  };
+  const switchPhotoPosition = async (idPhoto1: string, idPhoto2: string) => {
+    const [position1, position2] = photos
+      .filter((p) => p.id === idPhoto1 || p.id === idPhoto2)
+      .map((p) => p.position);
 
-  // const mockReorderPhotos = async (photoIds: string[]) => {
-  //   // Mock API call - replace with your actual API
-  //   console.log('Reordering photos:', photoIds);
-  //   await new Promise((resolve) => setTimeout(resolve, 500));
-  //   console.log('Photos reordered successfully');
-  // };
+    const orderedPhotos: UserImage[] = [];
+    const newImagePositions: ImagePosition[] = [];
+
+    for (const p of photos) {
+      if (p.position === position1) {
+        orderedPhotos.push({ ...p, position: position2 });
+        newImagePositions.push({
+          preview: cleanPreview(p.preview),
+          position: position2,
+        });
+        continue;
+      }
+
+      if (p.position === position2) {
+        orderedPhotos.push({ ...p, position: position1 });
+        newImagePositions.push({
+          preview: cleanPreview(p.preview),
+          position: position1,
+        });
+        continue;
+      }
+
+      orderedPhotos.push(p);
+    }
+
+    updateUserPhotos(orderedPhotos);
+    updateImagesPositionToUpdate([
+      ...imagesPositionToUpdate.filter((p) =>
+        newImagePositions.find((img) => p.preview === img.preview),
+      ),
+      ...newImagePositions,
+    ]);
+  };
 
   const removePhoto = (preview: string) => {
     const photo = photos.find((p) => p.preview === preview);
     if (photo) {
       URL.revokeObjectURL(photo.preview);
-      mockDeletePhoto(preview);
     }
+    updateImagesToDelete([...imagesToDelete, cleanPreview(preview)]);
     updateUserPhotos(photos.filter((p) => p.preview !== preview));
   };
 
-  const handleDragEnd = (_event: DragEndEvent) => {
-    // const { active, over } = event;
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) {
+      return;
+    }
 
-    // if (over && active.id !== over.id) {
-    // }
+    switchPhotoPosition(active.id.toString(), over.id.toString());
   };
 
   const emptySlots = Math.max(0, MAX_PHOTOS - photos.length);
@@ -162,29 +204,6 @@ export const PhotoGallery = ({ isEditing }: { isEditing: boolean }) => {
           >
             <Upload className="w-5 h-5" />
             Add Photos
-          </Button>
-
-          <Button
-            onClick={() => {
-              const input = document.createElement('input');
-              input.type = 'file';
-              input.accept = 'image/jpeg,image/jpg,image/png';
-              input.capture = 'environment';
-              input.multiple = true;
-              input.onchange = (e) => {
-                const files = Array.from(
-                  (e.target as HTMLInputElement).files || [],
-                );
-                onDrop(files);
-              };
-              input.click();
-            }}
-            variant="outline"
-            className="flex-1 gap-2 border-primary text-primary hover:bg-secondary hover:text-primary transition-all"
-            size="lg"
-          >
-            <Camera className="w-5 h-5" />
-            Take Photo
           </Button>
         </div>
       )}
