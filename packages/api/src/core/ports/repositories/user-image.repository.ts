@@ -5,5 +5,5 @@ export interface UserImageRepository {
   ): Promise<void>;
 
   delete(userId: string, previewList: string[]): Promise<void>;
-  // switchPosition(userId: string, position1: number, position2: number): Promise<void>;
+  reorderImages(userId: string, imageList: {preview: string, position: number}[]): Promise<void>;
 }

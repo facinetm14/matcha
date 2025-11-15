@@ -35,6 +35,8 @@ import { Gender } from '@/types/user';
 import { TagInput } from '@/components/ui/tag-input';
 import { PhotoGallery } from '@/components/PhotoGalery';
 import { getGenderLabel } from '@/utils/get-gender-label';
+import { DeleteUserImageDto } from '@/types/dto/delete-image.dto';
+import { UpdateImagePositionDto } from '@/types/dto/update-image-position.dto';
 
 export default function Profile() {
   const [isEditing, setIsEditing] = useState(false);
@@ -44,10 +46,13 @@ export default function Profile() {
     draft,
     user: profile,
     photos,
+    imagesToDelete,
+    imagesPositionToUpdate,
     updateUserDraft,
     updateUserProfile,
+    updateImagesToDelete,
+    updateImagesPositionToUpdate,
   } = useProfileStore((state) => state);
-
 
   const { isPending, error, refetch } = useQuery({
     queryKey: ['fetchUserProfile'],
@@ -77,8 +82,51 @@ export default function Profile() {
     },
     onSuccess: () => {
       toast.success('Profile updated successfully! 🎉');
-      setIsEditing(false);
       updateUserDraft(null);
+      refetch();
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
+
+  const deleteUserImageMutation = useMutation({
+    mutationFn: async (deleteImageDto: DeleteUserImageDto) => {
+      const response = await userApi.deleteUserImage(deleteImageDto);
+      if (response.status === 200) {
+        return true;
+      }
+
+      const error = await response.text();
+      throw new Error(error);
+    },
+    onSuccess: () => {
+      updateImagesToDelete([]);
+      if (draft) {
+        updateUserDraft(null);
+      }
+      refetch();
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
+
+  const updateImagePositionsMutation = useMutation({
+    mutationFn: async (updateImagePositionDto: UpdateImagePositionDto) => {
+      const response = await userApi.reorderImages(updateImagePositionDto);
+      if (response.status === 200) {
+        return true;
+      }
+
+      const error = await response.text();
+      throw new Error(error);
+    },
+    onSuccess: () => {
+      updateImagesPositionToUpdate([]);
+      if (draft) {
+        updateUserDraft(null);
+      }
       refetch();
     },
     onError: (error) => {
@@ -95,13 +143,19 @@ export default function Profile() {
       }
     }
 
-    if (!Object.keys(toUpdate).length) {
-      console.log('Nothing to update');
-      setIsEditing(false);
-      return;
+    if (Object.keys(toUpdate).length) {
+      updateProfileMutation.mutate(toUpdate);
     }
 
-    updateProfileMutation.mutate(toUpdate);
+    if (imagesPositionToUpdate.length) {
+      updateImagePositionsMutation.mutate({ images: imagesPositionToUpdate });
+    }
+
+    if (imagesToDelete.length) {
+      deleteUserImageMutation.mutate({ images: imagesToDelete });
+    }
+
+    setIsEditing(false);
   };
 
   if (isPending) {
@@ -409,10 +463,7 @@ export default function Profile() {
               ) : (
                 <div className="flex flex-wrap gap-2 p-2 bg-muted rounded">
                   {profile.tags.map((tag, index) => (
-                    <Badge
-                      key={index}
-                      variant="outline"
-                    >
+                    <Badge key={index} variant="outline">
                       #{tag}
                     </Badge>
                   ))}

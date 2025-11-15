@@ -1,7 +1,6 @@
 node_modules
 
 packages/api/.env
-packages/api/pics
 packages/api/package-lock.json
 packages/front/package-lock.json
 packages/front/.env

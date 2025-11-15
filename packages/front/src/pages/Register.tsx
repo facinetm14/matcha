@@ -65,16 +65,27 @@ export default function Register() {
     const validateEmailResult = isValidEmail(formData.email);
     if (!validateEmailResult.valid) {
       newErrors.email = validateEmailResult.error || 'Email is invalid';
+    } else {
+      const isEmailAvailable = await isUserIdentifierAvailable(
+        UserIdentifier.EMAIL,
+        formData.email,
+      );
+
+      if (!isEmailAvailable) {
+        newErrors.email = 'Email is already used';
+      }
     }
 
     const validateUsernameResult = isValidUsername(formData.username);
     if (!validateUsernameResult.valid) {
-      newErrors.username = validateUsernameResult.error || 'Username is invalid';
+      newErrors.username =
+        validateUsernameResult.error || 'Username is invalid';
     } else {
       const isUsernameAvailable = await isUserIdentifierAvailable(
         UserIdentifier.USERNAME,
         formData.username,
       );
+
       if (!isUsernameAvailable) {
         newErrors.username = 'Username is already used';
       }
@@ -82,17 +93,20 @@ export default function Register() {
 
     const validateFirstNameResult = isValidFirstname(formData.firstName);
     if (!validateFirstNameResult.valid) {
-      newErrors.firstName = validateFirstNameResult.error || 'First name is invalid';
+      newErrors.firstName =
+        validateFirstNameResult.error || 'First name is invalid';
     }
 
     const validateLastNameResult = isValidLastname(formData.lastName);
     if (!validateLastNameResult.valid) {
-      newErrors.lastName = validateLastNameResult.error || 'Last name is invalid';
+      newErrors.lastName =
+        validateLastNameResult.error || 'Last name is invalid';
     }
 
     const validatePasswordResult = isValidPassword(formData.password);
     if (!validatePasswordResult.valid) {
-      newErrors.password = validatePasswordResult.error || 'Password is invalid';
+      newErrors.password =
+        validatePasswordResult.error || 'Password is invalid';
     }
 
     if (formData.password !== formData.confirmPassword) {
