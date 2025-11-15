@@ -50,4 +50,12 @@ UserRouter.post(
   },
 );
 
+UserRouter.patch(
+  `/images/reorder`,
+  injectAuthorizationToken,
+  (req: Request, resp: Response) => {
+    userController.reorderImages(req, resp);
+  },
+);
+
 export default UserRouter;
