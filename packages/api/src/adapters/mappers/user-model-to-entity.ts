@@ -112,5 +112,8 @@ export function buildUserProfileFromUserAggregate(
     }
   }
 
-  return [...userProfilesMap.values()].map(profile => ({...profile, photos: profile.photos.sort((a, b) => a.position - b.position)}));
+  return [...userProfilesMap.values()].map((profile) => ({
+    ...profile,
+    photos: profile.photos.sort((a, b) => a.position - b.position),
+  }));
 }

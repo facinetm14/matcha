@@ -58,4 +58,8 @@ UserRouter.patch(
   },
 );
 
+UserRouter.get('/tags', injectAuthorizationToken, (req: Request, resp: Response) => {
+  userController.findAllInterests(req, resp);
+})
+
 export default UserRouter;
