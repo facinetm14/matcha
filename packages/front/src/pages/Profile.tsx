@@ -38,6 +38,7 @@ import { DeleteUserImageDto } from '@/types/dto/delete-image.dto';
 import { UpdateImagePositionDto } from '@/types/dto/update-image-position.dto';
 import { useGetProfile } from '@/hooks/useGetProfile';
 import { useSearchParams } from 'react-router-dom';
+import { disconnectSocket } from '@/api/socket.api';
 
 export default function Profile() {
   const unreadNotifications = mockNotifications.filter((n) => !n.read).length;
@@ -58,6 +59,7 @@ export default function Profile() {
   } = useProfileStore((state) => state);
 
   const { isPending, error, refetch } = useGetProfile();
+
   const updateProfileMutation = useMutation({
     mutationFn: async (updateUserDto: UpdateUserDto) => {
       const response = await userApi.updateUserProfile(updateUserDto);
@@ -131,7 +133,14 @@ export default function Profile() {
       }
     }
 
-    if (Object.keys(toUpdate).length) {
+    const updatedKeys = Object.keys(toUpdate);
+
+    const isOnlyEmptyPhotos =
+      updatedKeys.length === 1 &&
+      updatedKeys[0] === 'photos' &&
+      toUpdate['photos'].length === 0;
+
+    if (updatedKeys.length && !isOnlyEmptyPhotos) {
       updateProfileMutation.mutate(toUpdate);
     }
 
@@ -149,20 +158,30 @@ export default function Profile() {
   useEffect(() => {
     const openEdition = searchParams.get('openEdition');
     if (openEdition) {
+      updateUserDraft({
+        email: profile.email,
+        firstName: profile.firstName,
+        lastName: profile.lastName,
+        gender: profile.gender as Gender,
+        sexualOrientation: profile.sexualOrientation,
+        bio: profile.bio,
+        photos: [],
+      });
       setIsEditing(true);
       setSearchParams({}, { replace: true });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  if (isPending || !profile) {
-    return <div>Loading...</div>;
-  }
-
   if (error) {
     toast.error('Failed to load profile. Please try again later.');
     localStorage.removeItem('isLoggedIn');
+    disconnectSocket();
     return <Login />;
+  }
+
+  if (isPending || !profile) {
+    return <div>Loading...</div>;
   }
 
   return (

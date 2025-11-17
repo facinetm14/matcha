@@ -13,16 +13,95 @@ import {
   Star,
   Circle,
 } from 'lucide-react';
-import { mockUsers, mockNotifications, mockMessages } from '@/utils/mockData';
+import { mockNotifications, mockMessages } from '@/utils/mockData';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
+import { useProfileStore } from '@/store/profileStore';
+import { getInitials } from '@/utils/get-initials';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { userApi } from '@/api/user.api';
+import { useEffect } from 'react';
+import { CreateInteractionDto } from '@/types/dto/create-interaction.dto';
+import Login from './Login';
+import { disconnectSocket } from '@/api/socket.api';
 
 export default function ProfileView() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const user = mockUsers.find((u) => u.id === id);
+  const { userList, updateUserList } = useProfileStore();
+  const user = userList.find((u) => u.id === id);
+
   const unreadNotifications = mockNotifications.filter((n) => !n.read).length;
   const unreadMessages = mockMessages.filter((m) => !m.read).length;
+
+  const {
+    isPending,
+    data,
+    error,
+    refetch: refetchUserProfile,
+  } = useQuery({
+    queryKey: ['viewUser'],
+    queryFn: async () => {
+      const res = await userApi.viewUserProfile(id);
+      if (!res.ok) {
+        throw new Error('Failed to browse users');
+      }
+      const user = await res.json();
+      return user;
+    },
+
+    enabled: !!user,
+  });
+
+  const userInteractionMutation = useMutation({
+    mutationFn: async ({
+      query,
+      message,
+    }: {
+      query: CreateInteractionDto;
+      message: string;
+    }) => {
+      const actionResult = await userApi.interactWithUser(query);
+      if (actionResult.status !== 201) {
+        throw new Error(
+          'Login failed. Please check your credentials and try again.',
+        );
+      }
+      const currentUserResp = await userApi.getMe();
+      if (!currentUserResp.ok) {
+        throw new Error('Failled to retrieve user infos');
+      }
+      await refetchUserProfile();
+      return message;
+    },
+
+    onSuccess: (message: string) => {
+      toast.success(`${message}`);
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
+
+  useEffect(() => {
+    if (!user) {
+      refetchUserProfile();
+    }
+
+    if (data) {
+      updateUserList([data]);
+    }
+  }, [refetchUserProfile, updateUserList, data, user]);
+
+  if (error) {
+    localStorage.removeItem('isLoggedIn');
+    disconnectSocket();
+    return <Login />;
+  }
+
+  if (isPending) {
+    return <div>Loading...</div>;
+  }
 
   if (!user) {
     return (
@@ -39,7 +118,13 @@ export default function ProfileView() {
   }
 
   const handleLike = () => {
-    toast.success(`You liked ${user.firstName}! 💕`);
+    const message = `You liked ${user.firstName}! 💕`;
+    const query: CreateInteractionDto = {
+      recipient: user.id,
+      category: 'like',
+    };
+
+    userInteractionMutation.mutate({ query, message });
   };
 
   const handlePass = () => {
@@ -73,11 +158,17 @@ export default function ProfileView() {
           <div className="space-y-4">
             <Card className="overflow-hidden shadow-card">
               <div className="relative h-96">
-                <img
-                  src={user.profilePhoto}
-                  alt={user.firstName}
-                  className="w-full h-full object-cover"
-                />
+                {user.photos.length ? (
+                  <img
+                    src={user.photos[0].preview}
+                    alt={user.firstName}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-muted text-3xl font-bold text-primary">
+                    {getInitials(user.firstName, user.lastName)}
+                  </div>
+                )}
                 {user.isOnline && (
                   <div className="absolute top-4 left-4 flex items-center gap-2 bg-background/20 backdrop-blur-sm px-3 py-2 rounded-full">
                     <Circle className="w-2 h-2 fill-green-500 text-green-500" />
@@ -94,7 +185,7 @@ export default function ProfileView() {
                 <Card key={index} className="overflow-hidden shadow-card">
                   <div className="aspect-square">
                     <img
-                      src={photo}
+                      src={photo.preview}
                       alt={`${user.firstName} ${index + 2}`}
                       className="w-full h-full object-cover"
                     />
@@ -115,7 +206,7 @@ export default function ProfileView() {
                     </h1>
                     <div className="flex items-center gap-2 text-muted-foreground mb-2">
                       <MapPin className="w-4 h-4" />
-                      <span>{user.location.city}</span>
+                      <span>{user.location?.city ?? 'PARIS'}</span>
                     </div>
                     {!user.isOnline && user.lastSeen && (
                       <p className="text-sm text-muted-foreground">
@@ -134,7 +225,7 @@ export default function ProfileView() {
 
                 <div className="mb-6">
                   <h3 className="font-semibold mb-2">About</h3>
-                  <p className="text-muted-foreground">{user.biography}</p>
+                  <p className="text-muted-foreground">{user.bio}</p>
                 </div>
 
                 <div className="mb-6">
@@ -176,8 +267,10 @@ export default function ProfileView() {
                     <X className="w-4 h-4 mr-2" />
                     Pass
                   </Button>
+
                   <Button
-                    className="flex-1 bg-gradient-romantic"
+                    variant="outline"
+                    className="flex-1 hover:bg-primary"
                     onClick={handleLike}
                   >
                     <Heart className="w-4 h-4 mr-2" />

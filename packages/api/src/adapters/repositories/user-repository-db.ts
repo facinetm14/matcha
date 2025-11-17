@@ -15,10 +15,15 @@ import { TYPE } from '../../infrastructure/config/inversify-type';
 import { mapEnityOrDtoToModel } from '../mappers/map-entity-or-dto-to-model';
 import { UserModel } from '../../infrastructure/persistence/models/user.model';
 import { UpdateUserDto } from '../../core/domain/dto/update-user.dto';
+import { CacheService } from '@/core/ports/services/cache.service';
+import { CacheResourceKeys } from '@/core/domain/consts/cache-resource-keys';
 
 @injectable()
 export class UserRepositoryDb implements UserRepository {
-  constructor(@inject(TYPE.Logger) private readonly logger: Logger) {}
+  constructor(
+    @inject(TYPE.Logger) private readonly logger: Logger,
+    @inject(TYPE.CacheService) private readonly cacheService: CacheService,
+  ) {}
 
   async create(createUserDto: CreateUserDto): Promise<string | null> {
     const userModel = mapEnityOrDtoToModel<CreateUserDto, UserModel>(
@@ -140,6 +145,23 @@ export class UserRepositoryDb implements UserRepository {
       return null;
     }
 
-    return buildUserProfileFromUserAggregate(userProfileRawList)[0];
+    const userProfileRawListWithOnlineStatus = [];
+    for (const user of userProfileRawList) {
+      const isOnline = await this.getOnlineStatus(user.id);
+      userProfileRawListWithOnlineStatus.push({ ...user, isOnline });
+    }
+
+    const userProfiles = buildUserProfileFromUserAggregate(
+      userProfileRawListWithOnlineStatus,
+    );
+    return userProfiles[0];
+  }
+
+  private async getOnlineStatus(userId: string): Promise<boolean> {
+    const isConnectedUser = await this.cacheService.findById(
+      CacheResourceKeys.CONNECTED_USERS,
+      userId,
+    );
+    return !!isConnectedUser;
   }
 }

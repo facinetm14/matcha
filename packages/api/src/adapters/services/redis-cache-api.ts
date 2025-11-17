@@ -22,7 +22,9 @@ export class RedisCacheApi implements CacheService {
     data: T,
   ): Promise<string | null> {
     try {
-      await this.client.connect();
+      if (!this.client.isOpen) {
+        await this.client.connect();
+      }
       await this.client.hSet(resourceKey, data.id, JSON.stringify(data));
       await this.client.quit();
 
@@ -37,7 +39,9 @@ export class RedisCacheApi implements CacheService {
     resourceKey: string,
     id: string,
   ): Promise<T | null> {
-    await this.client.connect();
+    if (!this.client.isOpen) {
+      await this.client.connect();
+    }
     const token = await this.client.hGet(resourceKey, id);
     await this.client.quit();
 
@@ -47,7 +51,9 @@ export class RedisCacheApi implements CacheService {
   }
 
   async delete(resourceKey: string, id: string): Promise<void> {
-    await this.client.connect();
+    if (!this.client.isOpen) {
+      await this.client.connect();
+    }
     await this.client.hDel(resourceKey, id);
     await this.client.quit();
   }

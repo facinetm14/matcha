@@ -2,11 +2,22 @@ import { UpdateUserDto } from '@/types/dto/update-user.dto';
 import { UserIdentifier } from '../../../shared/user-identifier';
 import { DeleteUserImageDto } from '@/types/dto/delete-image.dto';
 import { UpdateImagePositionDto } from '@/types/dto/update-image-position.dto';
+import { CreateInteractionDto } from '@/types/dto/create-interaction.dto';
 
 const API_BASE_ROUTE = import.meta.env.VITE_BASE_API;
 
 const getMe = async () => {
   return fetch(`${API_BASE_ROUTE}/users/me`, {
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    method: 'GET',
+    credentials: 'include',
+  });
+};
+
+const viewUserProfile = async (userId: string) => {
+  return fetch(`${API_BASE_ROUTE}/users/${userId}/view`, {
     headers: {
       'Content-Type': 'application/json',
     },
@@ -77,6 +88,29 @@ const getAllTags = async () => {
   });
 };
 
+const browseUsers = async () => {
+  return fetch(`${API_BASE_ROUTE}/users/browse`, {
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    method: 'GET',
+    credentials: 'include',
+  });
+};
+
+const interactWithUser = async (
+  createUserInteractionDto: CreateInteractionDto,
+) => {
+  return fetch(`${API_BASE_ROUTE}/users/interaction`, {
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    method: 'POST',
+    body: JSON.stringify(createUserInteractionDto),
+    credentials: 'include',
+  });
+};
+
 export const userApi = {
   getMe,
   checkUserIdentifierAvailability,
@@ -84,4 +118,7 @@ export const userApi = {
   deleteUserImage,
   reorderImages,
   getAllTags,
+  browseUsers,
+  viewUserProfile,
+  interactWithUser,
 };

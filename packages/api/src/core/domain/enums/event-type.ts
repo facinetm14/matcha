@@ -6,6 +6,7 @@ export enum EventType {
 }
 
 export const SocketEvents = {
-  CONECTION: 'connection',
+  CONNECTION: 'connection',
+  DISCONNECT: 'logout',
   USER_IMAGE_UPLOADED: 'user_image_uploaded',
 } as const;

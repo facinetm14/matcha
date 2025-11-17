@@ -10,12 +10,14 @@ type UserProfileState = {
   photos: UserImage[];
   imagesToDelete: string[];
   imagesPositionToUpdate: ImagePosition[];
+  userList: UserProfile[];
 
   updateUserProfile: (userProfile: UserProfile) => void;
   updateUserDraft: (userDraft: UpdateUserDto) => void;
   updateUserPhotos: (userPhoto: UserImage[]) => void;
   updateImagesToDelete: (imagePreviewList: string[]) => void;
   updateImagesPositionToUpdate(imageList: ImagePosition[]): void;
+  updateUserList(users: UserProfile[]): void;
 };
 
 export const useProfileStore = create<UserProfileState>((set) => ({
@@ -24,6 +26,7 @@ export const useProfileStore = create<UserProfileState>((set) => ({
   photos: [],
   imagesToDelete: [],
   imagesPositionToUpdate: [],
+  userList: [],
 
   updateUserProfile: (userProfile: UserProfile) => {
     set(() => ({ user: userProfile, photos: userProfile.photos }));
@@ -43,5 +46,8 @@ export const useProfileStore = create<UserProfileState>((set) => ({
 
   updateImagesPositionToUpdate: (imageList: ImagePosition[]) => {
     set(() => ({ imagesPositionToUpdate: imageList }));
+  },
+  updateUserList: (users: UserProfile[]) => {
+    set(() => ({ userList: users }));
   },
 }));
