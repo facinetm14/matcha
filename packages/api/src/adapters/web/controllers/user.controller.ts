@@ -26,6 +26,7 @@ import { DeleteUserImageUsceCase } from '@/core/usecases/users/delete-user-image
 import { ReorderImagesDtoSchema } from '@/core/domain/dto/reorder-images.dto';
 import { ReorderUserImageUseCase } from '@/core/usecases/users/reorder-user-image-usecase';
 import { GetAllTagsUseCase } from '@/core/usecases/users/get-all-tags.usecase';
+import { FetchBestUserSuggestion } from '@/core/usecases/users/fetch-best-user-suggestion.usecase';
 
 @injectable()
 export class UserController {
@@ -46,6 +47,8 @@ export class UserController {
     private readonly reorderUserImageUseCase: ReorderUserImageUseCase,
     @inject(GetAllTagsUseCase)
     private readonly getAllTagsUseCase: GetAllTagsUseCase,
+    @inject(FetchBestUserSuggestion)
+    private readonly fetchBestUserSuggestion: FetchBestUserSuggestion,
   ) {}
 
   async getMe(req: Request, resp: Response) {
@@ -63,6 +66,33 @@ export class UserController {
     const getCurrentUserResult = await this.getCurrentUserUseCase.execute(
       connectedUserResult.data,
     );
+
+    if (getCurrentUserResult.isErr) {
+      resp.status(404).send('User not found');
+      return;
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { passwd, ...user } = getCurrentUserResult.data;
+
+    resp.status(200).json(user);
+  }
+
+  async viewUserProfile(req: Request, resp: Response) {
+    const connectedUserResult = await getConnectedUserId(
+      this.accessTokenService,
+      req,
+      resp,
+    );
+
+    if (connectedUserResult.isErr) {
+      resp.status(401).send('Invalid token');
+      return;
+    }
+
+    const { id } = req.params;
+
+    const getCurrentUserResult = await this.getCurrentUserUseCase.execute(id);
 
     if (getCurrentUserResult.isErr) {
       resp.status(404).send('User not found');
@@ -307,5 +337,32 @@ export class UserController {
     const interestList = await this.getAllTagsUseCase.execute();
 
     resp.status(200).send({ interestList });
+  }
+
+  async browse(req: Request, resp: Response) {
+    const connectedUserResult = await getConnectedUserId(
+      this.accessTokenService,
+      req,
+      resp,
+    );
+
+    if (connectedUserResult.isErr) {
+      resp.status(401).send('Invalid token');
+      return;
+    }
+
+    const bestUserSuggestion = await this.fetchBestUserSuggestion.execute(
+      connectedUserResult.data,
+    );
+
+    if (!bestUserSuggestion) {
+      resp.status(204).send('no profile to show');
+      return;
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { passwd, ...user } = bestUserSuggestion;
+
+    resp.status(200).json(user);
   }
 }

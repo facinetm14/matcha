@@ -14,6 +14,22 @@ UserRouter.get(
   },
 );
 
+UserRouter.get(
+  '/browse',
+  injectAuthorizationToken,
+  (req: Request, resp: Response) => {
+    userController.browse(req, resp);
+  },
+);
+
+UserRouter.get(
+  `/:id/view`,
+  injectAuthorizationToken,
+  (req: Request, resp: Response) => {
+    userController.viewUserProfile(req, resp);
+  },
+);
+
 UserRouter.post(`/check-identifier`, (req: Request, resp: Response) => {
   userController.checkUserIdentifierAvailability(req, resp);
 });
@@ -58,8 +74,12 @@ UserRouter.patch(
   },
 );
 
-UserRouter.get('/tags', injectAuthorizationToken, (req: Request, resp: Response) => {
-  userController.findAllInterests(req, resp);
-})
+UserRouter.get(
+  '/tags',
+  injectAuthorizationToken,
+  (req: Request, resp: Response) => {
+    userController.findAllInterests(req, resp);
+  },
+);
 
 export default UserRouter;

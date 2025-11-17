@@ -105,7 +105,6 @@ Content-Type: application/json
 
 
 ### user interaction
-
 POST {{baseUrl}}/users/interaction
 Authorization: Bearer {{accessToken}} {{refreshToken}}
 Content-Type: application/json

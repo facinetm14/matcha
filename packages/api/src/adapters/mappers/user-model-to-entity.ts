@@ -3,6 +3,20 @@ import { User } from '../../core/domain/entities/user.entity';
 import { UserModel } from '../../infrastructure/persistence/models/user.model';
 import { InteractionCategory } from '@/core/domain/entities/user-profile-interaction.entity';
 
+const LIKE_WEIGHT = 5;
+const VIEW_WEIGHT = 10;
+const DEFAULT_RATE = 1;
+const MAX_RATE = 1000;
+
+function computeFameRating(nbLikes: number, nbView: number): number {
+  const fameRating = Math.floor(nbLikes / LIKE_WEIGHT + nbView / VIEW_WEIGHT);
+  if (fameRating < DEFAULT_RATE) {
+    return 1;
+  }
+
+  return fameRating < MAX_RATE ? fameRating : MAX_RATE;
+}
+
 export function mapUserModelToEntity(userModel: UserModel): User {
   return {
     id: userModel.id,
@@ -36,6 +50,7 @@ export type UserAggregate = UserModel & {
   img_position: string;
   img_preview: string;
   img_id: string;
+  isOnline: boolean;
 };
 export function buildUserProfileFromUserAggregate(
   userAggregate: UserAggregate[],
@@ -54,7 +69,7 @@ export function buildUserProfileFromUserAggregate(
         ...mapUserModelToEntity(user),
         tags: user.interest ? [user.interest] : [],
         fameRating: 0,
-        isOnline: false,
+        isOnline: user.isOnline,
         likedBy: isCorrectCategory('like', user.author, user.category)
           ? [user.author]
           : [],
@@ -114,6 +129,10 @@ export function buildUserProfileFromUserAggregate(
 
   return [...userProfilesMap.values()].map((profile) => ({
     ...profile,
+    fameRating: computeFameRating(
+      profile.likedBy.length,
+      profile.viewedBy.length,
+    ),
     photos: profile.photos.sort((a, b) => a.position - b.position),
   }));
 }
