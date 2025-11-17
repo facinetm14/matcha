@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { authApi } from '@/api/auth.api';
-import { useAuthStore } from '@/store/authStore';
 
 import {
   Card,
@@ -16,6 +15,9 @@ import {
 import { Heart, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { useMutation } from '@tanstack/react-query';
+import { userApi } from '@/api/user.api';
+import { UserProfile } from '@/types/user';
+import { useAuthStore } from '@/store/authStore';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -37,17 +39,34 @@ export default function Login() {
       password: string;
     }) => {
       const loginResult = await authApi.signIn(username, password);
-      if (loginResult.status === 200) {
-        return true;
+      if (loginResult.status !== 200) {
+        throw new Error(
+          'Login failed. Please check your credentials and try again.',
+        );
       }
-      throw new Error(
-        'Login failed. Please check your credentials and try again.',
-      );
+      const currentUserResp = await userApi.getMe();
+      if (!currentUserResp.ok) {
+        throw new Error('Failled to retrieve user infos');
+      }
+
+      const user = (await currentUserResp.json()) as UserProfile;
+      return user;
     },
-    onSuccess: (data: boolean) => {
+
+    onSuccess: async (user: UserProfile) => {
       toast.success("You're logged in!");
       localStorage.setItem('isLoggedIn', 'true');
-      updateLoginStatus(data);
+      updateLoginStatus(true);
+
+      await Promise.resolve();
+
+      if (user.isFirstLogin) {
+        const params = new URLSearchParams({
+          openEdition: 'true',
+        });
+        navigate(`/profile?${params.toString()}`);
+        return;
+      }
       navigate('/browse');
     },
     onError: (error) => {

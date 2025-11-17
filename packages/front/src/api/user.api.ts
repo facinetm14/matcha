@@ -67,10 +67,21 @@ const reorderImages = async (
   });
 };
 
+const getAllTags = async () => {
+  return fetch(`${API_BASE_ROUTE}/users/tags`, {
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    method: 'GET',
+    credentials: 'include',
+  });
+};
+
 export const userApi = {
   getMe,
   checkUserIdentifierAvailability,
   updateUserProfile,
   deleteUserImage,
   reorderImages,
+  getAllTags,
 };

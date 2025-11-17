@@ -15,7 +15,6 @@ export default function Browse() {
   const [users] = useState<UserProfile[]>(mockUsers);
   const unreadNotifications = mockNotifications.filter((n) => !n.read).length;
   const unreadMessages = mockMessages.filter((m) => !m.read).length;
-
   const currentUser = users[currentIndex];
 
   const handleLike = () => {

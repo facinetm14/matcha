@@ -7,40 +7,32 @@ interface TagInputProps {
   tags: string[];
   onChange: (tags: string[]) => void;
   disabled?: boolean;
-  suggestedTags?: string[];
 }
 
-export function TagInput({
-  tags,
-  onChange,
-  disabled = false,
-  suggestedTags,
-}: TagInputProps) {
+export function TagInput({ tags, onChange, disabled = false }: TagInputProps) {
   const [inputValue, setInputValue] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(0);
   const MAX_TAGS = 15;
 
   // Mock
-  const allSuggestions =
-    suggestedTags ?? [
-      'frontend',
-      'backend',
-      'design',
-      'machine learning',
-      'ai',
-      'react',
-      'nextjs',
-      'typescript',
-      'product',
-      'data',
-    ];
+  const allSuggestions = [
+    'frontend',
+    'facebook',
+    'backend',
+    'design',
+    'machine learning',
+    'ai',
+    'react',
+    'nextjs',
+    'typescript',
+    'product',
+    'data',
+  ];
 
   const filteredSuggestions = allSuggestions
     .filter((tag) =>
-      inputValue
-        ? tag.toLowerCase().includes(inputValue.toLowerCase())
-        : true
+      inputValue ? tag.toLowerCase().includes(inputValue.toLowerCase()) : true,
     )
     .filter((tag) => !tags.includes(tag.toLowerCase()));
 
@@ -69,7 +61,7 @@ export function TagInput({
       e.preventDefault();
       setIsOpen(true);
       setHighlightedIndex((prev) =>
-        prev + 1 < filteredSuggestions.length ? prev + 1 : 0
+        prev + 1 < filteredSuggestions.length ? prev + 1 : 0,
       );
       return;
     }
@@ -79,7 +71,7 @@ export function TagInput({
       e.preventDefault();
       setIsOpen(true);
       setHighlightedIndex((prev) =>
-        prev - 1 >= 0 ? prev - 1 : filteredSuggestions.length - 1
+        prev - 1 >= 0 ? prev - 1 : filteredSuggestions.length - 1,
       );
       return;
     }

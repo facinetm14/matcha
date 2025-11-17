@@ -288,4 +288,24 @@ export class UserController {
     await this.reorderUserImageUseCase.execute(userId, newImagePositions);
     resp.status(200).send('image sucessfully reordered');
   }
+
+  async findAllInterests(req: Request, resp: Response) {
+    resp
+      .status(200)
+      .send({
+        interestList: [
+          'frontend',
+          'facebook',
+          'backend',
+          'design',
+          'machine learning',
+          'ai',
+          'react',
+          'nextjs',
+          'typescript',
+          'product',
+          'data',
+        ],
+      });
+  }
 }
