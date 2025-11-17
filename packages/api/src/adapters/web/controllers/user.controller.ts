@@ -25,6 +25,7 @@ import { DeleteUserImageDtoSchema } from '@/core/domain/dto/delete-user-image.dt
 import { DeleteUserImageUsceCase } from '@/core/usecases/users/delete-user-image.usecase';
 import { ReorderImagesDtoSchema } from '@/core/domain/dto/reorder-images.dto';
 import { ReorderUserImageUseCase } from '@/core/usecases/users/reorder-user-image-usecase';
+import { GetAllTagsUseCase } from '@/core/usecases/users/get-all-tags.usecase';
 
 @injectable()
 export class UserController {
@@ -43,6 +44,8 @@ export class UserController {
     private readonly deleteImageUseCase: DeleteUserImageUsceCase,
     @inject(ReorderUserImageUseCase)
     private readonly reorderUserImageUseCase: ReorderUserImageUseCase,
+    @inject(GetAllTagsUseCase)
+    private readonly getAllTagsUseCase: GetAllTagsUseCase,
   ) {}
 
   async getMe(req: Request, resp: Response) {
@@ -290,22 +293,19 @@ export class UserController {
   }
 
   async findAllInterests(req: Request, resp: Response) {
-    resp
-      .status(200)
-      .send({
-        interestList: [
-          'frontend',
-          'facebook',
-          'backend',
-          'design',
-          'machine learning',
-          'ai',
-          'react',
-          'nextjs',
-          'typescript',
-          'product',
-          'data',
-        ],
-      });
+    const connectedUserResult = await getConnectedUserId(
+      this.accessTokenService,
+      req,
+      resp,
+    );
+
+    if (connectedUserResult.isErr) {
+      resp.status(401).send('Invalid token');
+      return;
+    }
+
+    const interestList = await this.getAllTagsUseCase.execute();
+
+    resp.status(200).send({ interestList });
   }
 }

@@ -2,6 +2,8 @@ import { useState, KeyboardEvent } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { X } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { userApi } from '@/api/user.api';
 
 interface TagInputProps {
   tags: string[];
@@ -15,20 +17,18 @@ export function TagInput({ tags, onChange, disabled = false }: TagInputProps) {
   const [highlightedIndex, setHighlightedIndex] = useState(0);
   const MAX_TAGS = 15;
 
-  // Mock
-  const allSuggestions = [
-    'frontend',
-    'facebook',
-    'backend',
-    'design',
-    'machine learning',
-    'ai',
-    'react',
-    'nextjs',
-    'typescript',
-    'product',
-    'data',
-  ];
+  const { isPending, data } = useQuery({
+    queryKey: ['fetchAllTags'],
+    queryFn: async () => {
+      const res = await userApi.getAllTags();
+      if (!res.ok) throw new Error('Failed to fetch user');
+
+      const tags = await res.json();
+      return tags.interestList;
+    },
+  });
+
+  const allSuggestions = isPending ? [] : data;
 
   const filteredSuggestions = allSuggestions
     .filter((tag) =>

@@ -13,6 +13,7 @@ import { UpdateUserProfileUseCase } from '@/core/usecases/users/update-user-prof
 import { AddUserInteractionUseCase } from '@/core/usecases/users/add-user-interaction.usecase';
 import { DeleteUserImageUsceCase } from '@/core/usecases/users/delete-user-image.usecase';
 import { ReorderUserImageUseCase } from '@/core/usecases/users/reorder-user-image-usecase';
+import { GetAllTagsUseCase } from '@/core/usecases/users/get-all-tags.usecase';
 
 export function bindUseCases(container: Container) {
   container.bind(RegisterUserUseCase).toSelf().inSingletonScope();
@@ -32,4 +33,5 @@ export function bindUseCases(container: Container) {
   container.bind(AddUserInteractionUseCase).toSelf().inSingletonScope();
   container.bind(DeleteUserImageUsceCase).toSelf().inSingletonScope();
   container.bind(ReorderUserImageUseCase).toSelf().inSingletonScope();
+  container.bind(GetAllTagsUseCase).toSelf().inSingletonScope();
 }
