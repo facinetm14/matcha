@@ -233,7 +233,7 @@ export const mockNotifications: Notification[] = [
   {
     id: 'notif-1',
     userId: 'current-user',
-    type: 'like',
+    category: 'like',
     fromUserId: 'user-3',
     read: false,
     createdAt: new Date(Date.now() - 1800000),
@@ -241,7 +241,7 @@ export const mockNotifications: Notification[] = [
   {
     id: 'notif-2',
     userId: 'current-user',
-    type: 'view',
+    category: 'view',
     fromUserId: 'user-7',
     read: false,
     createdAt: new Date(Date.now() - 3600000),
@@ -249,7 +249,7 @@ export const mockNotifications: Notification[] = [
   {
     id: 'notif-3',
     userId: 'current-user',
-    type: 'match',
+    category: 'match',
     fromUserId: 'user-18',
     read: true,
     createdAt: new Date(Date.now() - 86400000),
@@ -257,7 +257,7 @@ export const mockNotifications: Notification[] = [
   {
     id: 'notif-4',
     userId: 'current-user',
-    type: 'message',
+    category: 'message',
     fromUserId: 'user-5',
     read: false,
     createdAt: new Date(Date.now() - 600000),

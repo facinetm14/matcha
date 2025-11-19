@@ -74,7 +74,10 @@ export class UpdateUserProfileUseCase {
     }
 
     if (tags) {
-      await this.userInterestRepository.bulkCreate(userId, tags);
+      await this.userInterestRepository.deleteByUserId(userId);
+      if (tags.length) {
+        await this.userInterestRepository.bulkCreate(userId, tags);
+      }
     }
 
     const updatedUserProfileResult =

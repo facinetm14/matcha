@@ -49,13 +49,13 @@ export class UserInterestRepositoryDb implements UserInterestRepository {
     column: UserInterestColumns,
     value: string,
   ): Promise<UserInterest[]> {
-    const queryUser = {
+    const queryUserInterest = {
       text: `SELECT * FROM user_interests WHERE ${column} = $1`,
       values: [value],
     };
 
     const connexion = await pgClient.connect();
-    const result = await pgClient.query(queryUser);
+    const result = await pgClient.query(queryUserInterest);
     connexion.release();
 
     const userInterestRawList = result.rows as UserInterestModel[];
@@ -64,18 +64,33 @@ export class UserInterestRepositoryDb implements UserInterestRepository {
     );
   }
 
-  async findAll(): Promise<UserInterest[]> {
-    const queryUser = {
-      text: `SELECT * FROM user_interests`,
+  async findAll(): Promise<string[]> {
+    const queryUserInterest = {
+      text: `SELECT DISTINCT interest FROM user_interests ORDER BY interest`,
     };
 
     const connexion = await pgClient.connect();
-    const result = await pgClient.query(queryUser);
+    const result = await pgClient.query(queryUserInterest);
     connexion.release();
 
     const userInterestRawList = result.rows as UserInterestModel[];
-    return userInterestRawList.map((userInterest) =>
-      mapUserInterestModelToEntity(userInterest),
-    );
+    return userInterestRawList.map((userInterest) => userInterest.interest);
+  }
+
+  async deleteByUserId(userId: string): Promise<void> {
+    const deleteQuery = {
+      text: `DELETE FROM user_interests WHERE user_id = $1`,
+      values: [userId],
+    };
+
+    try {
+      const connexion = await pgClient.connect();
+      await pgClient.query(deleteQuery);
+      connexion.release();
+    } catch (error) {
+      this.logger.error(
+        `Failed to delete user interest with id ${userId}: ${error}`,
+      );
+    }
   }
 }
