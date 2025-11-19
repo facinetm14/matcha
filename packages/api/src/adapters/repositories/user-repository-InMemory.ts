@@ -13,6 +13,9 @@ export class UserRepositoryInMemory implements UserRepository {
   constructor() {
     this.users = [];
   }
+  findUserProfileByIdList(_userId: string[]): Promise<UserProfile[]> {
+    return Promise.resolve([]);
+  }
 
   async create(createUserDto: CreateUserDto): Promise<string | null> {
     this.users.push(factoryUser({ ...createUserDto }));
@@ -71,7 +74,6 @@ export class UserRepositoryInMemory implements UserRepository {
       ...user,
       tags: [],
       photos: [],
-      profilePhoto: '',
       fameRating: 0,
       isOnline: false,
       reported: false,
@@ -79,6 +81,8 @@ export class UserRepositoryInMemory implements UserRepository {
       likedBy: [],
       blocked: [],
       viewedBy: [],
+      notifications: [],
+      matched: [],
     });
   }
 }

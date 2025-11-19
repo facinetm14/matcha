@@ -17,12 +17,17 @@ import { VerifyEmail } from './pages/VerifyEmail';
 import { useAuthStore } from './store/authStore';
 import CreateNewPassword from './pages/CreateNewPassword';
 import './api/socket.api';
+import { connectSocket } from './api/socket.api';
+import { useProfileStore } from './store/profileStore';
+import { SocketEvents } from '../../shared/socket-events';
+
+export const IS_LOGGED_IN_KEY = 'isLoggedIn';
 
 const queryClient = new QueryClient();
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
-  return isLoggedIn || localStorage.getItem('isLoggedIn') ? (
+  return isLoggedIn || localStorage.getItem(IS_LOGGED_IN_KEY) ? (
     <>{children}</>
   ) : (
     <Navigate to="/login" replace />
@@ -31,100 +36,137 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
 const RedirectToDashboard = ({ children }: { children: React.ReactNode }) => {
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
-  return !isLoggedIn && !localStorage.getItem('isLoggedIn') ? (
+  return !isLoggedIn && !localStorage.getItem(IS_LOGGED_IN_KEY) ? (
     <>{children}</>
   ) : (
     <Navigate to="/browse" replace />
   );
 };
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Navigate to="/browse" replace />} />
-          <Route
-            path="/login"
-            element={
-              <RedirectToDashboard>
-                <Login />
-              </RedirectToDashboard>
-            }
-          />
-          <Route
-            path="/register"
-            element={
-              <RedirectToDashboard>
-                <Register />
-              </RedirectToDashboard>
-            }
-          />
-          <Route path="/verify/:token" element={<VerifyEmail />} />
-          <Route path="/new-password/:token" element={<CreateNewPassword />} />
-          <Route
-            path="/forgot-password"
-            element={
-              <RedirectToDashboard>
-                <ForgotPassword />
-              </RedirectToDashboard>
-            }
-          />
-          <Route
-            path="/browse"
-            element={
-              <ProtectedRoute>
-                <Browse />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/profile"
-            element={
-              <ProtectedRoute>
-                <Profile />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/profile/:id"
-            element={
-              <ProtectedRoute>
-                <ProfileView />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/chat"
-            element={
-              <ProtectedRoute>
-                <Chat />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/search"
-            element={
-              <ProtectedRoute>
-                <Search />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/notifications"
-            element={
-              <ProtectedRoute>
-                <Notifications />
-              </ProtectedRoute>
-            }
-          />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
+  const { fetchProfile, fetchSelectedProfile, selectedUser } = useProfileStore(
+    (state) => state,
+  );
+
+  if (isLoggedIn || localStorage.getItem(IS_LOGGED_IN_KEY)) {
+    const socket = connectSocket();
+
+    socket?.once(SocketEvents.USER_CONNECTED, async ({ userId }) => {
+      fetchProfile();
+      if (userId === selectedUser?.id) {
+        fetchSelectedProfile(userId);
+      }
+    });
+
+    socket?.once(SocketEvents.USER_INTERACTION_ADDED, async ({ fromUser }) => {
+      fetchProfile();
+      if (fromUser === selectedUser?.id) {
+        fetchSelectedProfile(selectedUser.id);
+      }
+    });
+
+    socket?.once(SocketEvents.USER_DISCONNECTED, async ({ userId }) => {
+      fetchProfile();
+      if (userId === selectedUser?.id) {
+        fetchSelectedProfile(userId);
+      }
+    });
+  }
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter
+          future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+        >
+          <Routes>
+            <Route path="/" element={<Navigate to="/browse" replace />} />
+            <Route
+              path="/login"
+              element={
+                <RedirectToDashboard>
+                  <Login />
+                </RedirectToDashboard>
+              }
+            />
+            <Route
+              path="/register"
+              element={
+                <RedirectToDashboard>
+                  <Register />
+                </RedirectToDashboard>
+              }
+            />
+            <Route path="/verify/:token" element={<VerifyEmail />} />
+            <Route
+              path="/new-password/:token"
+              element={<CreateNewPassword />}
+            />
+            <Route
+              path="/forgot-password"
+              element={
+                <RedirectToDashboard>
+                  <ForgotPassword />
+                </RedirectToDashboard>
+              }
+            />
+            <Route
+              path="/browse"
+              element={
+                <ProtectedRoute>
+                  <Browse />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/profile/:id"
+              element={
+                <ProtectedRoute>
+                  <ProfileView />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/chat"
+              element={
+                <ProtectedRoute>
+                  <Chat />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/search"
+              element={
+                <ProtectedRoute>
+                  <Search />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/notifications"
+              element={
+                <ProtectedRoute>
+                  <Notifications />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;

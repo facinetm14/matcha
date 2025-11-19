@@ -1,22 +1,45 @@
-import { useState } from 'react';
+import { useEffect } from 'react';
 import { Navigation } from '@/components/Navigation';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Heart, X, MapPin, Star, Info } from 'lucide-react';
-import { mockUsers, mockNotifications, mockMessages } from '@/utils/mockData';
-import { UserProfile } from '@/types/user';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import { userApi } from '@/api/user.api';
+import { useQuery } from '@tanstack/react-query';
+import { getInitials } from '@/utils/get-initials';
+import { useProfileStore } from '@/store/profileStore';
+import { logout } from '@/utils/auth';
+import { disconnectSocket } from '@/api/socket.api';
+import { Loadder } from '@/components/ui/Loadder';
+import { useAuthStore } from '@/store/authStore';
 
 export default function Browse() {
   const navigate = useNavigate();
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [users] = useState<UserProfile[]>(mockUsers);
-  const unreadNotifications = mockNotifications.filter((n) => !n.read).length;
-  const unreadMessages = mockMessages.filter((m) => !m.read).length;
+  const {
+    selectedUser: currentUser,
+    updateSelectedUserProfile,
+    user: connectedUser,
+    fetchProfile,
+  } = useProfileStore();
 
-  const currentUser = users[currentIndex];
+  const notificationList = connectedUser?.notifications ?? [];
+  const unreadNotifications = notificationList.filter((n) => !n.isRead).length;
+  const unreadMessages = 0;
+
+  const { isPending, data, error, refetch } = useQuery({
+    queryKey: ['browseUsers'],
+    queryFn: async () => {
+      const res = await userApi.browseUsers();
+      if (!res.ok) {
+        throw new Error('Failed to browse users');
+      }
+      const user = await res.json();
+      return user;
+    },
+    enabled: !!connectedUser,
+  });
 
   const handleLike = () => {
     toast.success(`You liked ${currentUser.firstName}! 💕`);
@@ -27,18 +50,42 @@ export default function Browse() {
     nextProfile();
   };
 
-  const nextProfile = () => {
-    if (currentIndex < users.length - 1) {
-      setCurrentIndex(currentIndex + 1);
-    } else {
+  const nextProfile = async () => {
+    await refetch();
+    if (!currentUser) {
       toast.info("You've seen all profiles! Check back later for more.");
-      setCurrentIndex(0);
     }
   };
 
   const viewProfile = () => {
     navigate(`/profile/${currentUser.id}`);
   };
+
+  useEffect(() => {
+    if (!connectedUser) {
+      fetchProfile();
+    }
+
+    if (data) {
+      updateSelectedUserProfile(data);
+    }
+
+    if (error) {
+      disconnectSocket();
+      logout(navigate);
+    }
+  }, [
+    data,
+    updateSelectedUserProfile,
+    error,
+    navigate,
+    connectedUser,
+    fetchProfile,
+  ]);
+
+  if (isPending) {
+    return <Loadder />;
+  }
 
   if (!currentUser) {
     return (
@@ -65,11 +112,17 @@ export default function Browse() {
         <Card className="relative overflow-hidden shadow-card">
           {/* Profile Image */}
           <div className="relative h-[500px] md:h-[600px]">
-            <img
-              src={currentUser.profilePhoto}
-              alt={currentUser.firstName}
-              className="w-full h-full object-cover"
-            />
+            {currentUser.photos.length ? (
+              <img
+                src={currentUser.photos[0].preview}
+                alt={currentUser.firstName}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-muted text-3xl font-bold text-primary">
+                {getInitials(currentUser.firstName, currentUser.lastName)}
+              </div>
+            )}
 
             {/* Gradient Overlay */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
@@ -101,7 +154,7 @@ export default function Browse() {
                   </h2>
                   <div className="flex items-center gap-2 text-sm">
                     <MapPin className="w-4 h-4" />
-                    <span>{currentUser.location.city}</span>
+                    <span>{currentUser.location?.city ?? 'PARIS'}</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 bg-primary/20 backdrop-blur-sm px-3 py-1 rounded-full">
@@ -121,7 +174,7 @@ export default function Browse() {
                     variant="secondary"
                     className="bg-background/20 backdrop-blur-sm text-white border-white/20"
                   >
-                    {tag}
+                    #{tag}
                   </Badge>
                 ))}
               </div>
@@ -136,24 +189,21 @@ export default function Browse() {
               className="w-16 h-16 rounded-full border-2 hover:border-destructive hover:bg-destructive/10 hover:scale-110 transition-all"
               onClick={handlePass}
             >
-              <X className="w-8 h-8 text-destructive" />
+              <X className="w-19 h-10 text-destructive" />
             </Button>
 
-            <Button
-              size="icon"
-              className="w-20 h-20 rounded-full bg-gradient-romantic hover:scale-110 transition-all shadow-soft"
-              onClick={handleLike}
-            >
-              <Heart className="w-10 h-10 fill-white" />
-            </Button>
+            {!!connectedUser?.photos.length && (
+              <Button
+                size="icon"
+                variant="outline"
+                className="w-16 h-16 rounded-full border-2 hover:border-primary hover:bg-primary/10 hover:scale-110 transition-all"
+                onClick={handleLike}
+              >
+                <Heart className="w-10 h-10 fill-primary text-primary" />
+              </Button>
+            )}
           </div>
         </Card>
-
-        <div className="text-center mt-6">
-          <p className="text-sm text-muted-foreground">
-            {currentIndex + 1} of {users.length} profiles
-          </p>
-        </div>
       </div>
     </div>
   );

@@ -18,6 +18,7 @@ import { EventType } from '../../domain/enums/event-type';
 import { UserRegisteredPayload } from '../../domain/dto/user-registered-payload';
 import { UserToken } from '../../domain/entities/user-token.entity';
 import { UserStatus } from '../../domain/enums/user-status.enum';
+import { DEFAULT_SEXUAL_ORIENTATION } from '@/core/domain/consts/default-sexual-orientation';
 
 @injectable()
 export class RegisterUserUseCase {
@@ -26,7 +27,7 @@ export class RegisterUserUseCase {
     private readonly userRepository: UserRepository,
     @inject(TYPE.Logger) private readonly logger: Logger,
     @inject(TYPE.EventBus) private readonly eventBus: EventBus,
-  ) { }
+  ) {}
   async execute(
     createUserDto: CreateUserDto,
     userToken: UserToken,
@@ -91,6 +92,7 @@ export class RegisterUserUseCase {
       createdAt: now,
       updatedAt: now,
       status: UserStatus.UNVERIFIED,
+      sexualOrientation: DEFAULT_SEXUAL_ORIENTATION,
     });
 
     if (newUserId) {

@@ -14,6 +14,38 @@ UserRouter.get(
   },
 );
 
+UserRouter.get(
+  '/browse',
+  injectAuthorizationToken,
+  (req: Request, resp: Response) => {
+    userController.browse(req, resp);
+  },
+);
+
+UserRouter.post(
+  `/profile`,
+  injectAuthorizationToken,
+  (req: Request, resp: Response) => {
+    userController.viewUserProfileList(req, resp);
+  },
+);
+
+UserRouter.get(
+  `/:id/view`,
+  injectAuthorizationToken,
+  (req: Request, resp: Response) => {
+    userController.viewUserProfile(req, resp, { isViewing: true });
+  },
+);
+
+UserRouter.get(
+  `/:id/profile`,
+  injectAuthorizationToken,
+  (req: Request, resp: Response) => {
+    userController.viewUserProfile(req, resp);
+  },
+);
+
 UserRouter.post(`/check-identifier`, (req: Request, resp: Response) => {
   userController.checkUserIdentifierAvailability(req, resp);
 });
@@ -55,6 +87,14 @@ UserRouter.patch(
   injectAuthorizationToken,
   (req: Request, resp: Response) => {
     userController.reorderImages(req, resp);
+  },
+);
+
+UserRouter.get(
+  '/tags',
+  injectAuthorizationToken,
+  (req: Request, resp: Response) => {
+    userController.findAllInterests(req, resp);
   },
 );
 

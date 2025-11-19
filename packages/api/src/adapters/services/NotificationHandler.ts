@@ -11,12 +11,16 @@ import {
   buildUserRegisteredEmailTemplate,
 } from '../../infrastructure/mail-templates/user-registered.template';
 import { ResetPasswordWishedPayload } from '@/core/domain/dto/reset-password-wished-payload';
+import { UserNotificationRepository } from '@/core/ports/repositories/user-notification.repository';
+import { Notification } from '@/core/domain/entities/notification.entity';
 
 const clientHost = `${process.env.CLIENT_HOST}`;
 @injectable()
-export class Notification implements NotificationService {
+export class NotificationHandler implements NotificationService {
   constructor(
     @inject(TYPE.EmailService) private readonly emailService: EmailService,
+    @inject(TYPE.UserNotificationRepository)
+    private readonly userNotificationRepository: UserNotificationRepository,
   ) {}
 
   async sendUserRegisteredNotifification(
@@ -45,5 +49,9 @@ export class Notification implements NotificationService {
       username: payload.username,
     };
     this.emailService.send(emailPayload);
+  }
+
+  async createNotification(notification: Notification): Promise<void> {
+    return this.userNotificationRepository.create(notification);
   }
 }

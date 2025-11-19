@@ -5,7 +5,8 @@ export type InteractionCategory =
   | 'block'
   | 'unblock'
   | 'view'
-  | 'report';
+  | 'report'
+  | 'match';
 
 export interface UserProfileInteraction {
   id: string;

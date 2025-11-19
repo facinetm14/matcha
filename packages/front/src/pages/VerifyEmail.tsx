@@ -2,6 +2,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { authApi } from '@/api/auth.api';
 import Login from './Login';
+import { Loadder } from '@/components/ui/Loadder';
 
 export const VerifyEmail = () => {
   const { token } = useParams();
@@ -23,7 +24,7 @@ export const VerifyEmail = () => {
     },
   });
 
-  if (isPending) return 'Loading...';
+  if (isPending) return <Loadder />;;
 
   if (error) navigate('/not-found');
 

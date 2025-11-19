@@ -9,4 +9,5 @@ export interface UserRepository {
   update(id: string, updateUserDto: UpdateUserDto): Promise<User | null>;
   findUserByUniqKey(key: UserUniqKeys, value: string): Promise<User | null>;
   findUserProfileById(userId: string): Promise<UserProfile | null>;
+  findUserProfileByIdList(userId: string[]): Promise<UserProfile[]>;
 }

@@ -1,4 +1,5 @@
 import { CreateInteractionDto } from '@/core/domain/dto/create-interaction.dto';
+import { UserProfileInteraction } from '@/core/domain/entities/user-profile-interaction.entity';
 import { UserInteractionRepository } from '@/core/ports/repositories/user-profile-interaction.repository';
 import { Logger } from '@/core/ports/services/logger.service';
 import { TYPE } from '@/infrastructure/config/inversify-type';
@@ -46,5 +47,58 @@ export class UserInteractionRepositoryDb implements UserInteractionRepository {
       this.logger.error(errorMessage);
       return null;
     }
+  }
+
+  async delete(
+    createInteractionDto: CreateInteractionDto,
+    author: string,
+  ): Promise<void> {
+    const deleteQuery = {
+      text: `DELETE FROM user_profile_interactions WHERE author = $1 AND recipient = $2 AND category = $3`,
+      values: [
+        author,
+        createInteractionDto.recipient,
+        createInteractionDto.category,
+      ],
+    };
+
+    try {
+      const connexion = await pgClient.connect();
+      await pgClient.query(deleteQuery);
+      connexion.release();
+    } catch (error) {
+      this.logger.error(
+        `Failed to delete user ${author} interaction with id ${createInteractionDto.recipient} and category ${createInteractionDto.category}: ${error}`,
+      );
+    }
+  }
+
+  async findInteraction(
+    interaction: Pick<
+      UserProfileInteraction,
+      'author' | 'recipient' | 'category'
+    >,
+  ): Promise<UserProfileInteraction | null> {
+    const query = {
+      text: `SELECT * FROM user_profile_interactions WHERE author = $1 AND recipient = $2 AND category = $3 ORDER BY created_at DESC LIMIT 1`,
+      values: [interaction.author, interaction.recipient, interaction.category],
+    };
+
+    const connexion = await pgClient.connect();
+    const result = await pgClient.query(query);
+    connexion.release();
+    const interactionModel = result.rows[0];
+    if (!interactionModel) {
+      return null;
+    }
+
+    return {
+      id: interactionModel.id,
+      author: interactionModel.author,
+      recipient: interactionModel.recipient,
+      category: interactionModel.category,
+      createdAt: interactionModel.created_at,
+      updatedAt: interactionModel.updated_at,
+    };
   }
 }
