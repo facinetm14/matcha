@@ -1,4 +1,5 @@
-import { EventType, SocketEvents } from '../../core/domain/enums/event-type';
+import { EventType } from '../../core/domain/enums/event-type';
+import { SocketEvents } from '../../../../shared/socket-events';
 import { EventBus } from '../../core/ports/services/event-bus';
 import { Logger } from '../../core/ports/services/logger.service';
 import container from '../config/inversify';

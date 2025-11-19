@@ -1,11 +1,12 @@
 import { inject } from 'inversify';
 import { TYPE } from '../config/inversify-type';
 import { Socket, Server as SocketIoServer } from 'socket.io';
-import { SocketEvents } from '@/core/domain/enums/event-type';
+import { SocketEvents } from '../../../../shared/socket-events';
 import { AccessTokenService } from '@/core/ports/services/access-token.service';
 import { getConnectedUserIdFromSocket } from '@/adapters/web/middlewares/get-connected-user';
 import { CacheService } from '@/core/ports/services/cache.service';
 import { CacheResourceKeys } from '@/core/domain/consts/cache-resource-keys';
+import { EventBus } from '@/core/ports/services/event-bus';
 
 export class SocketIoListener {
   constructor(
@@ -15,6 +16,7 @@ export class SocketIoListener {
     private readonly accessTokenService: AccessTokenService,
     @inject(TYPE.CacheService)
     private readonly cacheService: CacheService,
+    @inject(TYPE.EventBus) private readonly eventBus: EventBus,
   ) {}
 
   async handleSocketEvents() {
@@ -51,7 +53,15 @@ export class SocketIoListener {
 
         socket.leave(userId);
         socket.disconnect(true);
+
+        this.serverSocket
+          .except(userId)
+          .emit(SocketEvents.USER_DISCONNECTED, { userId });
       });
+
+      this.serverSocket
+        .except(userId)
+        .emit(SocketEvents.USER_CONNECTED, { userId });
     });
   }
 }

@@ -26,6 +26,17 @@ const viewUserProfile = async (userId: string) => {
   });
 };
 
+const viewUserProfileList = async (userIdList: string[]) => {
+  return fetch(`${API_BASE_ROUTE}/users/view`, {
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    method: 'POST',
+    body: JSON.stringify({ userIdList }),
+    credentials: 'include',
+  });
+};
+
 const checkUserIdentifierAvailability = async (
   field: UserIdentifier,
   value: string,
@@ -121,4 +132,5 @@ export const userApi = {
   browseUsers,
   viewUserProfile,
   interactWithUser,
+  viewUserProfileList,
 };

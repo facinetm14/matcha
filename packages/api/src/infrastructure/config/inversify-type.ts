@@ -10,5 +10,6 @@ export const TYPE = {
   AccessTokenService: Symbol.for('AccessTokenService'),
   UserInterestRepository: Symbol.for('UserInterestRepository'),
   UserInteractionRepository: Symbol.for('UserInteractionRepository'),
+  UserNotificationRepository: Symbol.for('UserNotificationRepository'),
   UserImageRepository: Symbol.for('UserImageRepository'),
 };

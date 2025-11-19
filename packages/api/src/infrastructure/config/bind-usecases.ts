@@ -15,6 +15,7 @@ import { DeleteUserImageUsceCase } from '@/core/usecases/users/delete-user-image
 import { ReorderUserImageUseCase } from '@/core/usecases/users/reorder-user-image-usecase';
 import { GetAllTagsUseCase } from '@/core/usecases/users/get-all-tags.usecase';
 import { FetchBestUserSuggestion } from '@/core/usecases/users/fetch-best-user-suggestion.usecase';
+import { GetUserListFromIdListUseCase } from '@/core/usecases/users/get-user-list-from-id.usecase';
 
 export function bindUseCases(container: Container) {
   container.bind(RegisterUserUseCase).toSelf().inSingletonScope();
@@ -36,4 +37,5 @@ export function bindUseCases(container: Container) {
   container.bind(ReorderUserImageUseCase).toSelf().inSingletonScope();
   container.bind(GetAllTagsUseCase).toSelf().inSingletonScope();
   container.bind(FetchBestUserSuggestion).toSelf().inSingletonScope();
+  container.bind(GetUserListFromIdListUseCase).toSelf().inSingletonScope();
 }
