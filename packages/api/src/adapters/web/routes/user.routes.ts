@@ -21,7 +21,13 @@ UserRouter.get(
     userController.browse(req, resp);
   },
 );
-
+UserRouter.post(
+  `/view`,
+  injectAuthorizationToken,
+  (req: Request, resp: Response) => {
+    userController.viewUserProfileList(req, resp);
+  },
+);
 UserRouter.get(
   `/:id/view`,
   injectAuthorizationToken,

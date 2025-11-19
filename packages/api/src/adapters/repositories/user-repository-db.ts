@@ -127,10 +127,18 @@ export class UserRepositoryDb implements UserRepository {
   async findUserProfileById(id: string): Promise<UserProfile | null> {
     const queryUser = {
       text: `
-              SELECT u.*, uim.id as img_id, uim.position as img_position, uim.preview as img_preview, ui.interest, upi.author, upi.category, upi.created_at as interaction_created_at FROM users as u
+              SELECT u.*, 
+              uim.id as img_id, uim.position as img_position, uim.preview as img_preview,
+              ui.interest,
+              upi.author, upi.category, upi.created_at as interaction_created_at ,
+              notif.id as notif_id, notif.author as notif_author, notif.from_user as notif_from_user,
+              notif.created_at as notif_created_at, notif.updated_at as notif_updated_at, notif.is_read as notif_is_read,
+              notif.category as notif_category
+              FROM users as u
               LEFT JOIN user_images as uim ON u.id = uim.user_id
               LEFT JOIN user_interests as ui ON u.id = ui.user_id 
               LEFT JOIN user_profile_interactions as upi ON upi.recipient = u.id
+              LEFT JOIN user_notifications as notif ON notif.author = u.id
               WHERE u.id = $1
               ORDER BY interaction_created_at DESC
             `,
@@ -155,6 +163,47 @@ export class UserRepositoryDb implements UserRepository {
       userProfileRawListWithOnlineStatus,
     );
     return userProfiles[0];
+  }
+
+  async findUserProfileByIdList(id: string[]): Promise<UserProfile[]> {
+    const queryUser = {
+      text: `
+              SELECT u.*, 
+              uim.id as img_id, uim.position as img_position, uim.preview as img_preview,
+              ui.interest,
+              upi.author, upi.category, upi.created_at as interaction_created_at ,
+              notif.id as notif_id, notif.author as notif_author, notif.from_user as notif_from_user,
+              notif.created_at as notif_created_at, notif.updated_at as notif_updated_at, notif.is_read as notif_is_read,
+              notif.category as notif_category
+              FROM users as u
+              LEFT JOIN user_images as uim ON u.id = uim.user_id
+              LEFT JOIN user_interests as ui ON u.id = ui.user_id 
+              LEFT JOIN user_profile_interactions as upi ON upi.recipient = u.id
+              LEFT JOIN user_notifications as notif ON notif.author = u.id
+              WHERE u.id = ANY($1)
+              ORDER BY interaction_created_at DESC
+            `,
+      values: [id],
+    };
+
+    const connexion = await pgClient.connect();
+    const result = await pgClient.query(queryUser);
+    connexion.release();
+    const userProfileRawList = result.rows;
+    if (!userProfileRawList.length) {
+      return [];
+    }
+
+    const userProfileRawListWithOnlineStatus = [];
+    for (const user of userProfileRawList) {
+      const isOnline = await this.getOnlineStatus(user.id);
+      userProfileRawListWithOnlineStatus.push({ ...user, isOnline });
+    }
+
+    const userProfiles = buildUserProfileFromUserAggregate(
+      userProfileRawListWithOnlineStatus,
+    );
+    return userProfiles;
   }
 
   private async getOnlineStatus(userId: string): Promise<boolean> {

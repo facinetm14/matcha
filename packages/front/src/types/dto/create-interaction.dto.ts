@@ -1,9 +1,9 @@
-type InteractionCategory =
+export type InteractionCategory =
   | 'like'
   | 'unlike'
-  | 'swipe'
   | 'block'
   | 'unblock'
+  | 'swipe'
   | 'view'
   | 'report';
 

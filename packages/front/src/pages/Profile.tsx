@@ -39,6 +39,9 @@ import { UpdateImagePositionDto } from '@/types/dto/update-image-position.dto';
 import { useGetProfile } from '@/hooks/useGetProfile';
 import { useSearchParams } from 'react-router-dom';
 import { disconnectSocket } from '@/api/socket.api';
+import { Loadder } from '@/components/ui/Loadder';
+
+const PHOTOS_KEY = 'photos';
 
 export default function Profile() {
   const unreadNotifications = mockNotifications.filter((n) => !n.read).length;
@@ -53,17 +56,20 @@ export default function Profile() {
     photos,
     imagesToDelete,
     imagesPositionToUpdate,
+    selectedUser,
     updateUserDraft,
     updateImagesToDelete,
     updateImagesPositionToUpdate,
+    fetchProfile,
   } = useProfileStore((state) => state);
 
-  const { isPending, error, refetch } = useGetProfile();
+  const { isPending, error } = useGetProfile();
 
   const updateProfileMutation = useMutation({
     mutationFn: async (updateUserDto: UpdateUserDto) => {
       const response = await userApi.updateUserProfile(updateUserDto);
       if (response.status === 200) {
+        fetchProfile();
         return true;
       }
 
@@ -72,8 +78,8 @@ export default function Profile() {
     },
     onSuccess: () => {
       toast.success('Profile updated successfully! 🎉');
+      fetchProfile();
       updateUserDraft(null);
-      refetch();
     },
     onError: (error) => {
       toast.error(error.message);
@@ -87,15 +93,18 @@ export default function Profile() {
         return true;
       }
 
+      fetchProfile();
       const error = await response.text();
       throw new Error(error);
     },
     onSuccess: () => {
+      if (selectedUser) {
+        fetchProfile();
+      }
       updateImagesToDelete([]);
       if (draft) {
         updateUserDraft(null);
       }
-      refetch();
     },
     onError: (error) => {
       toast.error(error.message);
@@ -109,6 +118,7 @@ export default function Profile() {
         return true;
       }
 
+      fetchProfile();
       const error = await response.text();
       throw new Error(error);
     },
@@ -117,7 +127,6 @@ export default function Profile() {
       if (draft) {
         updateUserDraft(null);
       }
-      refetch();
     },
     onError: (error) => {
       toast.error(error.message);
@@ -137,8 +146,8 @@ export default function Profile() {
 
     const isOnlyEmptyPhotos =
       updatedKeys.length === 1 &&
-      updatedKeys[0] === 'photos' &&
-      toUpdate['photos'].length === 0;
+      updatedKeys[0] === PHOTOS_KEY &&
+      toUpdate[PHOTOS_KEY].length === 0;
 
     if (updatedKeys.length && !isOnlyEmptyPhotos) {
       updateProfileMutation.mutate(toUpdate);
@@ -181,7 +190,7 @@ export default function Profile() {
   }
 
   if (isPending || !profile) {
-    return <div>Loading...</div>;
+    return <Loadder />;
   }
 
   return (

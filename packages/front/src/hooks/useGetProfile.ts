@@ -3,12 +3,13 @@ import { userApi } from '../api/user.api';
 import { useEffect } from 'react';
 import { useProfileStore } from '@/store/profileStore';
 import { authApi } from '@/api/auth.api';
+import { UserProfile } from '@/types/user';
 
 export const useGetProfile = () => {
   const updateUserProfile = useProfileStore((state) => state.updateUserProfile);
   const query = useQuery({
     queryKey: ['fetchUserProfile'],
-    queryFn: async () => {
+    queryFn: async (): Promise<UserProfile> => {
       const res = await userApi.getMe();
       if (!res.ok) {
         await authApi.logout();

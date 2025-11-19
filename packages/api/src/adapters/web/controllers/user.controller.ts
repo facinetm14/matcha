@@ -27,6 +27,9 @@ import { ReorderImagesDtoSchema } from '@/core/domain/dto/reorder-images.dto';
 import { ReorderUserImageUseCase } from '@/core/usecases/users/reorder-user-image-usecase';
 import { GetAllTagsUseCase } from '@/core/usecases/users/get-all-tags.usecase';
 import { FetchBestUserSuggestion } from '@/core/usecases/users/fetch-best-user-suggestion.usecase';
+import { UserProfile } from '@/core/domain/entities/user-profile.entity';
+import { ViewUserProfileListSchema } from '@/core/domain/dto/view-user-profile-list.dto';
+import { GetUserListFromIdListUseCase } from '@/core/usecases/users/get-user-list-from-id.usecase';
 
 @injectable()
 export class UserController {
@@ -49,6 +52,8 @@ export class UserController {
     private readonly getAllTagsUseCase: GetAllTagsUseCase,
     @inject(FetchBestUserSuggestion)
     private readonly fetchBestUserSuggestion: FetchBestUserSuggestion,
+    @inject(GetUserListFromIdListUseCase)
+    private readonly getUserListFromIdListUseCase: GetUserListFromIdListUseCase,
   ) {}
 
   async getMe(req: Request, resp: Response) {
@@ -92,17 +97,54 @@ export class UserController {
 
     const { id } = req.params;
 
-    const getCurrentUserResult = await this.getCurrentUserUseCase.execute(id);
+    const getCurrentUserResult = await this.getCurrentUserUseCase.execute(
+      connectedUserResult.data,
+      id,
+    );
 
     if (getCurrentUserResult.isErr) {
       resp.status(404).send('User not found');
       return;
     }
 
+    
+
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { passwd, ...user } = getCurrentUserResult.data;
 
     resp.status(200).json(user);
+  }
+
+  async viewUserProfileList(req: Request, resp: Response) {
+    const connectedUserResult = await getConnectedUserId(
+      this.accessTokenService,
+      req,
+      resp,
+    );
+
+    if (connectedUserResult.isErr) {
+      resp.status(401).send('Invalid token');
+      return;
+    }
+
+    const parsedBody = ViewUserProfileListSchema.safeParse(req.body);
+
+    if (!parsedBody.success) {
+      resp.status(400).send('Bad request');
+      return;
+    }
+
+    const userIdList = parsedBody.data.userIdList;
+
+    const userList: UserProfile[] =
+      await this.getUserListFromIdListUseCase.execute(userIdList);
+    const safeUserList = userList.map((u) => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { passwd, ...user } = u;
+      return user;
+    });
+
+    resp.status(200).send(safeUserList);
   }
 
   async checkUserIdentifierAvailability(req: Request, resp: Response) {

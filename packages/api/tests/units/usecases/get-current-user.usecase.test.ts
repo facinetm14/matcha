@@ -1,6 +1,7 @@
 import { CreateUserDto } from '@/core/domain/dto/create-user.dto';
 import { UserStatus } from '@/core/domain/enums/user-status.enum';
 import { UserRepository } from '@/core/ports/repositories/user.repository';
+import { EventBus } from '@/core/ports/services/event-bus';
 import { GetCurrentUserUseCase } from '@/core/usecases/users/get-current-user.usecase';
 
 import {
@@ -12,11 +13,13 @@ describe('Get current user usecase', () => {
   let getCurrentUserUseCase: GetCurrentUserUseCase;
   let userRepository: UserRepository;
   let createUserDto: CreateUserDto;
+  let eventBus: EventBus;
 
   beforeAll(() => {
     userRepository = factoryUserRepositoryInMemory();
+    eventBus = {} as EventBus;
 
-    getCurrentUserUseCase = new GetCurrentUserUseCase(userRepository);
+    getCurrentUserUseCase = new GetCurrentUserUseCase(userRepository, eventBus);
 
     createUserDto = factoryCreateUserDto(
       {
