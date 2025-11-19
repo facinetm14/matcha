@@ -14,21 +14,30 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { MapPin, Star, Search as SearchIcon, Heart, Info } from 'lucide-react';
-import { mockUsers, mockNotifications, mockMessages } from '@/utils/mockData';
 import { useNavigate } from 'react-router-dom';
+import { useGetProfile } from '@/hooks/useGetProfile';
+import { useProfileStore } from '@/store/profileStore';
+import { UserProfile } from '@/types/user';
 
 export default function Search() {
   const navigate = useNavigate();
+  const { isPending } = useGetProfile();
+  const { user: connectedUser } = useProfileStore();
+
+  const userList = [];
+
   const [ageRange, setAgeRange] = useState([18, 50]);
   const [fameRange, setFameRange] = useState([0, 1000]);
   const [city, setCity] = useState('');
   const [sortBy, setSortBy] = useState('distance');
-  const [filteredUsers, setFilteredUsers] = useState(mockUsers);
-  const unreadNotifications = mockNotifications.filter((n) => !n.read).length;
-  const unreadMessages = mockMessages.filter((m) => !m.read).length;
+  const [filteredUsers, setFilteredUsers] = useState<UserProfile[]>(userList);
+
+  const notificationList = connectedUser?.notifications ?? [];
+  const unreadNotifications = notificationList.filter((n) => !n.isRead).length;
+  const unreadMessages = 0;
 
   const handleSearch = () => {
-    let results = mockUsers.filter((user) => {
+    let results = userList.filter((user) => {
       const ageMatch = user.age >= ageRange[0] && user.age <= ageRange[1];
       const fameMatch =
         user.fameRating >= fameRange[0] && user.fameRating <= fameRange[1];
@@ -124,6 +133,7 @@ export default function Search() {
 
             <Button
               onClick={handleSearch}
+              variant="outline"
               className="w-full mt-6 bg-gradient-romantic"
             >
               <SearchIcon className="w-4 h-4 mr-2" />
@@ -134,14 +144,14 @@ export default function Search() {
 
         {/* Results */}
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredUsers.slice(0, 12).map((user) => (
+          {filteredUsers.map((user) => (
             <Card
               key={user.id}
               className="overflow-hidden shadow-card hover:shadow-soft transition-all"
             >
               <div className="relative h-64">
                 <img
-                  src={user.profilePhoto}
+                  src={user.photos[0]}
                   alt={user.firstName}
                   className="w-full h-full object-cover"
                 />
@@ -189,7 +199,10 @@ export default function Search() {
                     <Info className="w-4 h-4 mr-2" />
                     View
                   </Button>
-                  <Button className="flex-1 bg-gradient-romantic">
+                  <Button
+                    variant="outline"
+                    className="flex-1 bg-gradient-romantic hover:bg-primary"
+                  >
                     <Heart className="w-4 h-4 mr-2" />
                     Like
                   </Button>

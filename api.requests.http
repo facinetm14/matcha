@@ -105,7 +105,6 @@ Content-Type: application/json
 
 
 ### user interaction
-
 POST {{baseUrl}}/users/interaction
 Authorization: Bearer {{accessToken}} {{refreshToken}}
 Content-Type: application/json
@@ -127,3 +126,18 @@ Content-Type: application/json
 {
   "images": ["9w29xp-mgz05g31-wwmy1x-he3qk8-image-1761376337952-719116665.jpg"]
 }
+
+### get user list
+POST {{baseUrl}}/users/profile
+Authorization: Bearer {{accessToken}} {{refreshToken}}
+Content-Type: application/json
+
+{
+  "userIdList": ["2jtgok-mh0qljsv-g884ib-bwc65m", "4ba6dh-mhxs77ur-qzlucq-jjmuyg", "83fghh-mh1vdv5y-nqnkkn-jpg3ub"]
+}
+
+
+### get user channel list
+GET {{baseUrl}}/chats/channels
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI5dzI5eHAtbWd6MDVnMzEtd3dteTF4LWhlM3FrOCIsImlhdCI6MTc2MzU3NzgzNiwiZXhwIjoxNzYzNTc4NzM2LCJqdGkiOiJ2b3hnc2ktbWk2Y3BqdWUtaGxmbXJzLXhkbW55MCJ9.XwgCap6Af6qktTJ8VQJIZjlWdL_B18xYO4IxovnxLv8 {{refreshToken}}
+Content-Type: application/json

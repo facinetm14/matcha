@@ -13,6 +13,7 @@ import { createServer, Server as NodeServer } from 'node:http';
 import { Server as SocketIoServer } from 'socket.io';
 import container from './infrastructure/config/inversify';
 import { TYPE } from './infrastructure/config/inversify-type';
+import ChatRouter from './adapters/web/routes/chat.routes';
 
 export const createApp = (): { server: NodeServer; app: Express } => {
   const app = express();
@@ -45,6 +46,7 @@ export const createApp = (): { server: NodeServer; app: Express } => {
   app.use(`${baseApi}`, DefaultRouter);
   app.use(`${baseApi}/auth`, rateLimiter, AuthRouter);
   app.use(`${baseApi}/users`, UserRouter);
+  app.use(`${baseApi}/chats`, ChatRouter)
 
   return { server, app };
 };

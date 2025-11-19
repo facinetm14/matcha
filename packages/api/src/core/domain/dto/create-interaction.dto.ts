@@ -10,6 +10,7 @@ export const CreateInteractionDtoSchema = z.object({
     'unblock',
     'view',
     'report',
+    'match',
   ] as const),
 });
 

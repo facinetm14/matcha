@@ -1,17 +1,56 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Navigation } from '@/components/Navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Heart, Eye, MessageCircle, Users, HeartOff } from 'lucide-react';
-import { mockNotifications, mockUsers, mockMessages } from '@/utils/mockData';
 import { formatDistanceToNow } from 'date-fns';
+import { useGetProfile } from '@/hooks/useGetProfile';
+import { disconnectSocket } from '@/api/socket.api';
+import Login from './Login';
+import { userApi } from '@/api/user.api';
+import { useQuery } from '@tanstack/react-query';
+import { UserProfile } from '@/types/user';
+import { Notification } from '@/types/user';
+import { getInitials } from '@/utils/get-initials';
+import { useProfileStore } from '@/store/profileStore';
+import { Loadder } from '@/components/ui/Loadder';
+import { IS_LOGGED_IN_KEY } from '@/App';
 
 export default function Notifications() {
-  const [filter, setFilter] = useState<string | null>(null);
+  const { isPending: isPendingProfile, error: errorProfile } = useGetProfile();
+  const { user: connectedUser } = useProfileStore();
 
-  const unreadNotifications = mockNotifications.filter((n) => !n.read).length;
-  const unreadMessages = mockMessages.filter((m) => !m.read).length;
+  const notificationList = connectedUser?.notifications ?? [];
+
+  const {
+    isPending: isPendingUserList,
+    data: users,
+    error: errorUserList,
+    refetch: refetchUserList,
+  } = useQuery({
+    queryKey: ['getUserProfileList'],
+    queryFn: async (): Promise<UserProfile[]> => {
+      const userIdList = notificationList.map((notif) => notif.fromUser) ?? [];
+      if (!userIdList.length) {
+        return [];
+      }
+
+      const res = await userApi.getUserProfileList(userIdList);
+      if (!res.ok) {
+        throw new Error('Failed to browse users');
+      }
+      const userList = await res.json();
+      return userList;
+    },
+    enabled: !!connectedUser,
+  });
+
+  const [filter, setFilter] = useState<string | null>(null);
+  const usersList = users || [];
+
+  const unreadNotifications = notificationList.filter((n) => !n.isRead).length;
+  const unreadMessages = 0;
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
@@ -30,11 +69,11 @@ export default function Notifications() {
     }
   };
 
-  const getNotificationText = (notification: (typeof mockNotifications)[0]) => {
-    const user = mockUsers.find((u) => u.id === notification.fromUserId);
+  const getNotificationText = (notification: Notification) => {
+    const user = usersList.find((u) => u.id === notification.fromUser);
     const name = user?.firstName || 'Someone';
 
-    switch (notification.type) {
+    switch (notification.category) {
       case 'like':
         return `${name} liked your profile`;
       case 'view':
@@ -45,15 +84,26 @@ export default function Notifications() {
         return `You matched with ${name}! 💕`;
       case 'unlike':
         return `${name} unliked your profile`;
-      default:
-        return 'New notification';
     }
   };
 
-  // Filtrage
   const filteredNotifications = filter
-    ? mockNotifications.filter((n) => n.type === filter)
-    : mockNotifications;
+    ? notificationList.filter((n) => n.category === filter)
+    : notificationList;
+
+  useEffect(() => {
+    refetchUserList();
+  }, [notificationList.length, connectedUser?.id, refetchUserList]);
+
+  if (errorProfile || errorUserList) {
+    localStorage.removeItem(IS_LOGGED_IN_KEY);
+    disconnectSocket();
+    return <Login />;
+  }
+
+  if (isPendingProfile || isPendingUserList) {
+    return <Loadder />;
+  }
 
   return (
     <div className="min-h-screen bg-background pb-20 md:pt-20">
@@ -89,47 +139,51 @@ export default function Notifications() {
 
         {/* --- Liste des notifications --- */}
         <div className="space-y-3">
-          {filteredNotifications.map((notification) => {
-            const user = mockUsers.find(
-              (u) => u.id === notification.fromUserId,
-            );
+          {filteredNotifications
+            .sort((a, b) => (a.isRead && !b.isRead ? 1 : -1))
+            .map((notification) => {
+              const user = usersList.find(
+                (u) => u.id === notification.fromUser,
+              );
 
-            return (
-              <Card
-                key={notification.id}
-                className={`shadow-card transition-all hover:shadow-soft cursor-pointer ${
-                  !notification.read ? 'bg-primary/5 border-primary/20' : ''
-                }`}
-              >
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-4">
-                    <Avatar className="w-12 h-12">
-                      <AvatarImage src={user?.profilePhoto} />
-                      <AvatarFallback>{user?.firstName[0]}</AvatarFallback>
-                    </Avatar>
+              return (
+                <Card
+                  key={notification.id}
+                  className={`shadow-card transition-all hover:shadow-soft cursor-pointer ${
+                    !notification.isRead ? 'bg-primary/5 border-primary/20' : ''
+                  }`}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-4">
+                      <Avatar className="w-12 h-12">
+                        <AvatarImage src={user?.photos[0].preview} />
+                        <AvatarFallback>
+                          {getInitials(user?.firstName, user?.lastName)}
+                        </AvatarFallback>
+                      </Avatar>
 
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        {getNotificationIcon(notification.type)}
-                        <p className="font-medium">
-                          {getNotificationText(notification)}
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          {getNotificationIcon(notification.category)}
+                          <p className="font-medium">
+                            {getNotificationText(notification)}
+                          </p>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          {formatDistanceToNow(notification.createdAt, {
+                            addSuffix: true,
+                          })}
                         </p>
                       </div>
-                      <p className="text-sm text-muted-foreground">
-                        {formatDistanceToNow(notification.createdAt, {
-                          addSuffix: true,
-                        })}
-                      </p>
-                    </div>
 
-                    {!notification.read && (
-                      <div className="w-2 h-2 rounded-full bg-primary" />
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
+                      {!notification.isRead && (
+                        <div className="w-2 h-2 rounded-full bg-primary" />
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
         </div>
       </div>
     </div>
