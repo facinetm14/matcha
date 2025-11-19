@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Navigation } from '@/components/Navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -24,10 +24,9 @@ import {
 } from 'lucide-react';
 import { mockNotifications, mockMessages } from '@/utils/mockData';
 import { toast } from 'sonner';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import { userApi } from '@/api/user.api';
 import Login from './Login';
-import { useAuthStore } from '@/store/authStore';
 import { useProfileStore } from '@/store/profileStore';
 import { getInitials } from '@/utils/get-initials';
 import { UpdateUserDto } from '@/types/dto/update-user.dto';
@@ -37,43 +36,40 @@ import { PhotoGallery } from '@/components/PhotoGalery';
 import { getGenderLabel } from '@/utils/get-gender-label';
 import { DeleteUserImageDto } from '@/types/dto/delete-image.dto';
 import { UpdateImagePositionDto } from '@/types/dto/update-image-position.dto';
+import { useGetProfile } from '@/hooks/useGetProfile';
+import { useSearchParams } from 'react-router-dom';
+import { disconnectSocket } from '@/api/socket.api';
+import { Loadder } from '@/components/ui/Loadder';
+
+const PHOTOS_KEY = 'photos';
 
 export default function Profile() {
-  const [isEditing, setIsEditing] = useState(false);
   const unreadNotifications = mockNotifications.filter((n) => !n.read).length;
   const unreadMessages = mockMessages.filter((m) => !m.read).length;
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const [isEditing, setIsEditing] = useState(false);
+
   const {
     draft,
     user: profile,
     photos,
     imagesToDelete,
     imagesPositionToUpdate,
+    selectedUser,
     updateUserDraft,
-    updateUserProfile,
     updateImagesToDelete,
     updateImagesPositionToUpdate,
+    fetchProfile,
   } = useProfileStore((state) => state);
 
-  const { isPending, error, refetch } = useQuery({
-    queryKey: ['fetchUserProfile'],
-    queryFn: async () => {
-      const currentUserResponse = await userApi.getMe();
-      if (currentUserResponse.status === 200) {
-        const user = await currentUserResponse.json();
-        updateUserProfile({
-          ...user,
-          sexualOrientation: user.sexualOrientation?.split(' ') ?? [],
-        });
-        return user;
-      }
-      throw new Error('Failed to fetch user profile');
-    },
-  });
+  const { isPending, error } = useGetProfile();
 
   const updateProfileMutation = useMutation({
     mutationFn: async (updateUserDto: UpdateUserDto) => {
       const response = await userApi.updateUserProfile(updateUserDto);
       if (response.status === 200) {
+        fetchProfile();
         return true;
       }
 
@@ -82,8 +78,8 @@ export default function Profile() {
     },
     onSuccess: () => {
       toast.success('Profile updated successfully! 🎉');
+      fetchProfile();
       updateUserDraft(null);
-      refetch();
     },
     onError: (error) => {
       toast.error(error.message);
@@ -97,15 +93,18 @@ export default function Profile() {
         return true;
       }
 
+      fetchProfile();
       const error = await response.text();
       throw new Error(error);
     },
     onSuccess: () => {
+      if (selectedUser) {
+        fetchProfile();
+      }
       updateImagesToDelete([]);
       if (draft) {
         updateUserDraft(null);
       }
-      refetch();
     },
     onError: (error) => {
       toast.error(error.message);
@@ -119,6 +118,7 @@ export default function Profile() {
         return true;
       }
 
+      fetchProfile();
       const error = await response.text();
       throw new Error(error);
     },
@@ -127,7 +127,6 @@ export default function Profile() {
       if (draft) {
         updateUserDraft(null);
       }
-      refetch();
     },
     onError: (error) => {
       toast.error(error.message);
@@ -143,7 +142,14 @@ export default function Profile() {
       }
     }
 
-    if (Object.keys(toUpdate).length) {
+    const updatedKeys = Object.keys(toUpdate);
+
+    const isOnlyEmptyPhotos =
+      updatedKeys.length === 1 &&
+      updatedKeys[0] === PHOTOS_KEY &&
+      toUpdate[PHOTOS_KEY].length === 0;
+
+    if (updatedKeys.length && !isOnlyEmptyPhotos) {
       updateProfileMutation.mutate(toUpdate);
     }
 
@@ -158,15 +164,33 @@ export default function Profile() {
     setIsEditing(false);
   };
 
-  if (isPending) {
-    return <div>Loading...</div>;
-  }
+  useEffect(() => {
+    const openEdition = searchParams.get('openEdition');
+    if (openEdition) {
+      updateUserDraft({
+        email: profile.email,
+        firstName: profile.firstName,
+        lastName: profile.lastName,
+        gender: profile.gender as Gender,
+        sexualOrientation: profile.sexualOrientation,
+        bio: profile.bio,
+        photos: [],
+      });
+      setIsEditing(true);
+      setSearchParams({}, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (error) {
     toast.error('Failed to load profile. Please try again later.');
     localStorage.removeItem('isLoggedIn');
-    useAuthStore.getState().updateLoginStatus(false);
+    disconnectSocket();
     return <Login />;
+  }
+
+  if (isPending || !profile) {
+    return <Loadder />;
   }
 
   return (

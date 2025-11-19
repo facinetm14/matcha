@@ -7,5 +7,6 @@ export interface UserInterestRepository {
     column: UserInterestColumns,
     value: string | null,
   ): Promise<UserInterest[]>;
-  findAll(): Promise<UserInterest[]>;
+  findAll(): Promise<string[]>;
+  deleteByUserId(userId: string): Promise<void>;
 }

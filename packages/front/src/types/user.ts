@@ -31,19 +31,6 @@ export type Location = {
   lng: number;
 };
 
-export type UserProfile = User & {
-  tags: string[];
-  photos: string[];
-  profilePhoto: string;
-  fameRating: number;
-  location?: Location;
-  isOnline: boolean;
-  lastSeen: Date | null;
-  likedBy: string[];
-  viewedBy: string[];
-  blocked?: string[];
-  reported: boolean;
-};
 export interface Match {
   id: string;
   users: [string, string];
@@ -62,8 +49,23 @@ export interface Message {
 export interface Notification {
   id: string;
   userId: string;
-  type: 'like' | 'view' | 'message' | 'match' | 'unlike';
-  fromUserId: string;
+  category: 'like' | 'view' | 'message' | 'match' | 'unlike';
+  fromUser: string;
   read: boolean;
   createdAt: Date;
 }
+
+export type UserProfile = User & {
+  tags: string[];
+  photos: string[];
+  profilePhoto: string;
+  fameRating: number;
+  location?: Location;
+  isOnline: boolean;
+  lastSeen: Date | null;
+  likedBy: string[];
+  viewedBy: string[];
+  blocked?: string[];
+  reported: boolean;
+  notifications: Notification[];
+};

@@ -105,7 +105,6 @@ Content-Type: application/json
 
 
 ### user interaction
-
 POST {{baseUrl}}/users/interaction
 Authorization: Bearer {{accessToken}} {{refreshToken}}
 Content-Type: application/json
@@ -126,4 +125,13 @@ Content-Type: application/json
 
 {
   "images": ["9w29xp-mgz05g31-wwmy1x-he3qk8-image-1761376337952-719116665.jpg"]
+}
+
+### get user list
+POST {{baseUrl}}/users/view
+Authorization: Bearer {{accessToken}} {{refreshToken}}
+Content-Type: application/json
+
+{
+  "userIdList": ["2jtgok-mh0qljsv-g884ib-bwc65m", "4ba6dh-mhxs77ur-qzlucq-jjmuyg", "83fghh-mh1vdv5y-nqnkkn-jpg3ub"]
 }

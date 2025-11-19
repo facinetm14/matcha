@@ -16,6 +16,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { authApi } from '@/api/auth.api';
 import { useParams } from 'react-router-dom';
 import NotFound from './NotFound';
+import { Loadder } from '@/components/ui/Loadder';
 
 export default function CreateNewPassword() {
   const navigate = useNavigate();
@@ -71,7 +72,7 @@ export default function CreateNewPassword() {
     },
   });
 
-  if (isPending) return 'Loading...';
+  if (isPending) return <Loadder />;;
 
   if (error) {
     return <NotFound />;
