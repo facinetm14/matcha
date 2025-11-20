@@ -1,3 +1,4 @@
+
 export const TYPE = {
   SocketIoServer: Symbol.for('SocketIoServer'),
   Logger: Symbol.for('Logger'),
@@ -12,4 +13,5 @@ export const TYPE = {
   UserInteractionRepository: Symbol.for('UserInteractionRepository'),
   UserNotificationRepository: Symbol.for('UserNotificationRepository'),
   UserImageRepository: Symbol.for('UserImageRepository'),
+  MessageRepository: Symbol.for('MessageRepository'),
 };

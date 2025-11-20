@@ -19,6 +19,7 @@ import { userApi } from '@/api/user.api';
 import { UserProfile } from '@/types/user';
 import { useAuthStore } from '@/store/authStore';
 import { connectSocket } from '@/api/socket.api';
+import { IS_LOGGED_IN_KEY } from '@/App';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -56,7 +57,7 @@ export default function Login() {
 
     onSuccess: async (user: UserProfile) => {
       toast.success("You're logged in!");
-      localStorage.setItem('isLoggedIn', 'true');
+      localStorage.setItem(IS_LOGGED_IN_KEY, 'true');
       updateLoginStatus(true);
       connectSocket();
       await Promise.resolve();

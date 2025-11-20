@@ -138,11 +138,15 @@ export class UserRepositoryDb implements UserRepository {
               LEFT JOIN user_images as uim ON u.id = uim.user_id
               LEFT JOIN user_interests as ui ON u.id = ui.user_id 
               LEFT JOIN user_profile_interactions as upi ON upi.recipient = u.id
-              LEFT JOIN user_notifications as notif ON notif.author = u.id
+              LEFT JOIN user_notifications as notif ON (
+                (notif.author = u.id AND notif.category != $2)
+                 OR 
+                (notif.category = $2 AND (notif.author = u.id OR notif.from_user = u.id))
+              )
               WHERE u.id = $1
               ORDER BY interaction_created_at DESC
             `,
-      values: [id],
+      values: [id, 'match'],
     };
 
     const connexion = await pgClient.connect();
@@ -179,11 +183,15 @@ export class UserRepositoryDb implements UserRepository {
               LEFT JOIN user_images as uim ON u.id = uim.user_id
               LEFT JOIN user_interests as ui ON u.id = ui.user_id 
               LEFT JOIN user_profile_interactions as upi ON upi.recipient = u.id
-              LEFT JOIN user_notifications as notif ON notif.author = u.id
+              LEFT JOIN user_notifications as notif ON (
+                (notif.author = u.id AND notif.category != $2)
+                 OR 
+                (notif.category = $2 AND (notif.author = u.id OR notif.from_user = u.id))
+              )
               WHERE u.id = ANY($1)
               ORDER BY interaction_created_at DESC
             `,
-      values: [id],
+      values: [id, 'match'],
     };
 
     const connexion = await pgClient.connect();

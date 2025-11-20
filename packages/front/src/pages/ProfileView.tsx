@@ -14,7 +14,6 @@ import {
   Circle,
   LockKeyholeOpen,
 } from 'lucide-react';
-import { mockNotifications, mockMessages } from '@/utils/mockData';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
 import { useProfileStore } from '@/store/profileStore';
@@ -27,23 +26,33 @@ import Login from './Login';
 import { disconnectSocket } from '@/api/socket.api';
 import { useGetProfile } from '@/hooks/useGetProfile';
 import { Loadder } from '@/components/ui/Loadder';
+import { IS_LOGGED_IN_KEY } from '@/App';
+import { useAuthStore } from '@/store/authStore';
 
 export default function ProfileView() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { data: connectedUser, isPending: isPendingConnectedUser } =
+  const { isPending: isPendingConnectedUser, error: errorProfile } =
     useGetProfile();
 
-  const { selectedUser, updateSelectedUserProfile } = useProfileStore(
-    (state) => state,
-  );
+  const {
+    selectedUser,
+    updateSelectedUserProfile,
+    user: connectedUser,
+  } = useProfileStore((state) => state);
 
-  const unreadNotifications = mockNotifications.filter((n) => !n.read).length;
-  const unreadMessages = mockMessages.filter((m) => !m.read).length;
+  const { updateLoginStatus } = useAuthStore();
+
+  const notificationList = connectedUser?.notifications ?? [];
+
+  const unreadNotifications = notificationList.filter((n) => !n.isRead).length;
+  const unreadMessages = notificationList.filter(
+    (n) => n.category == 'message' && !n.isRead,
+  ).length;
 
   const {
     isPending,
-    data,
+    data: currentUser,
     error,
     refetch: refetchUserProfile,
   } = useQuery({
@@ -56,6 +65,7 @@ export default function ProfileView() {
       const user = await res.json();
       return user;
     },
+    enabled: !!id,
   });
 
   const userInteractionMutation = useMutation({
@@ -87,14 +97,15 @@ export default function ProfileView() {
   });
 
   useEffect(() => {
-    if (data) {
-      updateSelectedUserProfile(data);
+    if (currentUser) {
+      updateSelectedUserProfile(currentUser);
     }
-  }, [updateSelectedUserProfile, data]);
+  }, [updateSelectedUserProfile, currentUser, connectedUser]);
 
-  if (error) {
-    localStorage.removeItem('isLoggedIn');
+  if (error || errorProfile) {
+    localStorage.removeItem(IS_LOGGED_IN_KEY);
     disconnectSocket();
+    updateLoginStatus(false);
     return <Login />;
   }
 
@@ -126,9 +137,15 @@ export default function ProfileView() {
     userInteractionMutation.mutate({ query, message });
   };
 
-  const hasAlreadyLiked = (currentUserId: string): boolean => {
-    return selectedUser.likedBy.includes(currentUserId);
-  };
+  const hasAlreadyLikedSelectedUser = selectedUser.likedBy.includes(
+    connectedUser?.id,
+  );
+
+  const hasSelectedAlreadyLiked = connectedUser?.likedBy.includes(
+    selectedUser.id,
+  );
+
+  const hasMatched = hasAlreadyLikedSelectedUser && hasSelectedAlreadyLiked;
 
   const hasAlreadyBlocked = (currentUserId: string): boolean => {
     return !selectedUser.likedBy.includes(currentUserId);
@@ -145,7 +162,7 @@ export default function ProfileView() {
   };
 
   const handleUnblock = () => {
-    const message = `You unliked ${selectedUser.firstName}!`;
+    const message = `You unblocked ${selectedUser.firstName}!`;
     const query: CreateInteractionDto = {
       recipient: selectedUser.id,
       category: 'unblock',
@@ -285,6 +302,21 @@ export default function ProfileView() {
                   </div>
                 </div>
 
+                <div className="mb-6">
+                  {hasMatched && (
+                    <Badge className="bg-primary/10 text-black px-3 py-1 rounded-full">
+                      You matched with {selectedUser.firstName}. You can start
+                      chatting! 💕💬
+                    </Badge>
+                  )}
+                  {!hasMatched && hasSelectedAlreadyLiked && (
+                    <Badge className="bg-primary/10 text-black px-3 py-1 rounded-full">
+                      {selectedUser.firstName} has liked you! Like back to
+                      match. 💕
+                    </Badge>
+                  )}
+                </div>
+
                 <div className="grid grid-cols-3 gap-2 mb-4">
                   <div className="text-center p-3 bg-muted rounded-lg">
                     <p className="text-sm text-muted-foreground">Gender</p>
@@ -309,7 +341,7 @@ export default function ProfileView() {
                 <div className="flex gap-3">
                   {!!connectedUser?.photos.length && (
                     <>
-                      {hasAlreadyLiked(connectedUser?.id) ? (
+                      {hasAlreadyLikedSelectedUser ? (
                         <Button
                           variant="outline"
                           className="flex-1"

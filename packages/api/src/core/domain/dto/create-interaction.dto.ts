@@ -1,14 +1,5 @@
 import * as z from 'zod';
 
-export type InteractionCategory =
-  | 'like'
-  | 'unlike'
-  | 'block'
-  | 'unblock'
-  | 'swipe'
-  | 'view'
-  | 'report';
-
 export const CreateInteractionDtoSchema = z.object({
   recipient: z.string(),
   category: z.enum([
@@ -19,6 +10,7 @@ export const CreateInteractionDtoSchema = z.object({
     'unblock',
     'view',
     'report',
+    'match',
   ] as const),
 });
 

@@ -39,11 +39,11 @@ export interface Match {
 
 export interface Message {
   id: string;
-  matchId: string;
+  channelId: string;
   senderId: string;
   content: string;
+  isRead: boolean;
   createdAt: Date;
-  read: boolean;
 }
 
 export interface Notification {
@@ -51,14 +51,13 @@ export interface Notification {
   userId: string;
   category: 'like' | 'view' | 'message' | 'match' | 'unlike';
   fromUser: string;
-  read: boolean;
+  isRead: boolean;
   createdAt: Date;
 }
 
 export type UserProfile = User & {
   tags: string[];
   photos: string[];
-  profilePhoto: string;
   fameRating: number;
   location?: Location;
   isOnline: boolean;
@@ -68,4 +67,13 @@ export type UserProfile = User & {
   blocked?: string[];
   reported: boolean;
   notifications: Notification[];
+  matched: string[];
+};
+
+export type Channel = {
+  id: string;
+  interlocutor: UserProfile;
+  messageList: Message[];
+  createdAt: Date;
+  updatedAt: Date;
 };

@@ -16,6 +16,7 @@ import { ReorderUserImageUseCase } from '@/core/usecases/users/reorder-user-imag
 import { GetAllTagsUseCase } from '@/core/usecases/users/get-all-tags.usecase';
 import { FetchBestUserSuggestion } from '@/core/usecases/users/fetch-best-user-suggestion.usecase';
 import { GetUserListFromIdListUseCase } from '@/core/usecases/users/get-user-list-from-id.usecase';
+import { GetUserChannelsUseCase } from '@/core/usecases/chat/get-user-channels.usecase';
 
 export function bindUseCases(container: Container) {
   container.bind(RegisterUserUseCase).toSelf().inSingletonScope();
@@ -38,4 +39,5 @@ export function bindUseCases(container: Container) {
   container.bind(GetAllTagsUseCase).toSelf().inSingletonScope();
   container.bind(FetchBestUserSuggestion).toSelf().inSingletonScope();
   container.bind(GetUserListFromIdListUseCase).toSelf().inSingletonScope();
+  container.bind(GetUserChannelsUseCase).toSelf().inSingletonScope();
 }

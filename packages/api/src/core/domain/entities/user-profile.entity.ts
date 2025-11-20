@@ -21,6 +21,7 @@ export type UserProfile = User & {
   lastSeen: Date | null;
   likedBy: string[];
   viewedBy: string[];
+  matched: string[];
   notifications: Notification[];
   blocked?: string[];
   reported: boolean;

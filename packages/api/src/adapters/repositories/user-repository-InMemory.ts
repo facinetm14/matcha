@@ -82,6 +82,7 @@ export class UserRepositoryInMemory implements UserRepository {
       blocked: [],
       viewedBy: [],
       notifications: [],
+      matched: [],
     });
   }
 }

@@ -80,7 +80,7 @@ export const useProfileStore = create<UserProfileState>((set) => ({
   },
 
   fetchSelectedProfile: async (userId: string) => {
-    const res = await userApi.viewUserProfile(userId);
+    const res = await userApi.getUserProfile(userId);
     if (!res.ok) {
       return;
     }

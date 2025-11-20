@@ -5,9 +5,8 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Heart, Eye, MessageCircle, Users, HeartOff } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
-import { mockMessages } from '@/utils/mockData';
 import { useGetProfile } from '@/hooks/useGetProfile';
-import { disconnectSocket } from '@/api/socket.api';
+import { connectSocket, disconnectSocket } from '@/api/socket.api';
 import Login from './Login';
 import { userApi } from '@/api/user.api';
 import { useQuery } from '@tanstack/react-query';
@@ -16,10 +15,17 @@ import { Notification } from '@/types/user';
 import { getInitials } from '@/utils/get-initials';
 import { useProfileStore } from '@/store/profileStore';
 import { Loadder } from '@/components/ui/Loadder';
+import { IS_LOGGED_IN_KEY } from '@/App';
+import { SocketEvents } from '../../../shared/socket-events';
+import { useNavigate } from 'react-router-dom';
+import { useAuthStore } from '@/store/authStore';
 
 export default function Notifications() {
+  const navigate = useNavigate();
+
   const { isPending: isPendingProfile, error: errorProfile } = useGetProfile();
   const { user: connectedUser } = useProfileStore();
+  const { updateLoginStatus } = useAuthStore();
 
   const notificationList = connectedUser?.notifications ?? [];
 
@@ -29,14 +35,14 @@ export default function Notifications() {
     error: errorUserList,
     refetch: refetchUserList,
   } = useQuery({
-    queryKey: ['viewUserProfileList'],
+    queryKey: ['getUserProfileList'],
     queryFn: async (): Promise<UserProfile[]> => {
       const userIdList = notificationList.map((notif) => notif.fromUser) ?? [];
       if (!userIdList.length) {
         return [];
       }
 
-      const res = await userApi.viewUserProfileList(userIdList);
+      const res = await userApi.getUserProfileList(userIdList);
       if (!res.ok) {
         throw new Error('Failed to browse users');
       }
@@ -49,8 +55,10 @@ export default function Notifications() {
   const [filter, setFilter] = useState<string | null>(null);
   const usersList = users || [];
 
-  const unreadNotifications = notificationList.filter((n) => !n.read).length;
-  const unreadMessages = mockMessages.filter((m) => !m.read).length;
+  const unreadNotifications = notificationList.filter((n) => !n.isRead).length;
+  const unreadMessages = notificationList.filter(
+    (n) => n.category == 'message' && !n.isRead,
+  ).length;
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
@@ -95,9 +103,42 @@ export default function Notifications() {
     refetchUserList();
   }, [notificationList.length, connectedUser?.id, refetchUserList]);
 
+  const handleReadNotification = (notification: Notification) => {
+    const socket = connectSocket();
+    if (!socket) {
+      return;
+    }
+
+    // message reading will handled in chat that will prevent duplication
+    if (!notification.isRead && notification.category !== 'message') {
+      socket.emit(SocketEvents.READING_NOTIFICATION, {
+        category: notification.category,
+        author: notification.id,
+      });
+    }
+
+    let redirectUrl = `/profile/${notification.fromUser}`;
+
+    if (notification.category === 'message') {
+      const notifId = notification.id;
+
+      //message notification id is : `uuid()-msg-channelId`;
+      const room = notifId.slice(notifId.indexOf('msg') + 4);
+
+      const params = new URLSearchParams({
+        openRoom: room,
+      });
+
+      redirectUrl = `/chat?${params.toString()}`;
+    }
+
+    navigate(redirectUrl);
+  };
+
   if (errorProfile || errorUserList) {
-    localStorage.removeItem('isLoggedIn');
+    localStorage.removeItem(IS_LOGGED_IN_KEY);
     disconnectSocket();
+    updateLoginStatus(false);
     return <Login />;
   }
 
@@ -130,56 +171,61 @@ export default function Notifications() {
             <Eye className="w-4 h-4 mr-2" /> Views
           </Button>
           <Button
-            variant={filter === 'match' ? 'default' : 'outline'}
-            onClick={() => setFilter(filter === 'match' ? null : 'match')}
+            variant={filter === 'message' ? 'default' : 'outline'}
+            onClick={() => setFilter(filter === 'message' ? null : 'message')}
           >
-            <Users className="w-4 h-4 mr-2" /> Matchs
+            <MessageCircle className="w-4 h-4 mr-2" /> Messages
           </Button>
         </div>
 
         {/* --- Liste des notifications --- */}
         <div className="space-y-3">
-          {filteredNotifications.map((notification) => {
-            const user = usersList.find((u) => u.id === notification.fromUser);
+          {filteredNotifications
+            .sort((a, b) => (a.isRead && !b.isRead ? 1 : -1))
+            .map((notification) => {
+              const user = usersList.find(
+                (u) => u.id === notification.fromUser,
+              );
 
-            return (
-              <Card
-                key={notification.id}
-                className={`shadow-card transition-all hover:shadow-soft cursor-pointer ${
-                  !notification.read ? 'bg-primary/5 border-primary/20' : ''
-                }`}
-              >
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-4">
-                    <Avatar className="w-12 h-12">
-                      <AvatarImage src={user?.photos[0].preview} />
-                      <AvatarFallback>
-                        {getInitials(user?.firstName, user?.lastName)}
-                      </AvatarFallback>
-                    </Avatar>
+              return (
+                <Card
+                  key={notification.id}
+                  className={`shadow-card transition-all hover:shadow-soft cursor-pointer ${
+                    !notification.isRead ? 'bg-primary/5 border-primary/20' : ''
+                  }`}
+                  onClick={() => handleReadNotification(notification)}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-4">
+                      <Avatar className="w-12 h-12">
+                        <AvatarImage src={user?.photos[0].preview} />
+                        <AvatarFallback>
+                          {getInitials(user?.firstName, user?.lastName)}
+                        </AvatarFallback>
+                      </Avatar>
 
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        {getNotificationIcon(notification.category)}
-                        <p className="font-medium">
-                          {getNotificationText(notification)}
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          {getNotificationIcon(notification.category)}
+                          <p className="font-medium">
+                            {getNotificationText(notification)}
+                          </p>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          {formatDistanceToNow(notification.createdAt, {
+                            addSuffix: true,
+                          })}
                         </p>
                       </div>
-                      <p className="text-sm text-muted-foreground">
-                        {formatDistanceToNow(notification.createdAt, {
-                          addSuffix: true,
-                        })}
-                      </p>
-                    </div>
 
-                    {!notification.read && (
-                      <div className="w-2 h-2 rounded-full bg-primary" />
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
+                      {!notification.isRead && (
+                        <div className="w-2 h-2 rounded-full bg-primary" />
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
         </div>
       </div>
     </div>
