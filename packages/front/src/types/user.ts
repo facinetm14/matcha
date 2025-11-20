@@ -16,11 +16,11 @@ export type User = {
   gender?: Gender;
   sexualOrientation?: Gender[];
   bio?: string;
-  age?: number;
   tags?: string[];
   photos?: UserImage[];
   createdAt?: Date;
   updatedAt?: Date;
+  birthDate?: Date;
 };
 
 export type Gender = 'male' | 'female' | 'non-binary';
@@ -68,6 +68,7 @@ export type UserProfile = User & {
   reported: boolean;
   notifications: Notification[];
   matched: string[];
+  age?: number;
 };
 
 export type Channel = {

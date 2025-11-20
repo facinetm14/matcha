@@ -9,6 +9,7 @@ type UserProfileState = {
   user: UserProfile | null;
   selectedUser: UserProfile | null;
   draft: UpdateUserDto | null;
+  birthDateDraft: Date | null;
   photos: UserImage[];
   imagesToDelete: string[];
   imagesPositionToUpdate: ImagePosition[];
@@ -23,7 +24,8 @@ type UserProfileState = {
   updateImagesPositionToUpdate(imageList: ImagePosition[]): void;
   updateUserList(users: UserProfile[]): void;
   fetchProfile(): void;
-  fetchSelectedProfile(userId: string): void;
+  fetchSelectedProfile: (userId: string) => void;
+  updateBirthDateDraft: (date: Date) => void;
 };
 
 export const useProfileStore = create<UserProfileState>((set) => ({
@@ -35,6 +37,7 @@ export const useProfileStore = create<UserProfileState>((set) => ({
   imagesPositionToUpdate: [],
   userList: [],
   userListFromNotification: [],
+  birthDateDraft: null,
 
   updateUserProfile: (userProfile: UserProfile) => {
     set(() => ({ user: userProfile, photos: userProfile.photos }));
@@ -44,6 +47,10 @@ export const useProfileStore = create<UserProfileState>((set) => ({
   },
   updateUserDraft: (userDraft: UpdateUserDto) => {
     set(() => ({ draft: userDraft }));
+  },
+
+  updateBirthDateDraft: (date: Date) => {
+    set(() => ({ birthDateDraft: date }));
   },
 
   updateUserPhotos: (userPhoto: UserImage[]) => {

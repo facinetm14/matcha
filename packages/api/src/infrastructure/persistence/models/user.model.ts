@@ -14,5 +14,5 @@ export type UserModel = {
   gender?: string;
   sexual_orientation?: string;
   bio?: string;
-  birthDate?: Date;
+  birth_date?: Date;
 };

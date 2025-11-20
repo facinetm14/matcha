@@ -33,6 +33,7 @@ export function mapUserModelToEntity(userModel: UserModel): User {
     gender: userModel.gender,
     sexualOrientation: userModel.sexual_orientation,
     bio: userModel.bio,
+    birthDate: userModel.birth_date,
   };
 }
 
