@@ -23,7 +23,7 @@ import {
   X as Cancel,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { userApi } from '@/api/user.api';
 import { useProfileStore } from '@/store/profileStore';
 import { getInitials } from '@/utils/get-initials';
@@ -39,30 +39,31 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { disconnectSocket } from '@/api/socket.api';
 import { Loadder } from '@/components/ui/Loadder';
 import { IS_LOGGED_IN_KEY } from '@/App';
-import { useAuthStore } from '@/store/authStore';
 import { logout } from '@/utils/auth';
+import { DatePicker } from '@/components/DatePicker';
+import { QUERY_KEYS } from '@/utils/utils';
 
 const PHOTOS_KEY = 'photos';
+const BIRTH_DATE_KEY = 'birthDate';
 
 export default function Profile() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { isPending, error } = useGetProfile();
+  const { isPending, error, data: profile } = useGetProfile();
+  const queryClient = useQueryClient();
 
   const [isEditing, setIsEditing] = useState(false);
-  const { updateLoginStatus } = useAuthStore();
 
   const {
     draft,
-    user: profile,
     photos,
     imagesToDelete,
     imagesPositionToUpdate,
-    selectedUser,
+    birthDateDraft,
+    updateBirthDateDraft,
     updateUserDraft,
     updateImagesToDelete,
     updateImagesPositionToUpdate,
-    fetchProfile,
   } = useProfileStore((state) => state);
 
   const notificationList = profile?.notifications ?? [];
@@ -75,7 +76,6 @@ export default function Profile() {
     mutationFn: async (updateUserDto: UpdateUserDto) => {
       const response = await userApi.updateUserProfile(updateUserDto);
       if (response.status === 200) {
-        fetchProfile();
         return true;
       }
 
@@ -84,8 +84,9 @@ export default function Profile() {
     },
     onSuccess: () => {
       toast.success('Profile updated successfully! 🎉');
-      fetchProfile();
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.ME], exact: true });
       updateUserDraft(null);
+      updateBirthDateDraft(null);
     },
     onError: (error) => {
       toast.error(error.message);
@@ -99,14 +100,11 @@ export default function Profile() {
         return true;
       }
 
-      fetchProfile();
       const error = await response.text();
       throw new Error(error);
     },
     onSuccess: () => {
-      if (selectedUser) {
-        fetchProfile();
-      }
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.ME], exact: true });
       updateImagesToDelete([]);
       if (draft) {
         updateUserDraft(null);
@@ -124,11 +122,11 @@ export default function Profile() {
         return true;
       }
 
-      fetchProfile();
       const error = await response.text();
       throw new Error(error);
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.ME], exact: true });
       updateImagesPositionToUpdate([]);
       if (draft) {
         updateUserDraft(null);
@@ -146,6 +144,10 @@ export default function Profile() {
       if (draft[key] !== profile[key]) {
         toUpdate[key] = value;
       }
+    }
+
+    if (birthDateDraft) {
+      toUpdate[BIRTH_DATE_KEY] = birthDateDraft;
     }
 
     const updatedKeys = Object.keys(toUpdate);
@@ -173,30 +175,20 @@ export default function Profile() {
   useEffect(() => {
     const openEdition = searchParams.get('openEdition');
     if (openEdition) {
-      updateUserDraft({
-        email: profile.email,
-        firstName: profile.firstName,
-        lastName: profile.lastName,
-        gender: profile.gender as Gender,
-        sexualOrientation: profile.sexualOrientation,
-        bio: profile.bio,
-        photos: [],
-      });
       setIsEditing(true);
       setSearchParams({}, { replace: true });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [profile]);
 
   useEffect(() => {
     if (error) {
       toast.error('Failed to load profile. Please try again later.');
       localStorage.removeItem(IS_LOGGED_IN_KEY);
       disconnectSocket();
-      updateLoginStatus(false);
       logout(navigate);
     }
-  }, [error, navigate, updateLoginStatus]);
+  }, [error, navigate]);
 
   if (isPending || !profile) {
     return <Loadder />;
@@ -365,24 +357,41 @@ export default function Profile() {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label>Email</Label>
-              {isEditing ? (
-                <Input
-                  type="email"
-                  value={draft?.email ?? ''}
-                  onChange={(e) =>
-                    updateUserDraft({
-                      ...(draft ?? {}),
-                      email: e.target.value,
-                    })
-                  }
-                />
-              ) : (
-                <p className="p-2 bg-muted rounded read-only">
-                  {profile.email}
-                </p>
-              )}
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Birthday</Label>
+                {isEditing ? (
+                  <DatePicker
+                    defaultDate={profile.birthDate}
+                    callBack={updateBirthDateDraft}
+                  />
+                ) : (
+                  <p className="p-2 bg-muted rounded read-only">
+                    {profile.birthDate
+                      ? `${new Date(profile.birthDate).toLocaleDateString('fr')}`
+                      : 'not defined'}
+                  </p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label>Email</Label>
+                {isEditing ? (
+                  <Input
+                    type="email"
+                    value={draft?.email ?? ''}
+                    onChange={(e) =>
+                      updateUserDraft({
+                        ...(draft ?? {}),
+                        email: e.target.value,
+                      })
+                    }
+                  />
+                ) : (
+                  <p className="p-2 bg-muted rounded read-only">
+                    {profile.email}
+                  </p>
+                )}
+              </div>
             </div>
 
             <div className="grid md:grid-cols-2 gap-4">

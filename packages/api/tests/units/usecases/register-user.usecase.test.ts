@@ -1,17 +1,17 @@
 import { describe, expect, test } from '@jest/globals';
-import { RegisterUserUseCase } from '../../../src/core/usecases/auth/register-user.usecase';
-import { UserRepository } from '../../../src/core/ports/repositories/user.repository';
-import container from '../../../src/infrastructure/config/inversify';
-import { TYPE } from '../../../src/infrastructure/config/inversify-type';
-import { Logger } from '../../../src/core/ports/services/logger.service';
-import { EventBus } from '../../../src/core/ports/services/event-bus';
-import { UserToken } from '../../../src/core/domain/entities/user-token.entity';
-import { UserTokenCateory } from '../../../src/core/domain/enums/user-token-category';
+import { RegisterUserUseCase } from '../../../src/modules/auth/application/usecases/register-user.usecase';
+import { UserRepository } from '../../../src/modules/users/application/ports/repositories/user.repository';
+import { Logger } from '../../../src/modules/shared/ports/logger.service';
+import { EventBus } from '../../../src/modules/shared/ports/event-bus';
+import { UserTokenCateory } from '../../../src/modules/auth/application/consts/user-token-category';
 import {
   factoryCreateUserDto,
   factoryUserRepositoryInMemory,
   factoryUserToken,
-} from '../../../../shared/factory';
+} from '../../../src/modules/shared/utils/factory';
+import container from '@/config/ioc/inversify';
+import { TYPE } from '@/config/ioc/inversify-type';
+import { UserToken } from '@/modules/auth/domain/entities/user-token.entity';
 
 describe('User Registration', () => {
   let userRepository: UserRepository;

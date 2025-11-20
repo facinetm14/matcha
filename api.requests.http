@@ -94,13 +94,11 @@ Authorization: Bearer {{accessToken}} {{refreshToken}}
 Content-Type: application/json
 
 {
-  "user": {
-    "firstName": "Petit",
-    "gender": "Male",
-    "sexualOrientation": "Hetero",
-    "bio": "lorem dkskdsd"
-  },
-  "interests": ["coding", "singing", "dancing"]
+  "firstName": "Petit",
+  "gender": "male",
+  "bio": "lorem dkskdsd",
+  "tags": ["coding", "singing", "dancing"],
+  "birthDate": "2005-10-21"
 }
 
 
@@ -139,5 +137,22 @@ Content-Type: application/json
 
 ### get user channel list
 GET {{baseUrl}}/chats/channels
-Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI5dzI5eHAtbWd6MDVnMzEtd3dteTF4LWhlM3FrOCIsImlhdCI6MTc2MzU3NzgzNiwiZXhwIjoxNzYzNTc4NzM2LCJqdGkiOiJ2b3hnc2ktbWk2Y3BqdWUtaGxmbXJzLXhkbW55MCJ9.XwgCap6Af6qktTJ8VQJIZjlWdL_B18xYO4IxovnxLv8 {{refreshToken}}
+Authorization: Bearer {{accessToken}} {{refreshToken}}
 Content-Type: application/json
+
+### get filtered users
+
+POST {{baseUrl}}/users/search
+Content-Type: application/json
+
+{
+  "age": {
+    "from": 18,
+    "to": 30
+  },
+  "fameRating": {
+    "from": 18,
+    "to": 20
+  }, 
+  "tags": []
+}

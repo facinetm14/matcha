@@ -4,7 +4,7 @@ import { useAuthStore } from '@/store/authStore';
 import { UserIdentifier } from '../../../shared/user-identifier';
 import { userApi } from '@/api/user.api';
 import { authApi } from '@/api/auth.api';
-import { connectSocket } from '@/api/socket.api';
+import { connectSocket, disconnectSocket } from '@/api/socket.api';
 import { SocketEvents } from '../../../shared/socket-events';
 import { IS_LOGGED_IN_KEY } from '@/App';
 
@@ -12,6 +12,7 @@ export function logout(navigate: NavigateFunction) {
   const socket = connectSocket();
   if (socket) {
     socket.emit(SocketEvents.DISCONNECT);
+    disconnectSocket();
   }
 
   localStorage.removeItem(IS_LOGGED_IN_KEY);

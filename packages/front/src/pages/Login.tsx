@@ -16,16 +16,18 @@ import { Heart, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { useMutation } from '@tanstack/react-query';
 import { userApi } from '@/api/user.api';
-import { UserProfile } from '@/types/user';
+import { Gender, UserProfile } from '@/types/user';
 import { useAuthStore } from '@/store/authStore';
 import { connectSocket } from '@/api/socket.api';
 import { IS_LOGGED_IN_KEY } from '@/App';
+import { useProfileStore } from '@/store/profileStore';
 
 export default function Login() {
   const navigate = useNavigate();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const updateLoginStatus = useAuthStore((state) => state.updateLoginStatus);
+  const { updateUserDraft } = useProfileStore();
 
   const [errors, setErrors] = useState<{
     username?: string;
@@ -65,6 +67,16 @@ export default function Login() {
       if (user.isFirstLogin) {
         const params = new URLSearchParams({
           openEdition: 'true',
+        });
+        updateUserDraft({
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          gender: user.gender as Gender,
+          sexualOrientation: user.sexualOrientation,
+          bio: user.bio,
+          photos: [],
+          birthDate: user.birthDate,
         });
         navigate(`/profile?${params.toString()}`);
         return;

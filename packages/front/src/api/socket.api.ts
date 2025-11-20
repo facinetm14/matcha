@@ -9,7 +9,7 @@ let socket: Socket | null = null;
 export const connectSocket = (): Socket => {
   if (!localStorage.getItem(IS_LOGGED_IN_KEY)) {
     socket = null;
-    return null;
+    return socket;
   }
 
   if (!socket) {
