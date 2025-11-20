@@ -19,3 +19,12 @@ export function computeMessages(channelList?: Channel[]): Message[] {
 
   return messageList;
 }
+
+export const QUERY_KEYS = {
+  ME: 'me',
+  BROWSE_USERS: 'browseUsers',
+  NOTIFICATIONS: 'notificats',
+  VIEW_USER: 'viewUser',
+  GET_CHANNELS: 'getchannels',
+  GET_USERS_PROFILE_LIST: 'getUserProfileList',
+} as const;

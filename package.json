@@ -30,29 +30,19 @@
     "@types/cors": "^2.8.19",
     "@typescript-eslint/eslint-plugin": "^8.41.0",
     "@typescript-eslint/parser": "^8.41.0",
-    "eslint-plugin-vue": "^10.4.0",
     "standard-version": "^9.5.0",
     "tsconfig-paths": "^4.2.0",
-    "typescript": "^5.9.2",
-    "vue-eslint-parser": "^10.2.0"
+    "typescript": "^5.9.2"
   },
   "dependencies": {
     "@babel/core": "^7.28.4",
-    "@getbrevo/brevo": "^3.0.1",
-    "@types/pg": "^8.15.5",
-    "argon2": "^0.44.0",
-    "cors": "^2.8.5",
     "eslint": "^9.35.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",
     "express": "^5.1.0",
     "git-filter-repo": "^0.0.30",
     "husky": "^9.1.7",
-    "node-pg-migrate": "^7.6.1",
-    "pg": "^8.16.3",
     "prettier": "^3.6.2",
-    "react-loader-spinner": "^8.0.0",
-    "redis": "^5.8.2",
     "zod": "^4.1.5"
   }
 }

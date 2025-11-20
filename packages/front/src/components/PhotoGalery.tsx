@@ -23,13 +23,15 @@ import { convertFIleToBase64t } from '@/utils/convert-file-to-base64';
 import { UserImage } from '@/types/user-image';
 import { uuid } from '../../../shared/uuid';
 import { ImagePosition } from '@/types/dto/update-image-position.dto';
+import { useGetProfile } from '@/hooks/useGetProfile';
 
 const MAX_PHOTOS = 5;
 const ACCEPTED_FORMATS = ['image/jpeg', 'image/jpg', 'image/png'];
 
 export const PhotoGallery = ({ isEditing }: { isEditing: boolean }) => {
+  const { data: user } = useGetProfile();
+
   const {
-    user,
     draft,
     photos,
     imagesToDelete,
@@ -39,6 +41,7 @@ export const PhotoGallery = ({ isEditing }: { isEditing: boolean }) => {
     updateImagesToDelete,
     updateImagesPositionToUpdate,
   } = useProfileStore((state) => state);
+
   const { toast } = useToast();
 
   const sensors = useSensors(

@@ -1,9 +1,8 @@
 import { createApp } from './app';
-import container from './infrastructure/config/inversify';
-import { Logger } from './core/ports/services/logger.service';
-import { TYPE } from './infrastructure/config/inversify-type';
-
-import { SocketIoListener } from './infrastructure/events-listeners/socket-io.listener';
+import { SocketIoListener } from './config/event-subscribers/socket-io.listener';
+import container from './config/ioc/inversify';
+import { TYPE } from './config/ioc/inversify-type';
+import { Logger } from './modules/shared/ports/logger.service';
 
 const logger = container.get<Logger>(TYPE.Logger);
 const PORT = process.env.SERVER_PORT || 5000;
@@ -15,7 +14,7 @@ const PORT = process.env.SERVER_PORT || 5000;
 
   socketIoLIstener.handleSocketEvents();
 
-  import('./infrastructure/events-listeners/listeners-register');
+  import('./config/event-subscribers/subscribers-register');
 
   server.listen(PORT, () => {
     logger.info(`Server running at http://localhost:${PORT}`);

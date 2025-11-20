@@ -1,7 +1,6 @@
 import { Toaster } from '@/components/ui/toaster';
 import { Toaster as Sonner } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -17,13 +16,13 @@ import { VerifyEmail } from './pages/VerifyEmail';
 import { useAuthStore } from './store/authStore';
 import CreateNewPassword from './pages/CreateNewPassword';
 import './api/socket.api';
-import { connectSocket } from './api/socket.api';
-import { useProfileStore } from './store/profileStore';
+import { useQueryClient } from '@tanstack/react-query';
 import { SocketEvents } from '../../shared/socket-events';
+import { QUERY_KEYS } from './utils/utils';
+import { connectSocket } from './api/socket.api';
+import { useEffect } from 'react';
 
 export const IS_LOGGED_IN_KEY = 'isLoggedIn';
-
-const queryClient = new QueryClient();
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
@@ -44,136 +43,146 @@ const RedirectToDashboard = ({ children }: { children: React.ReactNode }) => {
 };
 
 const App = () => {
-  const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
-  const { fetchProfile, fetchSelectedProfile, selectedUser } = useProfileStore(
-    (state) => state,
-  );
+  const queryClient = useQueryClient();
+  const { isLoggedIn } = useAuthStore();
 
-  if (isLoggedIn || localStorage.getItem(IS_LOGGED_IN_KEY)) {
-    const socket = connectSocket();
-
-    socket?.once(SocketEvents.USER_CONNECTED, async ({ userId }) => {
-      fetchProfile();
-      if (userId === selectedUser?.id) {
-        fetchSelectedProfile(userId);
-      }
+  const invalidateAllQueries = () => {
+    queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.ME], exact: true });
+    queryClient.invalidateQueries({
+      queryKey: [QUERY_KEYS.BROWSE_USERS],
+      exact: true,
     });
-
-    socket?.once(SocketEvents.USER_INTERACTION_ADDED, async ({ fromUser }) => {
-      fetchProfile();
-      if (fromUser === selectedUser?.id) {
-        fetchSelectedProfile(selectedUser.id);
-      }
+    queryClient.invalidateQueries({
+      queryKey: [QUERY_KEYS.NOTIFICATIONS],
+      exact: true,
     });
-
-    socket?.once(SocketEvents.USER_DISCONNECTED, async ({ userId }) => {
-      fetchProfile();
-      if (userId === selectedUser?.id) {
-        fetchSelectedProfile(userId);
-      }
+    queryClient.invalidateQueries({
+      queryKey: [QUERY_KEYS.GET_CHANNELS],
+      exact: true,
     });
-
-    socket?.once(SocketEvents.RECEIVE_MESSAGE, async () => {
-      fetchProfile();
+    queryClient.invalidateQueries({
+      queryKey: [QUERY_KEYS.GET_USERS_PROFILE_LIST],
+      exact: true,
     });
-
-    socket?.once(SocketEvents.NOTIFICATION_READ, async () => {
-      fetchProfile();
+    queryClient.invalidateQueries({
+      queryKey: [QUERY_KEYS.VIEW_USER],
+      exact: true,
     });
-  }
+  };
+
+  useEffect(() => {
+    if (isLoggedIn || localStorage.getItem(IS_LOGGED_IN_KEY)) {
+      const socket = connectSocket();
+
+      socket?.on(SocketEvents.USER_CONNECTED, () => {
+        invalidateAllQueries();
+      });
+
+      socket?.on(SocketEvents.USER_INTERACTION_ADDED, () => {
+        invalidateAllQueries();
+      });
+
+      socket?.on(SocketEvents.USER_DISCONNECTED, () => {
+        invalidateAllQueries();
+      });
+
+      socket?.on(SocketEvents.RECEIVE_MESSAGE, () => {
+        invalidateAllQueries();
+      });
+      socket?.on(SocketEvents.NOTIFICATION_READ, () => {
+        invalidateAllQueries();
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  });
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter
-          future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
-        >
-          <Routes>
-            <Route path="/" element={<Navigate to="/browse" replace />} />
-            <Route
-              path="/login"
-              element={
-                <RedirectToDashboard>
-                  <Login />
-                </RedirectToDashboard>
-              }
-            />
-            <Route
-              path="/register"
-              element={
-                <RedirectToDashboard>
-                  <Register />
-                </RedirectToDashboard>
-              }
-            />
-            <Route path="/verify/:token" element={<VerifyEmail />} />
-            <Route
-              path="/new-password/:token"
-              element={<CreateNewPassword />}
-            />
-            <Route
-              path="/forgot-password"
-              element={
-                <RedirectToDashboard>
-                  <ForgotPassword />
-                </RedirectToDashboard>
-              }
-            />
-            <Route
-              path="/browse"
-              element={
-                <ProtectedRoute>
-                  <Browse />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/profile"
-              element={
-                <ProtectedRoute>
-                  <Profile />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/profile/:id"
-              element={
-                <ProtectedRoute>
-                  <ProfileView />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/chat"
-              element={
-                <ProtectedRoute>
-                  <Chat />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/search"
-              element={
-                <ProtectedRoute>
-                  <Search />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/notifications"
-              element={
-                <ProtectedRoute>
-                  <Notifications />
-                </ProtectedRoute>
-              }
-            />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </QueryClientProvider>
+    <TooltipProvider>
+      <Toaster />
+      <Sonner />
+      <BrowserRouter
+        future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+      >
+        <Routes>
+          <Route path="/" element={<Navigate to="/browse" replace />} />
+          <Route
+            path="/login"
+            element={
+              <RedirectToDashboard>
+                <Login />
+              </RedirectToDashboard>
+            }
+          />
+          <Route
+            path="/register"
+            element={
+              <RedirectToDashboard>
+                <Register />
+              </RedirectToDashboard>
+            }
+          />
+          <Route path="/verify/:token" element={<VerifyEmail />} />
+          <Route path="/new-password/:token" element={<CreateNewPassword />} />
+          <Route
+            path="/forgot-password"
+            element={
+              <RedirectToDashboard>
+                <ForgotPassword />
+              </RedirectToDashboard>
+            }
+          />
+          <Route
+            path="/browse"
+            element={
+              <ProtectedRoute>
+                <Browse />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile/:id"
+            element={
+              <ProtectedRoute>
+                <ProfileView />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/chat"
+            element={
+              <ProtectedRoute>
+                <Chat />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/search"
+            element={
+              <ProtectedRoute>
+                <Search />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/notifications"
+            element={
+              <ProtectedRoute>
+                <Notifications />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </BrowserRouter>
+    </TooltipProvider>
   );
 };
 
