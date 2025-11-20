@@ -22,12 +22,12 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { userApi } from '@/api/user.api';
 import { useEffect } from 'react';
 import { CreateInteractionDto } from '@/types/dto/create-interaction.dto';
-import Login from './Login';
 import { disconnectSocket } from '@/api/socket.api';
 import { useGetProfile } from '@/hooks/useGetProfile';
 import { Loadder } from '@/components/ui/Loadder';
 import { IS_LOGGED_IN_KEY } from '@/App';
 import { useAuthStore } from '@/store/authStore';
+import { logout } from '@/utils/auth';
 
 export default function ProfileView() {
   const { id } = useParams();
@@ -97,17 +97,19 @@ export default function ProfileView() {
   });
 
   useEffect(() => {
+    if (error || errorProfile) {
+      localStorage.removeItem(IS_LOGGED_IN_KEY);
+      disconnectSocket();
+      updateLoginStatus(false);
+      logout(navigate);
+    }
+  }, [error, errorProfile, navigate, updateLoginStatus]);
+
+  useEffect(() => {
     if (currentUser) {
       updateSelectedUserProfile(currentUser);
     }
   }, [updateSelectedUserProfile, currentUser, connectedUser]);
-
-  if (error || errorProfile) {
-    localStorage.removeItem(IS_LOGGED_IN_KEY);
-    disconnectSocket();
-    updateLoginStatus(false);
-    return <Login />;
-  }
 
   if (isPending || isPendingConnectedUser) {
     return <Loadder />;

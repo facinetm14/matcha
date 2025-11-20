@@ -160,7 +160,8 @@ export class UserRepositoryDb implements UserRepository {
     const userProfileRawListWithOnlineStatus = [];
     for (const user of userProfileRawList) {
       const isOnline = await this.getOnlineStatus(user.id);
-      userProfileRawListWithOnlineStatus.push({ ...user, isOnline });
+      const lastSeen = await this.getLastConnection(user.id);
+      userProfileRawListWithOnlineStatus.push({ ...user, isOnline, lastSeen });
     }
 
     const userProfiles = buildUserProfileFromUserAggregate(
@@ -205,7 +206,8 @@ export class UserRepositoryDb implements UserRepository {
     const userProfileRawListWithOnlineStatus = [];
     for (const user of userProfileRawList) {
       const isOnline = await this.getOnlineStatus(user.id);
-      userProfileRawListWithOnlineStatus.push({ ...user, isOnline });
+      const lastSeen = await this.getLastConnection(user.id);
+      userProfileRawListWithOnlineStatus.push({ ...user, isOnline, lastSeen });
     }
 
     const userProfiles = buildUserProfileFromUserAggregate(
@@ -220,5 +222,18 @@ export class UserRepositoryDb implements UserRepository {
       userId,
     );
     return !!isConnectedUser;
+  }
+
+  private async getLastConnection(userId: string): Promise<Date | null> {
+    const lastConnection = await this.cacheService.findById<{
+      id: string;
+      lastSeen: Date;
+    }>(CacheResourceKeys.LAST_CONNEXION, userId);
+
+    if (!lastConnection) {
+      return null;
+    }
+
+    return lastConnection.lastSeen;
   }
 }
