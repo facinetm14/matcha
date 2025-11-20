@@ -27,11 +27,13 @@ import { disconnectSocket } from '@/api/socket.api';
 import { useGetProfile } from '@/hooks/useGetProfile';
 import { Loadder } from '@/components/ui/Loadder';
 import { IS_LOGGED_IN_KEY } from '@/App';
+import { useAuthStore } from '@/store/authStore';
 
 export default function ProfileView() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { isPending: isPendingConnectedUser } = useGetProfile();
+  const { isPending: isPendingConnectedUser, error: errorProfile } =
+    useGetProfile();
 
   const {
     selectedUser,
@@ -39,10 +41,14 @@ export default function ProfileView() {
     user: connectedUser,
   } = useProfileStore((state) => state);
 
+  const { updateLoginStatus } = useAuthStore();
+
   const notificationList = connectedUser?.notifications ?? [];
 
   const unreadNotifications = notificationList.filter((n) => !n.isRead).length;
-  const unreadMessages = 0;
+  const unreadMessages = notificationList.filter(
+    (n) => n.category == 'message' && !n.isRead,
+  ).length;
 
   const {
     isPending,
@@ -96,9 +102,10 @@ export default function ProfileView() {
     }
   }, [updateSelectedUserProfile, currentUser, connectedUser]);
 
-  if (error) {
+  if (error || errorProfile) {
     localStorage.removeItem(IS_LOGGED_IN_KEY);
     disconnectSocket();
+    updateLoginStatus(false);
     return <Login />;
   }
 

@@ -12,6 +12,8 @@ import { UserNotificationRepository } from '@/core/ports/repositories/user-notif
 import { MessageRepository } from '@/core/ports/repositories/message.repository';
 import { Message } from '@/core/domain/entities/message.entity';
 import { uuid } from '@shared/uuid';
+import { Notification } from '@/core/domain/entities/notification.entity';
+import { EventType } from '@/core/domain/enums/event-type';
 
 export class SocketIoListener {
   constructor(
@@ -107,14 +109,40 @@ export class SocketIoListener {
             ? channel.fromUser
             : channel.author;
 
-        this.serverSocket
-          .to(interlocutor)
-          .emit(SocketEvents.RECEIVE_MESSAGE, channel.id);
+        const notification: Notification = {
+          id: `${uuid()}-msg-${sanitized.channelId}`,
+          author: interlocutor,
+          fromUser: newMessage.senderId,
+          category: 'message',
+          createdAt: now,
+          updatedAt: now,
+          isRead: false,
+        };
+
+        this.eventBus.emitEvent(
+          EventType.USER_INTERACTION_ADDED,
+          JSON.stringify(notification),
+        );
 
         this.serverSocket
-          .to(newMessage.senderId)
+          .to([interlocutor, newMessage.senderId])
           .emit(SocketEvents.RECEIVE_MESSAGE, channel.id);
       });
+
+      socket.on(
+        SocketEvents.READING_NOTIFICATION,
+        async ({ category, author }) => {
+          if (category !== 'message') {
+            await this.userNotificationRepository.updateReadStatusById(author);
+          } else {
+            await this.userNotificationRepository.updateReadStatusByAuthorAndFromUser(
+              userId,
+              author,
+            );
+          }
+          this.serverSocket.emit(SocketEvents.NOTIFICATION_READ, author);
+        },
+      );
 
       this.serverSocket
         .except(userId)

@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Heart, Eye, MessageCircle, Users, HeartOff } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { useGetProfile } from '@/hooks/useGetProfile';
-import { disconnectSocket } from '@/api/socket.api';
+import { connectSocket, disconnectSocket } from '@/api/socket.api';
 import Login from './Login';
 import { userApi } from '@/api/user.api';
 import { useQuery } from '@tanstack/react-query';
@@ -16,10 +16,16 @@ import { getInitials } from '@/utils/get-initials';
 import { useProfileStore } from '@/store/profileStore';
 import { Loadder } from '@/components/ui/Loadder';
 import { IS_LOGGED_IN_KEY } from '@/App';
+import { SocketEvents } from '../../../shared/socket-events';
+import { useNavigate } from 'react-router-dom';
+import { useAuthStore } from '@/store/authStore';
 
 export default function Notifications() {
+  const navigate = useNavigate();
+
   const { isPending: isPendingProfile, error: errorProfile } = useGetProfile();
   const { user: connectedUser } = useProfileStore();
+  const { updateLoginStatus } = useAuthStore();
 
   const notificationList = connectedUser?.notifications ?? [];
 
@@ -50,7 +56,9 @@ export default function Notifications() {
   const usersList = users || [];
 
   const unreadNotifications = notificationList.filter((n) => !n.isRead).length;
-  const unreadMessages = 0;
+  const unreadMessages = notificationList.filter(
+    (n) => n.category == 'message' && !n.isRead,
+  ).length;
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
@@ -95,9 +103,42 @@ export default function Notifications() {
     refetchUserList();
   }, [notificationList.length, connectedUser?.id, refetchUserList]);
 
+  const handleReadNotification = (notification: Notification) => {
+    const socket = connectSocket();
+    if (!socket) {
+      return;
+    }
+
+    // message reading will handled in chat that will prevent duplication
+    if (!notification.isRead && notification.category !== 'message') {
+      socket.emit(SocketEvents.READING_NOTIFICATION, {
+        category: notification.category,
+        author: notification.id,
+      });
+    }
+
+    let redirectUrl = `/profile/${notification.fromUser}`;
+
+    if (notification.category === 'message') {
+      const notifId = notification.id;
+
+      //message notification id is : `uuid()-msg-channelId`;
+      const room = notifId.slice(notifId.indexOf('msg') + 4);
+
+      const params = new URLSearchParams({
+        openRoom: room,
+      });
+
+      redirectUrl = `/chat?${params.toString()}`;
+    }
+
+    navigate(redirectUrl);
+  };
+
   if (errorProfile || errorUserList) {
     localStorage.removeItem(IS_LOGGED_IN_KEY);
     disconnectSocket();
+    updateLoginStatus(false);
     return <Login />;
   }
 
@@ -130,10 +171,10 @@ export default function Notifications() {
             <Eye className="w-4 h-4 mr-2" /> Views
           </Button>
           <Button
-            variant={filter === 'match' ? 'default' : 'outline'}
-            onClick={() => setFilter(filter === 'match' ? null : 'match')}
+            variant={filter === 'message' ? 'default' : 'outline'}
+            onClick={() => setFilter(filter === 'message' ? null : 'message')}
           >
-            <Users className="w-4 h-4 mr-2" /> Matchs
+            <MessageCircle className="w-4 h-4 mr-2" /> Messages
           </Button>
         </div>
 
@@ -152,6 +193,7 @@ export default function Notifications() {
                   className={`shadow-card transition-all hover:shadow-soft cursor-pointer ${
                     !notification.isRead ? 'bg-primary/5 border-primary/20' : ''
                   }`}
+                  onClick={() => handleReadNotification(notification)}
                 >
                   <CardContent className="p-4">
                     <div className="flex items-center gap-4">

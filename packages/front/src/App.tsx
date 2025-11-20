@@ -73,7 +73,11 @@ const App = () => {
       }
     });
 
-    socket?.once(SocketEvents.RECEIVE_MESSAGE, async (channelId) => {
+    socket?.once(SocketEvents.RECEIVE_MESSAGE, async () => {
+      fetchProfile();
+    });
+
+    socket?.once(SocketEvents.NOTIFICATION_READ, async () => {
       fetchProfile();
     });
   }

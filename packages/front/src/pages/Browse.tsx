@@ -26,7 +26,9 @@ export default function Browse() {
 
   const notificationList = connectedUser?.notifications ?? [];
   const unreadNotifications = notificationList.filter((n) => !n.isRead).length;
-  const unreadMessages = 0;
+  const unreadMessages = notificationList.filter(
+    (n) => n.category == 'message' && !n.isRead,
+  ).length;
 
   const { isPending: isPendingConnectedUser, error: errorConnectedUser } =
     useGetProfile();

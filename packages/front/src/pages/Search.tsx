@@ -34,7 +34,9 @@ export default function Search() {
 
   const notificationList = connectedUser?.notifications ?? [];
   const unreadNotifications = notificationList.filter((n) => !n.isRead).length;
-  const unreadMessages = 0;
+  const unreadMessages = notificationList.filter(
+    (n) => n.category == 'message' && !n.isRead,
+  ).length;
 
   const handleSearch = () => {
     let results = userList.filter((user) => {
