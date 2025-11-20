@@ -4,7 +4,6 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Heart, X, MapPin, Star, Info } from 'lucide-react';
-import { mockNotifications, mockMessages } from '@/utils/mockData';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { userApi } from '@/api/user.api';
@@ -14,6 +13,7 @@ import { useProfileStore } from '@/store/profileStore';
 import { logout } from '@/utils/auth';
 import { disconnectSocket } from '@/api/socket.api';
 import { Loadder } from '@/components/ui/Loadder';
+import { useGetProfile } from '@/hooks/useGetProfile';
 
 export default function Browse() {
   const navigate = useNavigate();
@@ -21,9 +21,17 @@ export default function Browse() {
     selectedUser: currentUser,
     updateSelectedUserProfile,
     user: connectedUser,
+    fetchProfile,
   } = useProfileStore();
-  const unreadNotifications = mockNotifications.filter((n) => !n.read).length;
-  const unreadMessages = mockMessages.filter((m) => !m.read).length;
+
+  const notificationList = connectedUser?.notifications ?? [];
+  const unreadNotifications = notificationList.filter((n) => !n.isRead).length;
+  const unreadMessages = notificationList.filter(
+    (n) => n.category == 'message' && !n.isRead,
+  ).length;
+
+  const { isPending: isPendingConnectedUser, error: errorConnectedUser } =
+    useGetProfile();
 
   const { isPending, data, error, refetch } = useQuery({
     queryKey: ['browseUsers'],
@@ -35,6 +43,7 @@ export default function Browse() {
       const user = await res.json();
       return user;
     },
+    enabled: !!connectedUser,
   });
 
   const handleLike = () => {
@@ -62,13 +71,21 @@ export default function Browse() {
       updateSelectedUserProfile(data);
     }
 
-    if (error) {
+    if (error || errorConnectedUser) {
       disconnectSocket();
       logout(navigate);
     }
-  }, [data, updateSelectedUserProfile, error, navigate]);
+  }, [
+    data,
+    updateSelectedUserProfile,
+    error,
+    navigate,
+    connectedUser,
+    fetchProfile,
+    errorConnectedUser,
+  ]);
 
-  if (isPending) {
+  if (isPending || isPendingConnectedUser) {
     return <Loadder />;
   }
 
@@ -159,7 +176,7 @@ export default function Browse() {
                     variant="secondary"
                     className="bg-background/20 backdrop-blur-sm text-white border-white/20"
                   >
-                    {tag}
+                    #{tag}
                   </Badge>
                 ))}
               </div>

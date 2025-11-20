@@ -83,7 +83,11 @@ export class UserController {
     resp.status(200).json(user);
   }
 
-  async viewUserProfile(req: Request, resp: Response) {
+  async viewUserProfile(
+    req: Request,
+    resp: Response,
+    { isViewing }: { isViewing: boolean } = { isViewing: false },
+  ) {
     const connectedUserResult = await getConnectedUserId(
       this.accessTokenService,
       req,
@@ -100,14 +104,13 @@ export class UserController {
     const getCurrentUserResult = await this.getCurrentUserUseCase.execute(
       connectedUserResult.data,
       id,
+      isViewing,
     );
 
     if (getCurrentUserResult.isErr) {
       resp.status(404).send('User not found');
       return;
     }
-
-    
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { passwd, ...user } = getCurrentUserResult.data;

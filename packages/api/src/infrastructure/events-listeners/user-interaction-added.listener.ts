@@ -9,6 +9,8 @@ import { Notification } from '@/core/domain/entities/notification.entity';
 import { Server as SocketIoServer } from 'socket.io';
 import { UserInteractionRepository } from '@/core/ports/repositories/user-profile-interaction.repository';
 import { VIEW_NOTIFICATION_INTERVAL_IN_MS } from '@/core/domain/utils/notificationUtils';
+import { UserProfileInteraction } from '@/core/domain/entities/user-profile-interaction.entity';
+import { uuid } from '@shared/uuid';
 
 const eventBus = container.get<EventBus>(TYPE.EventBus);
 const logger = container.get<Logger>(TYPE.Logger);
@@ -22,6 +24,18 @@ const userInteractionRepository = container.get<UserInteractionRepository>(
   TYPE.UserInteractionRepository,
 );
 
+const shouldPreventViewSpam = (
+  lastView: UserProfileInteraction | null,
+  notification: Notification,
+): boolean => {
+  return (
+    !!lastView &&
+    new Date(notification.createdAt).getTime() -
+      new Date(lastView.createdAt).getTime() <=
+      VIEW_NOTIFICATION_INTERVAL_IN_MS
+  );
+};
+
 eventBus.listenTo(EventType.USER_INTERACTION_ADDED, async (payload: string) => {
   const notification = JSON.parse(payload) as Notification;
 
@@ -29,22 +43,17 @@ eventBus.listenTo(EventType.USER_INTERACTION_ADDED, async (payload: string) => {
     const lastView = await userInteractionRepository.findInteraction({
       author: notification.fromUser,
       recipient: notification.author,
-      category: 'view',
+      category: notification.category,
     });
 
     if (!lastView) {
       await userInteractionRepository.create(
-        { category: 'view', recipient: notification.author },
+        { category: notification.category, recipient: notification.author },
         notification.fromUser,
       );
     }
-    
-    if (
-      lastView &&
-      new Date(notification.createdAt).getTime() -
-        new Date(lastView.createdAt).getTime() <
-        VIEW_NOTIFICATION_INTERVAL_IN_MS
-    ) {
+
+    if (shouldPreventViewSpam(lastView, notification)) {
       return;
     }
 
@@ -54,10 +63,33 @@ eventBus.listenTo(EventType.USER_INTERACTION_ADDED, async (payload: string) => {
         notification.fromUser,
       );
       await userInteractionRepository.create(
-        { category: 'view', recipient: notification.author },
+        { category: notification.category, recipient: notification.author },
         notification.fromUser,
       );
     }
+  }
+
+  if (notification.category === 'like') {
+    const like = await userInteractionRepository.findInteraction({
+      author: notification.author,
+      recipient: notification.fromUser,
+      category: notification.category,
+    });
+
+    if (like) {
+      await notificationService.createNotification({
+        ...notification,
+        id: uuid(),
+        category: 'match',
+      });
+    }
+  }
+
+  if (notification.category === 'unlike' || notification.category === 'block') {
+    await notificationService.deleteMatch(
+      notification.author,
+      notification.fromUser,
+    );
   }
 
   await notificationService.createNotification(notification);

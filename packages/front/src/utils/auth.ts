@@ -6,6 +6,7 @@ import { userApi } from '@/api/user.api';
 import { authApi } from '@/api/auth.api';
 import { connectSocket } from '@/api/socket.api';
 import { SocketEvents } from '../../../shared/socket-events';
+import { IS_LOGGED_IN_KEY } from '@/App';
 
 export function logout(navigate: NavigateFunction) {
   const socket = connectSocket();
@@ -13,7 +14,7 @@ export function logout(navigate: NavigateFunction) {
     socket.emit(SocketEvents.DISCONNECT);
   }
 
-  localStorage.removeItem('isLoggedIn');
+  localStorage.removeItem(IS_LOGGED_IN_KEY);
   useAuthStore.getState().updateLoginStatus(false);
   toast.success("You're logged out.");
   authApi.logout();

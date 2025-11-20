@@ -1,8 +1,8 @@
 import {
   CreateInteractionDto,
-  InteractionCategory,
 } from '@/core/domain/dto/create-interaction.dto';
 import { Notification } from '@/core/domain/entities/notification.entity';
+import { InteractionCategory } from '@/core/domain/entities/user-profile-interaction.entity';
 import { EventType } from '@/core/domain/enums/event-type';
 import { UserUniqKeys } from '@/core/domain/enums/user-uniq-keys.enum';
 import { Err, Ok, Result } from '@/core/domain/utils/result';

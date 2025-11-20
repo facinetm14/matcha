@@ -1,6 +1,6 @@
 import { Notification } from '@/core/domain/entities/notification.entity';
 
-const unnecessaryCategories = ['block', 'unblock', 'report'];
+const unnecessaryCategories = ['block', 'unblock', 'report', 'match'];
 
 export const skipUnecessaryNotification = (
   notificationList: Notification[],

@@ -12,6 +12,8 @@ import { UserImageRepositoryDb } from '@/adapters/repositories/user-image-reposi
 import { UserTokenRepositoryInCache } from '@/adapters/repositories/user-token-repository-cache';
 import { UserNotificationRepository } from '@/core/ports/repositories/user-notification.repository';
 import { UserNotificationRepositoryDb } from '@/adapters/repositories/user-notification-repository-db';
+import { MessageRepository } from '@/core/ports/repositories/message.repository';
+import { MessageRepositoryDb } from '@/adapters/repositories/message-repository-db';
 
 export function bindRepositories(container: Container) {
   container
@@ -42,5 +44,10 @@ export function bindRepositories(container: Container) {
   container
     .bind<UserImageRepository>(TYPE.UserImageRepository)
     .to(UserImageRepositoryDb)
+    .inSingletonScope();
+
+  container
+    .bind<MessageRepository>(TYPE.MessageRepository)
+    .to(MessageRepositoryDb)
     .inSingletonScope();
 }

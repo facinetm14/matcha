@@ -52,22 +52,33 @@ const App = () => {
   if (isLoggedIn || localStorage.getItem(IS_LOGGED_IN_KEY)) {
     const socket = connectSocket();
 
-    socket.on(SocketEvents.USER_CONNECTED, async ({ userId }) => {
+    socket?.once(SocketEvents.USER_CONNECTED, async ({ userId }) => {
       fetchProfile();
       if (userId === selectedUser?.id) {
         fetchSelectedProfile(userId);
       }
     });
 
-    socket.on(SocketEvents.USER_INTERACTION_ADDED, async () => {
+    socket?.once(SocketEvents.USER_INTERACTION_ADDED, async ({ fromUser }) => {
       fetchProfile();
+      if (fromUser === selectedUser?.id) {
+        fetchSelectedProfile(selectedUser.id);
+      }
     });
 
-    socket.on(SocketEvents.USER_DISCONNECTED, async ({ userId }) => {
+    socket?.once(SocketEvents.USER_DISCONNECTED, async ({ userId }) => {
       fetchProfile();
       if (userId === selectedUser?.id) {
         fetchSelectedProfile(userId);
       }
+    });
+
+    socket?.once(SocketEvents.RECEIVE_MESSAGE, async () => {
+      fetchProfile();
+    });
+
+    socket?.once(SocketEvents.NOTIFICATION_READ, async () => {
+      fetchProfile();
     });
   }
 

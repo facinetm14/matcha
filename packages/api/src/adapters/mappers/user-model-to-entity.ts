@@ -96,6 +96,7 @@ export function buildUserProfileFromUserAggregate(
         viewedBy: isCorrectCategory('view', user.author, user.category)
           ? [user.author]
           : [],
+        matched: user.notif_category === 'match' ? [user.notif_id] : [],
         notifications: user.notif_author ? [notification] : [],
 
         reported: false,
@@ -150,6 +151,11 @@ export function buildUserProfileFromUserAggregate(
 
     if (!visitedNotif.has(notification.id)) {
       existingProfile.notifications.push(notification);
+
+      if (notification.category === 'match') {
+        existingProfile.matched.push(notification.id);
+      }
+
       visitedNotif.add(notification.id);
     }
   }

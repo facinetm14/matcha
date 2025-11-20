@@ -20,6 +20,7 @@ export class GetCurrentUserUseCase {
   async execute(
     userId: string,
     targetUserId?: string,
+    isViewing?: boolean,
   ): Promise<Result<UserProfile, VerifyTokenError>> {
     const userProfile = await this.userRepository.findUserProfileById(
       targetUserId ?? userId,
@@ -33,7 +34,7 @@ export class GetCurrentUserUseCase {
       await this.userRepository.update(userId, { isFirstLogin: null });
     }
 
-    if (targetUserId && userId !== targetUserId) {
+    if (targetUserId && userId !== targetUserId && isViewing) {
       const now = new Date();
       const notification: Notification = {
         id: uuid(),

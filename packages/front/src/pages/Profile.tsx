@@ -22,7 +22,6 @@ import {
   Heart as HeartIcon,
   X as Cancel,
 } from 'lucide-react';
-import { mockNotifications, mockMessages } from '@/utils/mockData';
 import { toast } from 'sonner';
 import { useMutation } from '@tanstack/react-query';
 import { userApi } from '@/api/user.api';
@@ -40,15 +39,17 @@ import { useGetProfile } from '@/hooks/useGetProfile';
 import { useSearchParams } from 'react-router-dom';
 import { disconnectSocket } from '@/api/socket.api';
 import { Loadder } from '@/components/ui/Loadder';
+import { IS_LOGGED_IN_KEY } from '@/App';
+import { useAuthStore } from '@/store/authStore';
 
 const PHOTOS_KEY = 'photos';
 
 export default function Profile() {
-  const unreadNotifications = mockNotifications.filter((n) => !n.read).length;
-  const unreadMessages = mockMessages.filter((m) => !m.read).length;
   const [searchParams, setSearchParams] = useSearchParams();
+  const { isPending, error } = useGetProfile();
 
   const [isEditing, setIsEditing] = useState(false);
+  const { updateLoginStatus } = useAuthStore();
 
   const {
     draft,
@@ -63,7 +64,11 @@ export default function Profile() {
     fetchProfile,
   } = useProfileStore((state) => state);
 
-  const { isPending, error } = useGetProfile();
+  const notificationList = profile?.notifications ?? [];
+  const unreadNotifications = notificationList.filter((n) => !n.isRead).length;
+  const unreadMessages = notificationList.filter(
+    (n) => n.category == 'message' && !n.isRead,
+  ).length;
 
   const updateProfileMutation = useMutation({
     mutationFn: async (updateUserDto: UpdateUserDto) => {
@@ -184,8 +189,9 @@ export default function Profile() {
 
   if (error) {
     toast.error('Failed to load profile. Please try again later.');
-    localStorage.removeItem('isLoggedIn');
+    localStorage.removeItem(IS_LOGGED_IN_KEY);
     disconnectSocket();
+    updateLoginStatus(false);
     return <Login />;
   }
 

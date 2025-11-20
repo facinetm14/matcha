@@ -16,6 +16,16 @@ const getMe = async () => {
   });
 };
 
+const getUserProfile = async (userId: string) => {
+  return fetch(`${API_BASE_ROUTE}/users/${userId}/profile`, {
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    method: 'GET',
+    credentials: 'include',
+  });
+};
+
 const viewUserProfile = async (userId: string) => {
   return fetch(`${API_BASE_ROUTE}/users/${userId}/view`, {
     headers: {
@@ -26,8 +36,8 @@ const viewUserProfile = async (userId: string) => {
   });
 };
 
-const viewUserProfileList = async (userIdList: string[]) => {
-  return fetch(`${API_BASE_ROUTE}/users/view`, {
+const getUserProfileList = async (userIdList: string[]) => {
+  return fetch(`${API_BASE_ROUTE}/users/profile`, {
     headers: {
       'Content-Type': 'application/json',
     },
@@ -122,6 +132,16 @@ const interactWithUser = async (
   });
 };
 
+const getChannels = async () => {
+  return fetch(`${API_BASE_ROUTE}/chats/channels`, {
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    method: 'GET',
+    credentials: 'include',
+  });
+};
+
 export const userApi = {
   getMe,
   checkUserIdentifierAvailability,
@@ -130,7 +150,9 @@ export const userApi = {
   reorderImages,
   getAllTags,
   browseUsers,
-  viewUserProfile,
+  getUserProfile,
   interactWithUser,
-  viewUserProfileList,
+  getUserProfileList,
+  viewUserProfile,
+  getChannels,
 };
