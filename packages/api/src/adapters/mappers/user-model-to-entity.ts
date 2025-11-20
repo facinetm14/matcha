@@ -52,6 +52,7 @@ export type UserAggregate = UserModel & {
   img_preview: string;
   img_id: string;
   isOnline: boolean;
+  lastSeen: Date | null;
   notif_id: string;
   notif_author: string;
   notif_from_user: string;
@@ -90,6 +91,7 @@ export function buildUserProfileFromUserAggregate(
         tags: user.interest ? [user.interest] : [],
         fameRating: 0,
         isOnline: user.isOnline,
+        lastSeen: user.lastSeen,
         likedBy: isCorrectCategory('like', user.author, user.category)
           ? [user.author]
           : [],
@@ -100,7 +102,6 @@ export function buildUserProfileFromUserAggregate(
         notifications: user.notif_author ? [notification] : [],
 
         reported: false,
-        lastSeen: null,
         photos: user.img_id
           ? [
               {

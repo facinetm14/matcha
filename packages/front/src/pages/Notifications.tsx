@@ -7,7 +7,6 @@ import { Heart, Eye, MessageCircle, Users, HeartOff } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { useGetProfile } from '@/hooks/useGetProfile';
 import { connectSocket, disconnectSocket } from '@/api/socket.api';
-import Login from './Login';
 import { userApi } from '@/api/user.api';
 import { useQuery } from '@tanstack/react-query';
 import { UserProfile } from '@/types/user';
@@ -19,6 +18,7 @@ import { IS_LOGGED_IN_KEY } from '@/App';
 import { SocketEvents } from '../../../shared/socket-events';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
+import { logout } from '@/utils/auth';
 
 export default function Notifications() {
   const navigate = useNavigate();
@@ -100,6 +100,15 @@ export default function Notifications() {
     : notificationList;
 
   useEffect(() => {
+    if (errorUserList || errorProfile) {
+      localStorage.removeItem(IS_LOGGED_IN_KEY);
+      disconnectSocket();
+      updateLoginStatus(false);
+      logout(navigate);
+    }
+  }, [errorProfile, errorUserList, navigate, updateLoginStatus]);
+
+  useEffect(() => {
     refetchUserList();
   }, [notificationList.length, connectedUser?.id, refetchUserList]);
 
@@ -134,13 +143,6 @@ export default function Notifications() {
 
     navigate(redirectUrl);
   };
-
-  if (errorProfile || errorUserList) {
-    localStorage.removeItem(IS_LOGGED_IN_KEY);
-    disconnectSocket();
-    updateLoginStatus(false);
-    return <Login />;
-  }
 
   if (isPendingProfile || isPendingUserList) {
     return <Loadder />;
