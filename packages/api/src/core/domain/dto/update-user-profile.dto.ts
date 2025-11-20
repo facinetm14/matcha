@@ -7,6 +7,10 @@ export const UpdateUserProfileDtoSchema = z.object({
   lastName: z.string().trim().min(3).optional(),
   passwd: z.string().optional(),
   confirmPasswd: z.string().optional(),
+  birthDate: z
+    .string()
+    .transform((val) => new Date(val))
+    .optional(),
   gender: z.enum(['male', 'female', 'non-binary']).optional(),
   sexualOrientation: z
     .array(z.enum(['male', 'female', 'non-binary']))

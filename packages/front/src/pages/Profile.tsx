@@ -41,8 +41,10 @@ import { Loadder } from '@/components/ui/Loadder';
 import { IS_LOGGED_IN_KEY } from '@/App';
 import { useAuthStore } from '@/store/authStore';
 import { logout } from '@/utils/auth';
+import { DatePicker } from '@/components/DatePicker';
 
 const PHOTOS_KEY = 'photos';
+const BIRTH_DATE_KEY = 'birthDate';
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -58,6 +60,8 @@ export default function Profile() {
     photos,
     imagesToDelete,
     imagesPositionToUpdate,
+    birthDateDraft,
+    updateBirthDateDraft,
     selectedUser,
     updateUserDraft,
     updateImagesToDelete,
@@ -86,6 +90,7 @@ export default function Profile() {
       toast.success('Profile updated successfully! 🎉');
       fetchProfile();
       updateUserDraft(null);
+      updateBirthDateDraft(null);
     },
     onError: (error) => {
       toast.error(error.message);
@@ -148,6 +153,10 @@ export default function Profile() {
       }
     }
 
+    if (birthDateDraft) {
+      toUpdate[BIRTH_DATE_KEY] = birthDateDraft;
+    }
+
     const updatedKeys = Object.keys(toUpdate);
 
     const isOnlyEmptyPhotos =
@@ -181,6 +190,7 @@ export default function Profile() {
         sexualOrientation: profile.sexualOrientation,
         bio: profile.bio,
         photos: [],
+        birthDate: profile.birthDate,
       });
       setIsEditing(true);
       setSearchParams({}, { replace: true });
@@ -365,24 +375,41 @@ export default function Profile() {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label>Email</Label>
-              {isEditing ? (
-                <Input
-                  type="email"
-                  value={draft?.email ?? ''}
-                  onChange={(e) =>
-                    updateUserDraft({
-                      ...(draft ?? {}),
-                      email: e.target.value,
-                    })
-                  }
-                />
-              ) : (
-                <p className="p-2 bg-muted rounded read-only">
-                  {profile.email}
-                </p>
-              )}
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Birthday</Label>
+                {isEditing ? (
+                  <DatePicker
+                    defaultDate={profile.birthDate}
+                    callBack={updateBirthDateDraft}
+                  />
+                ) : (
+                  <p className="p-2 bg-muted rounded read-only">
+                    {profile.birthDate
+                      ? `${new Date(profile.birthDate).toLocaleDateString('fr')}`
+                      : 'not defined'}
+                  </p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label>Email</Label>
+                {isEditing ? (
+                  <Input
+                    type="email"
+                    value={draft?.email ?? ''}
+                    onChange={(e) =>
+                      updateUserDraft({
+                        ...(draft ?? {}),
+                        email: e.target.value,
+                      })
+                    }
+                  />
+                ) : (
+                  <p className="p-2 bg-muted rounded read-only">
+                    {profile.email}
+                  </p>
+                )}
+              </div>
             </div>
 
             <div className="grid md:grid-cols-2 gap-4">
