@@ -130,4 +130,46 @@ export class UserNotificationRepositoryDb
       );
     }
   }
+
+  async updateReadStatusById(id: string): Promise<void> {
+    const updateQuery = {
+      text: `UPDATE user_notifications SET is_read = $1 WHERE id=$2`,
+      values: ['yes', id],
+    };
+
+    try {
+      const connexion = await pgClient.connect();
+      await pgClient.query(updateQuery);
+      connexion.release();
+    } catch (error) {
+      this.logger.error(
+        `Failed to update notification ${id} read status ${error}`,
+      );
+    }
+  }
+
+  async updateReadStatusByAuthorAndFromUser(
+    author: string,
+    fromUser: string,
+  ): Promise<void> {
+    const updateQuery = {
+      text: `UPDATE user_notifications SET is_read = $1 WHERE category = $2 AND 
+      (
+        author = $3
+        AND
+        from_user = $4
+      ) `,
+      values: ['yes', 'message', author, fromUser],
+    };
+
+    try {
+      const connexion = await pgClient.connect();
+      await pgClient.query(updateQuery);
+      connexion.release();
+    } catch (error) {
+      this.logger.error(
+        `Failed to update notification ${{ author, fromUser }} read status ${error}`,
+      );
+    }
+  }
 }

@@ -10,7 +10,7 @@ import { disconnectSocket } from '@/api/socket.api';
 
 export const useGetProfile = () => {
   const updateUserProfile = useProfileStore((state) => state.updateUserProfile);
-  const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
+  const { isLoggedIn } = useAuthStore();
 
   const query = useQuery({
     queryKey: ['fetchUserProfile'],
@@ -20,7 +20,6 @@ export const useGetProfile = () => {
         await authApi.logout();
         disconnectSocket();
         localStorage.removeItem(IS_LOGGED_IN_KEY);
-
         throw new Error('Failed to fetch user');
       }
 

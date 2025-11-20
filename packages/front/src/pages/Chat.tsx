@@ -14,18 +14,26 @@ import { Channel, Message } from '../types/user';
 import { getInitials } from '@/utils/get-initials';
 import { useQuery } from '@tanstack/react-query';
 import { userApi } from '@/api/user.api';
-import { connectSocket } from '@/api/socket.api';
+import { connectSocket, disconnectSocket } from '@/api/socket.api';
 import { CreateMessageDto } from '@/types/dto/create-message.dto';
 import { SocketEvents } from '../../../shared/socket-events';
 import { uuid } from '../../../shared/uuid';
 import { computeMessages } from '@/utils/utils';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { logout } from '@/utils/auth';
 
 export default function Chat() {
-  const { isPending } = useGetProfile();
+  const navigate = useNavigate();
+  const { isPending, error } = useGetProfile();
   const { user: connectedUser } = useProfileStore();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const notificationList = connectedUser?.notifications ?? [];
   const unreadNotifications = notificationList.filter((n) => !n.isRead).length;
+  const unreadMessages = notificationList.filter(
+    (n) => n.category == 'message' && !n.isRead,
+  ).length;
+
   const [messageText, setMessageText] = useState<string>('');
   const [messages, setMessages] = useState([]);
 
@@ -49,13 +57,7 @@ export default function Chat() {
     enabled: !!connectedUser,
   });
 
-  const [selectedMatchId, setSelectedMatchId] = useState(
-    connectedUser?.matched[0],
-  );
-
-  const unreadMessages = messages?.filter(
-    (m) => !m.isRead && m.senderId !== connectedUser?.id,
-  ).length;
+  const [selectedMatchId, setSelectedMatchId] = useState(null);
 
   const chatMessages = messages
     ?.filter((m) => m.channelId === selectedMatchId)
@@ -90,9 +92,56 @@ export default function Chat() {
 
   const selectedMatch = channelList?.find((ch) => ch.id === selectedMatchId);
 
+  const handleSelectChannel = (channelId: string) => {
+    const channel = channelList?.find((ch) => ch.id === channelId);
+    if (!channel) {
+      setSelectedMatchId(channelId);
+      return;
+    }
+
+    const unreadMessageNotification = notificationList.find(
+      (notif) =>
+        notif.fromUser === channel.interlocutor.id &&
+        notif.category === 'message' &&
+        !notif.isRead,
+    );
+
+    if (!unreadMessageNotification) {
+      setSelectedMatchId(channelId);
+      return;
+    }
+
+    const socket = connectSocket();
+    if (!socket) {
+      setSelectedMatchId(channelId);
+      return;
+    }
+
+    socket.emit(SocketEvents.READING_NOTIFICATION, {
+      category: 'message',
+      author: channel.interlocutor.id,
+    });
+
+    setSelectedMatchId(channelId);
+  };
+
+  useEffect(() => {
+    const openRoom = searchParams.get('openRoom');
+    if (openRoom) {
+      handleSelectChannel(openRoom);
+      setSearchParams({}, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(() => {
     refetchChanneList();
-  }, [connectedUser, refetchChanneList]);
+
+    if (error) {
+      disconnectSocket();
+      logout(navigate);
+    }
+  }, [connectedUser, refetchChanneList, error, navigate]);
 
   if (isPending || isPendingChannelList) {
     return <Loadder />;
@@ -116,7 +165,7 @@ export default function Chat() {
               {channelList?.map((match) => (
                 <button
                   key={match.id}
-                  onClick={() => setSelectedMatchId(match.id)}
+                  onClick={() => handleSelectChannel(match.id)}
                   className={`w-full p-4 flex items-center gap-3 hover:bg-muted transition-colors ${
                     selectedMatchId === match.id ? 'bg-muted' : ''
                   }`}
@@ -201,9 +250,7 @@ export default function Chat() {
                         }`}
                       >
                         <p className="text-sm">{message.content}</p>
-                        <p
-                          className={`text-xs mt-1 text-muted-foreground'}`}
-                        >
+                        <p className={`text-xs mt-1 text-muted-foreground'}`}>
                           {formatDistanceToNow(message.createdAt, {
                             addSuffix: true,
                           })}

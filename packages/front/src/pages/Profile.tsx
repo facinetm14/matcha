@@ -40,6 +40,7 @@ import { useSearchParams } from 'react-router-dom';
 import { disconnectSocket } from '@/api/socket.api';
 import { Loadder } from '@/components/ui/Loadder';
 import { IS_LOGGED_IN_KEY } from '@/App';
+import { useAuthStore } from '@/store/authStore';
 
 const PHOTOS_KEY = 'photos';
 
@@ -48,6 +49,7 @@ export default function Profile() {
   const { isPending, error } = useGetProfile();
 
   const [isEditing, setIsEditing] = useState(false);
+  const { updateLoginStatus } = useAuthStore();
 
   const {
     draft,
@@ -64,7 +66,9 @@ export default function Profile() {
 
   const notificationList = profile?.notifications ?? [];
   const unreadNotifications = notificationList.filter((n) => !n.isRead).length;
-  const unreadMessages = 0;
+  const unreadMessages = notificationList.filter(
+    (n) => n.category == 'message' && !n.isRead,
+  ).length;
 
   const updateProfileMutation = useMutation({
     mutationFn: async (updateUserDto: UpdateUserDto) => {
@@ -187,6 +191,7 @@ export default function Profile() {
     toast.error('Failed to load profile. Please try again later.');
     localStorage.removeItem(IS_LOGGED_IN_KEY);
     disconnectSocket();
+    updateLoginStatus(false);
     return <Login />;
   }
 
