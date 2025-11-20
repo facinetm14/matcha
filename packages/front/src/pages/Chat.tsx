@@ -10,7 +10,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { useGetProfile } from '@/hooks/useGetProfile';
 import { useProfileStore } from '@/store/profileStore';
 import { Loadder } from '@/components/ui/Loadder';
-import { Channel, Message } from '../types/user';
+import { Channel } from '../types/user';
 import { getInitials } from '@/utils/get-initials';
 import { useQuery } from '@tanstack/react-query';
 import { userApi } from '@/api/user.api';

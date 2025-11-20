@@ -25,7 +25,6 @@ import {
 import { toast } from 'sonner';
 import { useMutation } from '@tanstack/react-query';
 import { userApi } from '@/api/user.api';
-import Login from './Login';
 import { useProfileStore } from '@/store/profileStore';
 import { getInitials } from '@/utils/get-initials';
 import { UpdateUserDto } from '@/types/dto/update-user.dto';
@@ -36,15 +35,17 @@ import { getGenderLabel } from '@/utils/get-gender-label';
 import { DeleteUserImageDto } from '@/types/dto/delete-image.dto';
 import { UpdateImagePositionDto } from '@/types/dto/update-image-position.dto';
 import { useGetProfile } from '@/hooks/useGetProfile';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { disconnectSocket } from '@/api/socket.api';
 import { Loadder } from '@/components/ui/Loadder';
 import { IS_LOGGED_IN_KEY } from '@/App';
 import { useAuthStore } from '@/store/authStore';
+import { logout } from '@/utils/auth';
 
 const PHOTOS_KEY = 'photos';
 
 export default function Profile() {
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { isPending, error } = useGetProfile();
 
@@ -187,13 +188,15 @@ export default function Profile() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  if (error) {
-    toast.error('Failed to load profile. Please try again later.');
-    localStorage.removeItem(IS_LOGGED_IN_KEY);
-    disconnectSocket();
-    updateLoginStatus(false);
-    return <Login />;
-  }
+  useEffect(() => {
+    if (error) {
+      toast.error('Failed to load profile. Please try again later.');
+      localStorage.removeItem(IS_LOGGED_IN_KEY);
+      disconnectSocket();
+      updateLoginStatus(false);
+      logout(navigate);
+    }
+  }, [error, navigate, updateLoginStatus]);
 
   if (isPending || !profile) {
     return <Loadder />;

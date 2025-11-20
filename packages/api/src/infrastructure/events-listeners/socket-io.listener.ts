@@ -62,6 +62,23 @@ export class SocketIoListener {
           userId,
         );
 
+        const lastConnection = await this.cacheService.findById(
+          CacheResourceKeys.LAST_CONNEXION,
+          userId,
+        );
+
+        if (lastConnection) {
+          await this.cacheService.delete(
+            CacheResourceKeys.LAST_CONNEXION,
+            userId,
+          );
+        }
+
+        this.cacheService.insert(CacheResourceKeys.LAST_CONNEXION, {
+          id: userId,
+          lastSeen: new Date(),
+        });
+
         socket.leave(userId);
         socket.disconnect(true);
 
