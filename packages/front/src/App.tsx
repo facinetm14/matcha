@@ -72,6 +72,10 @@ const App = () => {
         fetchSelectedProfile(userId);
       }
     });
+
+    socket?.once(SocketEvents.RECEIVE_MESSAGE, async (channelId) => {
+      fetchProfile();
+    });
   }
 
   return (

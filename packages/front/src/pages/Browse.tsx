@@ -13,7 +13,7 @@ import { useProfileStore } from '@/store/profileStore';
 import { logout } from '@/utils/auth';
 import { disconnectSocket } from '@/api/socket.api';
 import { Loadder } from '@/components/ui/Loadder';
-import { useAuthStore } from '@/store/authStore';
+import { useGetProfile } from '@/hooks/useGetProfile';
 
 export default function Browse() {
   const navigate = useNavigate();
@@ -27,6 +27,9 @@ export default function Browse() {
   const notificationList = connectedUser?.notifications ?? [];
   const unreadNotifications = notificationList.filter((n) => !n.isRead).length;
   const unreadMessages = 0;
+
+  const { isPending: isPendingConnectedUser, error: errorConnectedUser } =
+    useGetProfile();
 
   const { isPending, data, error, refetch } = useQuery({
     queryKey: ['browseUsers'],
@@ -62,15 +65,11 @@ export default function Browse() {
   };
 
   useEffect(() => {
-    if (!connectedUser) {
-      fetchProfile();
-    }
-
     if (data) {
       updateSelectedUserProfile(data);
     }
 
-    if (error) {
+    if (error || errorConnectedUser) {
       disconnectSocket();
       logout(navigate);
     }
@@ -81,9 +80,10 @@ export default function Browse() {
     navigate,
     connectedUser,
     fetchProfile,
+    errorConnectedUser,
   ]);
 
-  if (isPending) {
+  if (isPending || isPendingConnectedUser) {
     return <Loadder />;
   }
 

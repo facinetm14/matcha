@@ -23,6 +23,8 @@ export class GetUserChannelsUseCase {
     const channelIdList: string[] = [];
 
     for (const m of matchList) {
+      channelIdList.push(m.id);
+
       if (channelMap.has(m.id)) {
         continue;
       }

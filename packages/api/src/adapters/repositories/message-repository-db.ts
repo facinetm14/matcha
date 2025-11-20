@@ -14,7 +14,7 @@ export class MessageRepositoryDb implements MessageRepository {
 
     const insertQuery = {
       text: `
-                INSERT INTO messages(id, channel_id, sender_id, is_red, content, created_at, updated_at)
+                INSERT INTO messages(id, channel_id, sender_id, is_read, content, created_at, updated_at)
                 VALUES($1, $2, $3, $4, $5, $6, $7)
               `,
       values: [

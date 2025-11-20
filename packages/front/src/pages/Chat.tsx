@@ -10,10 +10,15 @@ import { formatDistanceToNow } from 'date-fns';
 import { useGetProfile } from '@/hooks/useGetProfile';
 import { useProfileStore } from '@/store/profileStore';
 import { Loadder } from '@/components/ui/Loadder';
-import { Channel } from '../types/user';
+import { Channel, Message } from '../types/user';
 import { getInitials } from '@/utils/get-initials';
 import { useQuery } from '@tanstack/react-query';
 import { userApi } from '@/api/user.api';
+import { connectSocket } from '@/api/socket.api';
+import { CreateMessageDto } from '@/types/dto/create-message.dto';
+import { SocketEvents } from '../../../shared/socket-events';
+import { uuid } from '../../../shared/uuid';
+import { computeMessages } from '@/utils/utils';
 
 export default function Chat() {
   const { isPending } = useGetProfile();
@@ -21,6 +26,8 @@ export default function Chat() {
 
   const notificationList = connectedUser?.notifications ?? [];
   const unreadNotifications = notificationList.filter((n) => !n.isRead).length;
+  const [messageText, setMessageText] = useState<string>('');
+  const [messages, setMessages] = useState([]);
 
   const {
     isPending: isPendingChannelList,
@@ -34,6 +41,9 @@ export default function Chat() {
         throw new Error('Failed to browse users');
       }
       const channelList = (await res.json()) as Channel[];
+      const messageList = computeMessages(channelList);
+
+      setMessages(messageList);
       return channelList;
     },
     enabled: !!connectedUser,
@@ -42,28 +52,38 @@ export default function Chat() {
   const [selectedMatchId, setSelectedMatchId] = useState(
     connectedUser?.matched[0],
   );
-  const [messageText, setMessageText] = useState('');
-  const [messages, setMessages] = useState([]);
 
-  const unreadMessages = messages.filter(
+  const unreadMessages = messages?.filter(
     (m) => !m.isRead && m.senderId !== connectedUser?.id,
   ).length;
 
   const chatMessages = messages
-    .filter((m) => m.matchId === selectedMatchId)
-    .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+    ?.filter((m) => m.channelId === selectedMatchId)
+    .sort(
+      (a, b) =>
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+    );
 
   const handleSend = () => {
+    const socket = connectSocket();
+
     if (messageText.trim() && selectedMatchId) {
-      const newMessage = {
-        id: `msg-${Date.now()}`,
-        matchId: selectedMatchId,
-        senderId: 'current-user',
+      const newMessage: CreateMessageDto = {
+        channelId: selectedMatchId,
+        senderId: connectedUser.id,
         content: messageText,
-        createdAt: new Date(),
-        read: true,
       };
-      setMessages([...messages, newMessage]);
+
+      if (socket) {
+        socket.emit(SocketEvents.SEND_MESSAGE, newMessage);
+      }
+
+      const now = new Date();
+      const id = uuid();
+      setMessages([
+        ...messages,
+        { ...newMessage, id, createdAt: now, isRead: false },
+      ]);
       setMessageText('');
     }
   };
@@ -126,9 +146,12 @@ export default function Chat() {
                   </div>
                   {match.messageList.at(-1) && (
                     <span className="text-xs text-muted-foreground">
-                      {formatDistanceToNow(match.messageList.at(-1)?.createdAt, {
-                        addSuffix: true,
-                      })}
+                      {formatDistanceToNow(
+                        match.messageList.at(-1)?.createdAt,
+                        {
+                          addSuffix: true,
+                        },
+                      )}
                     </span>
                   )}
                 </button>
@@ -165,7 +188,7 @@ export default function Chat() {
 
                 {/* Messages */}
                 <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                  {chatMessages.map((message) => (
+                  {chatMessages?.map((message) => (
                     <div
                       key={message.id}
                       className={`flex ${message.senderId === connectedUser?.id ? 'justify-end' : 'justify-start'}`}
@@ -173,13 +196,13 @@ export default function Chat() {
                       <div
                         className={`max-w-[70%] rounded-2xl px-4 py-2 ${
                           message.senderId === connectedUser?.id
-                            ? 'bg-gradient-romantic text-white'
+                            ? 'bg-primary/10'
                             : 'bg-muted'
                         }`}
                       >
                         <p className="text-sm">{message.content}</p>
                         <p
-                          className={`text-xs mt-1 ${message.senderId === connectedUser?.id ? 'text-white/70' : 'text-muted-foreground'}`}
+                          className={`text-xs mt-1 text-muted-foreground'}`}
                         >
                           {formatDistanceToNow(message.createdAt, {
                             addSuffix: true,
@@ -196,9 +219,10 @@ export default function Chat() {
                     <Input
                       value={messageText}
                       onChange={(e) => setMessageText(e.target.value)}
-                      onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+                      onKeyDown={(e) => e.key === 'Enter' && handleSend()}
                       placeholder="Type a message..."
                       className="flex-1"
+                      maxLength={100}
                     />
                     <Button
                       onClick={handleSend}

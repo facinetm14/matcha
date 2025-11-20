@@ -10,4 +10,5 @@ export interface NotificationService {
     payload: ResetPasswordWishedPayload,
   ): Promise<void>;
   createNotification(notification: Notification): Promise<void>;
+  deleteMatch(author: string, fromUser: string): Promise<void>;
 }
