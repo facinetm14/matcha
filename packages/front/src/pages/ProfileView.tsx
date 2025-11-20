@@ -155,7 +155,7 @@ export default function ProfileView() {
   };
 
   const handleUnblock = () => {
-    const message = `You unliked ${selectedUser.firstName}!`;
+    const message = `You unblocked ${selectedUser.firstName}!`;
     const query: CreateInteractionDto = {
       recipient: selectedUser.id,
       category: 'unblock',

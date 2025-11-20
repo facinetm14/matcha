@@ -54,4 +54,8 @@ export class NotificationHandler implements NotificationService {
   async createNotification(notification: Notification): Promise<void> {
     return this.userNotificationRepository.create(notification);
   }
+
+  async deleteMatch(author: string, fromUser: string): Promise<void> {
+    return this.userNotificationRepository.deleteMatch(author, fromUser);
+  }
 }

@@ -7,6 +7,11 @@ import { getConnectedUserIdFromSocket } from '@/adapters/web/middlewares/get-con
 import { CacheService } from '@/core/ports/services/cache.service';
 import { CacheResourceKeys } from '@/core/domain/consts/cache-resource-keys';
 import { EventBus } from '@/core/ports/services/event-bus';
+import { CreateMessageDtoSchema } from '@/core/domain/dto/message.dto';
+import { UserNotificationRepository } from '@/core/ports/repositories/user-notification.repository';
+import { MessageRepository } from '@/core/ports/repositories/message.repository';
+import { Message } from '@/core/domain/entities/message.entity';
+import { uuid } from '@shared/uuid';
 
 export class SocketIoListener {
   constructor(
@@ -17,6 +22,10 @@ export class SocketIoListener {
     @inject(TYPE.CacheService)
     private readonly cacheService: CacheService,
     @inject(TYPE.EventBus) private readonly eventBus: EventBus,
+    @inject(TYPE.UserNotificationRepository)
+    private readonly userNotificationRepository: UserNotificationRepository,
+    @inject(TYPE.MessageRepository)
+    private readonly messageRepository: MessageRepository,
   ) {}
 
   async handleSocketEvents() {
@@ -57,6 +66,54 @@ export class SocketIoListener {
         this.serverSocket
           .except(userId)
           .emit(SocketEvents.USER_DISCONNECTED, { userId });
+      });
+
+      socket.on(SocketEvents.SEND_MESSAGE, async (message) => {
+        const parseMessage = CreateMessageDtoSchema.safeParse(message);
+        if (!parseMessage.success) {
+          return;
+        }
+
+        const sanitized = parseMessage.data;
+        const channel = await this.userNotificationRepository.findMatchById(
+          sanitized.channelId,
+        );
+        if (!channel) {
+          return;
+        }
+
+        if (
+          sanitized.senderId !== channel.author &&
+          sanitized.senderId !== channel.fromUser
+        ) {
+          return;
+        }
+
+        const now = new Date();
+        const newMessage: Message = {
+          id: uuid(),
+          senderId: sanitized.senderId,
+          content: sanitized.content,
+          channelId: sanitized.channelId,
+          isRead: false,
+          createdAt: now,
+          updatedAt: now,
+        };
+
+        await this.messageRepository.create(newMessage);
+
+        const interlocutor =
+          channel.author === sanitized.senderId
+            ? channel.fromUser
+            : channel.author;
+
+        this.serverSocket
+          .to(interlocutor)
+          .emit(SocketEvents.RECEIVE_MESSAGE, channel.id);
+
+        this.serverSocket
+          .to(newMessage.senderId)
+          .emit(SocketEvents.RECEIVE_MESSAGE, channel.id);
       });
 
       this.serverSocket

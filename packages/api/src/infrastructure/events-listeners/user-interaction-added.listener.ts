@@ -85,6 +85,13 @@ eventBus.listenTo(EventType.USER_INTERACTION_ADDED, async (payload: string) => {
     }
   }
 
+  if (notification.category === 'unlike' || notification.category === 'block') {
+    await notificationService.deleteMatch(
+      notification.author,
+      notification.fromUser,
+    );
+  }
+
   await notificationService.createNotification(notification);
 
   logger.info(`creating notification for ${notification.author}`);

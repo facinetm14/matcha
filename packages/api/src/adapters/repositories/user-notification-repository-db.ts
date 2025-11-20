@@ -77,4 +77,57 @@ export class UserNotificationRepositoryDb
       return [];
     }
   }
+
+  async findMatchById(id: string): Promise<Notification | null> {
+    const query = {
+      text: `
+            SELECT * FROM user_notifications WHERE category = 'match' AND id = $1
+          `,
+      values: [id],
+    };
+
+    try {
+      const connexion = await pgClient.connect();
+      const matchResp = await pgClient.query(query);
+      connexion.release();
+
+      const matchRaw = matchResp.rows[0];
+
+      if (!matchRaw) {
+        return null;
+      }
+
+      return {
+        id: matchRaw.id,
+        author: matchRaw.author,
+        fromUser: matchRaw.from_user,
+        createdAt: matchRaw.created_at,
+        updatedAt: matchRaw.updated_at,
+        category: matchRaw.category,
+        isRead: matchRaw.is_read ? true : false,
+      };
+    } catch (error) {
+      const errorMessage = `Failed while fetch user match ${id}: ${error}`;
+      this.logger.error(errorMessage);
+      return null;
+    }
+  }
+
+  async deleteMatch(author: string, fromUser: string): Promise<void> {
+    const deleteQuery = {
+      text: `DELETE FROM user_notifications WHERE category = $2 AND 
+      author = ANY($1) AND from_user = ANY($1)`,
+      values: [[author, fromUser], 'match'],
+    };
+
+    try {
+      const connexion = await pgClient.connect();
+      await pgClient.query(deleteQuery);
+      connexion.release();
+    } catch (error) {
+      this.logger.error(
+        `Failed to delete ${[author, fromUser]} match ${error}`,
+      );
+    }
+  }
 }

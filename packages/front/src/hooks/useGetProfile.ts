@@ -6,6 +6,7 @@ import { authApi } from '@/api/auth.api';
 import { UserProfile } from '@/types/user';
 import { useAuthStore } from '@/store/authStore';
 import { IS_LOGGED_IN_KEY } from '@/App';
+import { disconnectSocket } from '@/api/socket.api';
 
 export const useGetProfile = () => {
   const updateUserProfile = useProfileStore((state) => state.updateUserProfile);
@@ -17,6 +18,9 @@ export const useGetProfile = () => {
       const res = await userApi.getMe();
       if (!res.ok) {
         await authApi.logout();
+        disconnectSocket();
+        localStorage.removeItem(IS_LOGGED_IN_KEY);
+
         throw new Error('Failed to fetch user');
       }
 
