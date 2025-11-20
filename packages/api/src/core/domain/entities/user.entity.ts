@@ -12,7 +12,7 @@ export type User = {
   gender?: string;
   sexualOrientation?: string;
   bio?: string;
-  age?: number;
   createdAt: Date;
   updatedAt: Date;
+  birthDate?: Date;
 };

@@ -90,17 +90,15 @@ Authorization: Bearer {{accessToken}} {{refreshToken}}
 
 ### update user infos
 PATCH {{baseUrl}}/users/update
-Authorization: Bearer {{accessToken}} {{refreshToken}}
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI5dzI5eHAtbWd6MDVnMzEtd3dteTF4LWhlM3FrOCIsImlhdCI6MTc2MzY1NzE3OCwiZXhwIjoxNzYzNjU4MDc4LCJqdGkiOiJ1YXVuNWstbWk3bnk0cHYtOHQ1MmNzLTNmbjE0NyJ9._eciHPuG4ND37FvxXIWyhffHe75fAY1JqcZ8PHxf7wg {{refreshToken}}
 Content-Type: application/json
 
 {
-  "user": {
-    "firstName": "Petit",
-    "gender": "Male",
-    "sexualOrientation": "Hetero",
-    "bio": "lorem dkskdsd"
-  },
-  "interests": ["coding", "singing", "dancing"]
+  "firstName": "Petit",
+  "gender": "male",
+  "bio": "lorem dkskdsd",
+  "tags": ["coding", "singing", "dancing"],
+  "birthDate": "2005-10-21"
 }
 
 
