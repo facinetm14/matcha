@@ -115,7 +115,10 @@ export class UserRepositoryDb implements UserRepository {
 
     const connexion = await pgClient.connect();
     try {
-      await pgClient.query(updateQuery);
+      const rowAffected = await pgClient.query(updateQuery);
+      if (!rowAffected) {
+        this.logger.error(`Error: unable to update user ${id}, ${rowAffected}`);
+      }
     } catch (error) {
       this.logger.error(`Error: unable to update user ${id}, ${error}`);
     }

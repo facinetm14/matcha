@@ -190,6 +190,7 @@ export class UserController {
     }
 
     const updateUserProfileDto = parsedBody.data;
+    
     const updateUserProfileResult = await this.updateUserProfileUseCase.execute(
       userId,
       updateUserProfileDto,
