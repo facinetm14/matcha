@@ -1,7 +1,7 @@
 import { Gender } from '../user';
 import { UserImageDto } from './user-image.dto';
 
-export interface UpdateUserDto {
+export type UpdateUserDto =  {
   email?: string;
   firstName?: string;
   lastName?: string;

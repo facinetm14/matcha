@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { authApi } from '@/api/auth.api';
 import Login from './Login';
 import { Loadder } from '@/components/ui/Loadder';
+import { useEffect } from 'react';
 
 export const VerifyEmail = () => {
   const { token } = useParams();
@@ -24,9 +25,11 @@ export const VerifyEmail = () => {
     },
   });
 
-  if (isPending) return <Loadder />;;
+  useEffect(() => {
+    if (error) navigate('/not-found');
+  }, [error, navigate]);
 
-  if (error) navigate('/not-found');
+  if (isPending) return <Loadder />;
 
-  return <Login/>;
+  return <Login />;
 };

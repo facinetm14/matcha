@@ -28,8 +28,10 @@ export function DatePicker({
 
   const handleDateSelect = (selectedDate: Date | undefined) => {
     setDate(selectedDate);
+    const newDate = new Date(selectedDate);
     if (callBack) {
-      callBack(new Date(selectedDate));
+      newDate.setDate(selectedDate.getDate() + 1);
+      callBack(new Date(newDate));
     }
   };
 

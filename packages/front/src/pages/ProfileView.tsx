@@ -16,32 +16,26 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
-import { useProfileStore } from '@/store/profileStore';
 import { getInitials } from '@/utils/get-initials';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { userApi } from '@/api/user.api';
 import { useEffect } from 'react';
 import { CreateInteractionDto } from '@/types/dto/create-interaction.dto';
-import { disconnectSocket } from '@/api/socket.api';
 import { useGetProfile } from '@/hooks/useGetProfile';
 import { Loadder } from '@/components/ui/Loadder';
-import { IS_LOGGED_IN_KEY } from '@/App';
-import { useAuthStore } from '@/store/authStore';
 import { logout } from '@/utils/auth';
+import { QUERY_KEYS } from '@/utils/utils';
 
 export default function ProfileView() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { isPending: isPendingConnectedUser, error: errorProfile } =
-    useGetProfile();
-
   const {
-    selectedUser,
-    updateSelectedUserProfile,
-    user: connectedUser,
-  } = useProfileStore((state) => state);
+    isPending: isPendingConnectedUser,
+    error: errorProfile,
+    data: connectedUser,
+  } = useGetProfile();
 
-  const { updateLoginStatus } = useAuthStore();
+  const queryClient = useQueryClient();
 
   const notificationList = connectedUser?.notifications ?? [];
 
@@ -52,11 +46,10 @@ export default function ProfileView() {
 
   const {
     isPending,
-    data: currentUser,
+    data: selectedUser,
     error,
-    refetch: refetchUserProfile,
   } = useQuery({
-    queryKey: ['viewUser'],
+    queryKey: [QUERY_KEYS.VIEW_USER],
     queryFn: async () => {
       const res = await userApi.viewUserProfile(id);
       if (!res.ok) {
@@ -84,12 +77,19 @@ export default function ProfileView() {
       if (!currentUserResp.ok) {
         throw new Error('Failled to retrieve user infos');
       }
-      await refetchUserProfile();
       return message;
     },
 
     onSuccess: (message: string) => {
       toast.success(`${message}`);
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.VIEW_USER],
+        exact: true,
+      });
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.BROWSE_USERS],
+        exact: true,
+      });
     },
     onError: (error) => {
       toast.error(error.message);
@@ -97,19 +97,10 @@ export default function ProfileView() {
   });
 
   useEffect(() => {
-    if (error || errorProfile) {
-      localStorage.removeItem(IS_LOGGED_IN_KEY);
-      disconnectSocket();
-      updateLoginStatus(false);
+    if (error || errorProfile || !id) {
       logout(navigate);
     }
-  }, [error, errorProfile, navigate, updateLoginStatus]);
-
-  useEffect(() => {
-    if (currentUser) {
-      updateSelectedUserProfile(currentUser);
-    }
-  }, [updateSelectedUserProfile, currentUser, connectedUser]);
+  }, [error, errorProfile, navigate, id]);
 
   if (isPending || isPendingConnectedUser) {
     return <Loadder />;

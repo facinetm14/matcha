@@ -23,7 +23,7 @@ import {
   X as Cancel,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { userApi } from '@/api/user.api';
 import { useProfileStore } from '@/store/profileStore';
 import { getInitials } from '@/utils/get-initials';
@@ -39,9 +39,9 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { disconnectSocket } from '@/api/socket.api';
 import { Loadder } from '@/components/ui/Loadder';
 import { IS_LOGGED_IN_KEY } from '@/App';
-import { useAuthStore } from '@/store/authStore';
 import { logout } from '@/utils/auth';
 import { DatePicker } from '@/components/DatePicker';
+import { QUERY_KEYS } from '@/utils/utils';
 
 const PHOTOS_KEY = 'photos';
 const BIRTH_DATE_KEY = 'birthDate';
@@ -49,24 +49,21 @@ const BIRTH_DATE_KEY = 'birthDate';
 export default function Profile() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { isPending, error } = useGetProfile();
+  const { isPending, error, data: profile } = useGetProfile();
+  const queryClient = useQueryClient();
 
   const [isEditing, setIsEditing] = useState(false);
-  const { updateLoginStatus } = useAuthStore();
 
   const {
     draft,
-    user: profile,
     photos,
     imagesToDelete,
     imagesPositionToUpdate,
     birthDateDraft,
     updateBirthDateDraft,
-    selectedUser,
     updateUserDraft,
     updateImagesToDelete,
     updateImagesPositionToUpdate,
-    fetchProfile,
   } = useProfileStore((state) => state);
 
   const notificationList = profile?.notifications ?? [];
@@ -79,7 +76,6 @@ export default function Profile() {
     mutationFn: async (updateUserDto: UpdateUserDto) => {
       const response = await userApi.updateUserProfile(updateUserDto);
       if (response.status === 200) {
-        fetchProfile();
         return true;
       }
 
@@ -88,7 +84,7 @@ export default function Profile() {
     },
     onSuccess: () => {
       toast.success('Profile updated successfully! 🎉');
-      fetchProfile();
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.ME], exact: true });
       updateUserDraft(null);
       updateBirthDateDraft(null);
     },
@@ -104,14 +100,11 @@ export default function Profile() {
         return true;
       }
 
-      fetchProfile();
       const error = await response.text();
       throw new Error(error);
     },
     onSuccess: () => {
-      if (selectedUser) {
-        fetchProfile();
-      }
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.ME], exact: true });
       updateImagesToDelete([]);
       if (draft) {
         updateUserDraft(null);
@@ -129,11 +122,11 @@ export default function Profile() {
         return true;
       }
 
-      fetchProfile();
       const error = await response.text();
       throw new Error(error);
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.ME], exact: true });
       updateImagesPositionToUpdate([]);
       if (draft) {
         updateUserDraft(null);
@@ -182,31 +175,20 @@ export default function Profile() {
   useEffect(() => {
     const openEdition = searchParams.get('openEdition');
     if (openEdition) {
-      updateUserDraft({
-        email: profile.email,
-        firstName: profile.firstName,
-        lastName: profile.lastName,
-        gender: profile.gender as Gender,
-        sexualOrientation: profile.sexualOrientation,
-        bio: profile.bio,
-        photos: [],
-        birthDate: profile.birthDate,
-      });
       setIsEditing(true);
       setSearchParams({}, { replace: true });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [profile]);
 
   useEffect(() => {
     if (error) {
       toast.error('Failed to load profile. Please try again later.');
       localStorage.removeItem(IS_LOGGED_IN_KEY);
       disconnectSocket();
-      updateLoginStatus(false);
       logout(navigate);
     }
-  }, [error, navigate, updateLoginStatus]);
+  }, [error, navigate]);
 
   if (isPending || !profile) {
     return <Loadder />;

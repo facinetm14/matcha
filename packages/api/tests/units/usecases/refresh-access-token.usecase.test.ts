@@ -1,9 +1,9 @@
-import { AccessTokenHelper } from '@/adapters/services/access-token-helper';
-import { REFRESH_ACESS_TOKEN_TTL_IN_MS } from '@/core/domain/consts/access-token-ttl';
-import { VerifyTokenError } from '@/core/domain/errors/verify-token.error';
-import { AccessTokenService } from '@/core/ports/services/access-token.service';
-import { RefreshAccessTokenUseCase } from '@/core/usecases/auth/refresh-token.usecase';
-import { factoryUserTokenRepositoryInMemory } from '@shared/factory';
+import { AccessTokenManager } from '@/modules/auth/infrastructure/adapters/services/access-token-manager';
+import { REFRESH_ACESS_TOKEN_TTL_IN_MS } from '@/modules/auth/application/consts/access-token-ttl';
+import { VerifyTokenError } from '@/modules/auth/application/errors/verify-token.error';
+import { AccessTokenService } from '@/modules/auth/application/ports/services/access-token.service';
+import { RefreshAccessTokenUseCase } from '@/modules/auth/application/usecases/refresh-token.usecase';
+import { factoryUserTokenRepositoryInMemory } from '@/modules/shared/utils/factory';
 
 describe('Refresh Access Token Usecase', () => {
   let refreshAccessTokenUseCase: RefreshAccessTokenUseCase;
@@ -13,7 +13,7 @@ describe('Refresh Access Token Usecase', () => {
   const userId = 'user-id';
 
   beforeAll(async () => {
-    accessTokenService = new AccessTokenHelper(
+    accessTokenService = new AccessTokenManager(
       factoryUserTokenRepositoryInMemory(),
     );
 
