@@ -6,26 +6,27 @@ import { Button } from '@/components/ui/button';
 import { Heart, Eye, MessageCircle, Users, HeartOff } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { useGetProfile } from '@/hooks/useGetProfile';
-import { connectSocket, disconnectSocket } from '@/api/socket.api';
+import { connectSocket } from '@/api/socket.api';
 import { userApi } from '@/api/user.api';
 import { useQuery } from '@tanstack/react-query';
 import { UserProfile } from '@/types/user';
 import { Notification } from '@/types/user';
 import { getInitials } from '@/utils/get-initials';
-import { useProfileStore } from '@/store/profileStore';
 import { Loadder } from '@/components/ui/Loadder';
-import { IS_LOGGED_IN_KEY } from '@/App';
 import { SocketEvents } from '../../../shared/socket-events';
 import { useNavigate } from 'react-router-dom';
-import { useAuthStore } from '@/store/authStore';
 import { logout } from '@/utils/auth';
+import { QUERY_KEYS } from '@/utils/utils';
+import { INCOMMING_MESSAGE_TIMEOUT_MS } from '../../../shared/notification-time';
 
 export default function Notifications() {
   const navigate = useNavigate();
 
-  const { isPending: isPendingProfile, error: errorProfile } = useGetProfile();
-  const { user: connectedUser } = useProfileStore();
-  const { updateLoginStatus } = useAuthStore();
+  const {
+    isPending: isPendingProfile,
+    error: errorProfile,
+    data: connectedUser,
+  } = useGetProfile();
 
   const notificationList = connectedUser?.notifications ?? [];
 
@@ -33,9 +34,8 @@ export default function Notifications() {
     isPending: isPendingUserList,
     data: users,
     error: errorUserList,
-    refetch: refetchUserList,
   } = useQuery({
-    queryKey: ['getUserProfileList'],
+    queryKey: [QUERY_KEYS.GET_USERS_PROFILE_LIST],
     queryFn: async (): Promise<UserProfile[]> => {
       const userIdList = notificationList.map((notif) => notif.fromUser) ?? [];
       if (!userIdList.length) {
@@ -49,7 +49,6 @@ export default function Notifications() {
       const userList = await res.json();
       return userList;
     },
-    enabled: !!connectedUser,
   });
 
   const [filter, setFilter] = useState<string | null>(null);
@@ -101,16 +100,9 @@ export default function Notifications() {
 
   useEffect(() => {
     if (errorUserList || errorProfile) {
-      localStorage.removeItem(IS_LOGGED_IN_KEY);
-      disconnectSocket();
-      updateLoginStatus(false);
       logout(navigate);
     }
-  }, [errorProfile, errorUserList, navigate, updateLoginStatus]);
-
-  useEffect(() => {
-    refetchUserList();
-  }, [notificationList.length, connectedUser?.id, refetchUserList]);
+  }, [errorProfile, errorUserList, navigate]);
 
   const handleReadNotification = (notification: Notification) => {
     const socket = connectSocket();
@@ -118,12 +110,14 @@ export default function Notifications() {
       return;
     }
 
-    // message reading will handled in chat that will prevent duplication
+    // message read will handled in chat that will prevent duplication
     if (!notification.isRead && notification.category !== 'message') {
-      socket.emit(SocketEvents.READING_NOTIFICATION, {
-        category: notification.category,
-        author: notification.id,
-      });
+      socket
+        .timeout(INCOMMING_MESSAGE_TIMEOUT_MS)
+        .emit(SocketEvents.READING_NOTIFICATION, {
+          category: notification.category,
+          author: notification.id,
+        });
     }
 
     let redirectUrl = `/profile/${notification.fromUser}`;

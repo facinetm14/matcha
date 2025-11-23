@@ -8,25 +8,24 @@ import { Send, Circle } from 'lucide-react';
 
 import { formatDistanceToNow } from 'date-fns';
 import { useGetProfile } from '@/hooks/useGetProfile';
-import { useProfileStore } from '@/store/profileStore';
 import { Loadder } from '@/components/ui/Loadder';
 import { Channel } from '../types/user';
 import { getInitials } from '@/utils/get-initials';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { userApi } from '@/api/user.api';
-import { connectSocket, disconnectSocket } from '@/api/socket.api';
+import { connectSocket } from '@/api/socket.api';
 import { CreateMessageDto } from '@/types/dto/create-message.dto';
 import { SocketEvents } from '../../../shared/socket-events';
 import { uuid } from '../../../shared/uuid';
-import { computeMessages } from '@/utils/utils';
+import { computeMessages, QUERY_KEYS } from '@/utils/utils';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { logout } from '@/utils/auth';
 
 export default function Chat() {
   const navigate = useNavigate();
-  const { isPending, error } = useGetProfile();
-  const { user: connectedUser } = useProfileStore();
+  const { isPending, error, data: connectedUser } = useGetProfile();
   const [searchParams, setSearchParams] = useSearchParams();
+  const queryClient = useQueryClient();
 
   const notificationList = connectedUser?.notifications ?? [];
   const unreadNotifications = notificationList.filter((n) => !n.isRead).length;
@@ -37,12 +36,8 @@ export default function Chat() {
   const [messageText, setMessageText] = useState<string>('');
   const [messages, setMessages] = useState([]);
 
-  const {
-    isPending: isPendingChannelList,
-    data: channelList,
-    refetch: refetchChanneList,
-  } = useQuery({
-    queryKey: ['getChannels'],
+  const { isPending: isPendingChannelList, data: channelList } = useQuery({
+    queryKey: [QUERY_KEYS.GET_CHANNELS],
     queryFn: async (): Promise<Channel[]> => {
       const res = await userApi.getChannels();
       if (!res.ok) {
@@ -54,7 +49,6 @@ export default function Chat() {
       setMessages(messageList);
       return channelList;
     },
-    enabled: !!connectedUser,
   });
 
   const [selectedMatchId, setSelectedMatchId] = useState(null);
@@ -66,9 +60,16 @@ export default function Chat() {
         new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
     );
 
-  const handleSend = () => {
-    const socket = connectSocket();
+  const isThereUnReadMessageNotification = (): boolean => {
+    return notificationList.some(
+      (n) =>
+        n.category === 'message' &&
+        n.fromUser === selectedMatch?.interlocutor.id &&
+        !n.isRead,
+    );
+  };
 
+  const handleSend = () => {
     if (messageText.trim() && selectedMatchId) {
       const newMessage: CreateMessageDto = {
         channelId: selectedMatchId,
@@ -76,8 +77,9 @@ export default function Chat() {
         content: messageText,
       };
 
+      const socket = connectSocket();
       if (socket) {
-        socket.emit(SocketEvents.SEND_MESSAGE, newMessage);
+        socket.timeout(50).emit(SocketEvents.SEND_MESSAGE, newMessage);
       }
 
       const now = new Date();
@@ -93,33 +95,9 @@ export default function Chat() {
   const selectedMatch = channelList?.find((ch) => ch.id === selectedMatchId);
 
   const handleSelectChannel = (channelId: string) => {
-    const channel = channelList?.find((ch) => ch.id === channelId);
-    if (!channel) {
-      setSelectedMatchId(channelId);
-      return;
-    }
-
-    const unreadMessageNotification = notificationList.find(
-      (notif) =>
-        notif.fromUser === channel.interlocutor.id &&
-        notif.category === 'message' &&
-        !notif.isRead,
-    );
-
-    if (!unreadMessageNotification) {
-      setSelectedMatchId(channelId);
-      return;
-    }
-
-    const socket = connectSocket();
-    if (!socket) {
-      setSelectedMatchId(channelId);
-      return;
-    }
-
-    socket.emit(SocketEvents.READING_NOTIFICATION, {
-      category: 'message',
-      author: channel.interlocutor.id,
+    queryClient.invalidateQueries({
+      queryKey: [QUERY_KEYS.GET_CHANNELS],
+      exact: true,
     });
 
     setSelectedMatchId(channelId);
@@ -135,13 +113,31 @@ export default function Chat() {
   }, []);
 
   useEffect(() => {
-    refetchChanneList();
-
     if (error) {
-      disconnectSocket();
       logout(navigate);
     }
-  }, [connectedUser, refetchChanneList, error, navigate]);
+  }, [connectedUser, error, navigate]);
+
+  useEffect(() => {
+    if (isThereUnReadMessageNotification()) {
+      const socket = connectSocket();
+      if (!socket) {
+        return;
+      }
+
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.GET_CHANNELS],
+        exact: true,
+      });
+
+      socket.timeout(50).emit(SocketEvents.READING_NOTIFICATION, {
+        category: 'message',
+        author: selectedMatch?.interlocutor.id,
+      });
+    }
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [channelList, selectedMatchId]);
 
   if (isPending || isPendingChannelList) {
     return <Loadder />;

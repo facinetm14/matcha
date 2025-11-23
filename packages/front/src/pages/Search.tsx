@@ -16,18 +16,17 @@ import {
 import { MapPin, Star, Search as SearchIcon, Heart, Info } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useGetProfile } from '@/hooks/useGetProfile';
-import { useProfileStore } from '@/store/profileStore';
 import { UserProfile } from '@/types/user';
+import { Loadder } from '@/components/ui/Loadder';
 
 export default function Search() {
   const navigate = useNavigate();
-  const { isPending } = useGetProfile();
-  const { user: connectedUser } = useProfileStore();
+  const { isPending, data: connectedUser } = useGetProfile();
 
   const userList = [];
 
   const [ageRange, setAgeRange] = useState([18, 50]);
-  const [fameRange, setFameRange] = useState([0, 1000]);
+  const [fameRange, setFameRange] = useState([1, 1000]);
   const [city, setCity] = useState('');
   const [sortBy, setSortBy] = useState('distance');
   const [filteredUsers, setFilteredUsers] = useState<UserProfile[]>(userList);
@@ -48,7 +47,6 @@ export default function Search() {
       return ageMatch && fameMatch && cityMatch;
     });
 
-    // Sort results
     results = results.sort((a, b) => {
       switch (sortBy) {
         case 'age':
@@ -57,12 +55,16 @@ export default function Search() {
           return b.fameRating - a.fameRating;
         case 'distance':
         default:
-          return 0; // Would calculate actual distance in real app
+          return 0;
       }
     });
 
     setFilteredUsers(results);
   };
+
+  if (isPending) {
+    return <Loadder />;
+  }
 
   return (
     <div className="min-h-screen bg-background pb-20 md:pt-20">

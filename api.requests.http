@@ -90,7 +90,7 @@ Authorization: Bearer {{accessToken}} {{refreshToken}}
 
 ### update user infos
 PATCH {{baseUrl}}/users/update
-Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI5dzI5eHAtbWd6MDVnMzEtd3dteTF4LWhlM3FrOCIsImlhdCI6MTc2MzY1NzE3OCwiZXhwIjoxNzYzNjU4MDc4LCJqdGkiOiJ1YXVuNWstbWk3bnk0cHYtOHQ1MmNzLTNmbjE0NyJ9._eciHPuG4ND37FvxXIWyhffHe75fAY1JqcZ8PHxf7wg {{refreshToken}}
+Authorization: Bearer {{accessToken}} {{refreshToken}}
 Content-Type: application/json
 
 {
@@ -137,5 +137,22 @@ Content-Type: application/json
 
 ### get user channel list
 GET {{baseUrl}}/chats/channels
-Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI5dzI5eHAtbWd6MDVnMzEtd3dteTF4LWhlM3FrOCIsImlhdCI6MTc2MzU3NzgzNiwiZXhwIjoxNzYzNTc4NzM2LCJqdGkiOiJ2b3hnc2ktbWk2Y3BqdWUtaGxmbXJzLXhkbW55MCJ9.XwgCap6Af6qktTJ8VQJIZjlWdL_B18xYO4IxovnxLv8 {{refreshToken}}
+Authorization: Bearer {{accessToken}} {{refreshToken}}
 Content-Type: application/json
+
+### get filtered users
+
+POST {{baseUrl}}/users/search
+Content-Type: application/json
+
+{
+  "age": {
+    "from": 18,
+    "to": 30
+  },
+  "fameRating": {
+    "from": 18,
+    "to": 20
+  }, 
+  "tags": []
+}

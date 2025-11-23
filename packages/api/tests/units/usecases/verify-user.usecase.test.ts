@@ -1,13 +1,13 @@
 import { describe } from 'node:test';
 import { uuid } from '../../../../shared/uuid';
-import { VerifyUserUseCase } from '../../../src/core/usecases/auth/verify-user.usecase';
-import { VerifyTokenError } from '../../../src/core/domain/errors/verify-token.error';
+import { VerifyUserUseCase } from '../../../src/modules/auth/application/usecases/verify-user.usecase';
+import { VerifyTokenError } from '../../../src/modules/auth/application/errors/verify-token.error';
 import {
   factoryUserRepositoryInMemory,
   factoryUserToken,
   factoryUserTokenRepositoryInMemory,
-} from '../../../../shared/factory';
-import { UserTokenRepository } from '../../../src/core/ports/repositories/user-token.repository';
+} from '../../../src/modules/shared/utils/factory';
+import { UserTokenRepository } from '../../../src/modules/auth/application/ports/repositories/user-token.repository';
 
 describe('Verify user email', () => {
   let token: string;
@@ -34,7 +34,7 @@ describe('Verify user email', () => {
   });
 
   test('should return ok when token is valid', async () => {
-    const userToken = await  userTokenRepository.create(factoryUserToken({}));
+    const userToken = await userTokenRepository.create(factoryUserToken({}));
 
     const verfyUserResult = await verifyUserUseCase.execute(`${userToken}`);
 

@@ -7,22 +7,22 @@ import { Heart, X, MapPin, Star, Info } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { userApi } from '@/api/user.api';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getInitials } from '@/utils/get-initials';
-import { useProfileStore } from '@/store/profileStore';
 import { logout } from '@/utils/auth';
-import { disconnectSocket } from '@/api/socket.api';
 import { Loadder } from '@/components/ui/Loadder';
 import { useGetProfile } from '@/hooks/useGetProfile';
+import { QUERY_KEYS } from '@/utils/utils';
 
 export default function Browse() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
   const {
-    selectedUser: currentUser,
-    updateSelectedUserProfile,
-    user: connectedUser,
-    fetchProfile,
-  } = useProfileStore();
+    isPending: isPendingConnectedUser,
+    error: errorConnectedUser,
+    data: connectedUser,
+  } = useGetProfile();
 
   const notificationList = connectedUser?.notifications ?? [];
   const unreadNotifications = notificationList.filter((n) => !n.isRead).length;
@@ -30,60 +30,43 @@ export default function Browse() {
     (n) => n.category == 'message' && !n.isRead,
   ).length;
 
-  const { isPending: isPendingConnectedUser, error: errorConnectedUser } =
-    useGetProfile();
-
-  const { isPending, data, error, refetch } = useQuery({
-    queryKey: ['browseUsers'],
+  const {
+    isPending,
+    data: users,
+    error,
+  } = useQuery({
+    queryKey: [QUERY_KEYS.BROWSE_USERS],
     queryFn: async () => {
       const res = await userApi.browseUsers();
       if (!res.ok) {
         throw new Error('Failed to browse users');
       }
-      const user = await res.json();
-      return user;
+      const users = await res.json();
+      return users;
     },
-    enabled: !!connectedUser,
   });
+
+  const currentUser = users ? users[0] : null;
 
   const handleLike = () => {
     toast.success(`You liked ${currentUser.firstName}! 💕`);
-    nextProfile();
+    queryClient.invalidateQueries({
+      queryKey: [QUERY_KEYS.BROWSE_USERS],
+      exact: true,
+    });
   };
 
-  const handlePass = () => {
-    nextProfile();
-  };
-
-  const nextProfile = async () => {
-    await refetch();
-    if (!currentUser) {
-      toast.info("You've seen all profiles! Check back later for more.");
-    }
-  };
+  const handlePass = () => {};
 
   const viewProfile = () => {
     navigate(`/profile/${currentUser.id}`);
   };
 
   useEffect(() => {
-    if (data) {
-      updateSelectedUserProfile(data);
-    }
-
     if (error || errorConnectedUser) {
-      disconnectSocket();
       logout(navigate);
     }
-  }, [
-    data,
-    updateSelectedUserProfile,
-    error,
-    navigate,
-    connectedUser,
-    fetchProfile,
-    errorConnectedUser,
-  ]);
+  }, [error, errorConnectedUser, navigate]);
 
   if (isPending || isPendingConnectedUser) {
     return <Loadder />;
