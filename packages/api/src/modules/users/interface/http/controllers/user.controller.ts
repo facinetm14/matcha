@@ -30,9 +30,9 @@ import { UpdateUserProfileDtoSchema } from '../../validations/update-user-profil
 import { DeleteUserImageDtoSchema } from '../../validations/delete-user-image-dto.validation';
 import { ReorderImagesDtoSchema } from '../../validations/reorder-images-dto.validations';
 import { CreateInteractionDtoSchema } from '../../validations/create-user-interaction-dto.validation';
-import { UpdateUserDto } from '@/modules/users/application/dto/update-user.dto';
 import { UpdateUserProfileDto } from '@/modules/users/application/dto/update-user-profile.dto';
 import { FilterUsersDtoSchema } from '../../validations/filter-users-dto.validation';
+import { FilterUsersUseCase } from '@/modules/users/application/usecases/filter-users.usecase';
 
 @injectable()
 export class UserController {
@@ -57,6 +57,8 @@ export class UserController {
     private readonly fetchBestUserSuggestion: FetchBestUserSuggestion,
     @inject(GetUserListFromIdListUseCase)
     private readonly getUserListFromIdListUseCase: GetUserListFromIdListUseCase,
+    @inject(FilterUsersUseCase)
+    private readonly filterUsersUseCase: FilterUsersUseCase,
   ) {}
 
   async getMe(req: Request, resp: Response) {
@@ -87,23 +89,28 @@ export class UserController {
   }
 
   async filterUsers(req: Request, resp: Response) {
-    // const connectedUserResult = await getConnectedUserId(
-    //   this.accessTokenService,
-    //   req,
-    //   resp,
-    // );
+    const connectedUserResult = await getConnectedUserId(
+      this.accessTokenService,
+      req,
+      resp,
+    );
 
-    // if (connectedUserResult.isErr) {
-    //   resp.status(401).send('Invalid token');
-    //   return;
-    // }
+    if (connectedUserResult.isErr) {
+      resp.status(401).send('Invalid token');
+      return;
+    }
     const parsedBody = FilterUsersDtoSchema.safeParse(req.body);
     if (!parsedBody.success) {
       resp.status(400).send('Bad request');
       return;
     }
 
-    resp.status(200).json([]);
+    const filteredUsers = await this.filterUsersUseCase.execute(
+      parsedBody.data,
+      connectedUserResult.data
+    );
+
+    resp.status(200).json(filteredUsers);
   }
 
   async viewUserProfile(

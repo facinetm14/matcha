@@ -4,6 +4,7 @@ import { UserModel } from '../models/user.model';
 import { InteractionCategory } from '@/modules/users/domain/entities/user-profile-interaction.entity';
 import { skipUnecessaryNotification } from '@/modules/notifications/application/utils/notification-utils';
 import { calculateFameRating } from '../../domain/services/calculate-fame-rating';
+import { calculateAge } from '../../domain/services/calculate-age';
 
 export function mapUserModelToEntity(userModel: UserModel): User {
   return {
@@ -59,6 +60,8 @@ export function buildUserProfileFromUserAggregate(
   const visitedImages: Set<string> = new Set();
   const visitedNotif: Set<string> = new Set();
 
+  const now = new Date();
+
   for (const user of userAggregate) {
     const interactionKey = `${user.id}+${user.author}+${user.category}`;
     const tagKey = `${user.id}+${user.interest}`;
@@ -100,6 +103,7 @@ export function buildUserProfileFromUserAggregate(
               },
             ]
           : [],
+        age: user.birth_date ? calculateAge(user.birth_date, now) : undefined,
       });
 
       interactors.add(interactionKey);

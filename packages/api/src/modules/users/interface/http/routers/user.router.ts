@@ -16,7 +16,7 @@ UserRouter.get(
 
 UserRouter.post(
   `/search`,
-  //injectAuthorizationToken,
+  injectAuthorizationToken,
   (req: Request, resp: Response) => {
     userController.filterUsers(req, resp);
   },
