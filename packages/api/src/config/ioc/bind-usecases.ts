@@ -18,6 +18,7 @@ import { RegisterUserUseCase } from '@/modules/auth/application/usecases/registe
 import { LoginUserUseCase } from '@/modules/auth/application/usecases/login-user.usecase';
 import { VerifyUserUseCase } from '@/modules/auth/application/usecases/verify-user.usecase';
 import { SendMessageUsceCase } from '@/modules/notifications/application/usecases/send-message.usecase';
+import { FilterUsersUseCase } from '@/modules/users/application/usecases/filter-users.usecase';
 
 export function bindUseCases(container: Container) {
   container.bind(RegisterUserUseCase).toSelf().inSingletonScope();
@@ -42,4 +43,5 @@ export function bindUseCases(container: Container) {
   container.bind(GetUserListFromIdListUseCase).toSelf().inSingletonScope();
   container.bind(GetUserChannelsUseCase).toSelf().inSingletonScope();
   container.bind(SendMessageUsceCase).toSelf().inSingletonScope();
+  container.bind(FilterUsersUseCase).toSelf().inSingletonScope();
 }

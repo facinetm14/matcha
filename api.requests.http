@@ -151,7 +151,7 @@ Content-Type: application/json
     "to": 30
   },
   "fameRating": {
-    "from": 18,
+    "from": 19,
     "to": 20
   }, 
   "tags": []
