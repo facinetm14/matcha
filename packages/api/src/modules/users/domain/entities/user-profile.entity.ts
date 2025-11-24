@@ -23,4 +23,5 @@ export type UserProfile = User & {
   notifications: Notification[];
   blocked?: string[];
   reported: boolean;
+  age?: number;
 };

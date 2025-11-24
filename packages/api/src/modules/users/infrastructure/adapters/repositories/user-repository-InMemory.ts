@@ -6,6 +6,7 @@ import { factoryUser } from '@/modules/shared/utils/factory';
 import { hashPassword } from '../../../../auth/infrastructure/utils/password';
 import { UserProfile } from '@/modules/users/domain/entities/user-profile.entity';
 import { UpdateUserDto } from '@/modules/users/application/dto/update-user.dto';
+import { FilterUsersDto } from '@/modules/users/application/dto/filter-users.dto';
 
 export class UserRepositoryInMemory implements UserRepository {
   private users: User[];
@@ -84,5 +85,12 @@ export class UserRepositoryInMemory implements UserRepository {
       notifications: [],
       matched: [],
     });
+  }
+
+  async findUsersByFilter(
+    _filter: FilterUsersDto,
+    _userId: string,
+  ): Promise<UserProfile[]> {
+    return [];
   }
 }

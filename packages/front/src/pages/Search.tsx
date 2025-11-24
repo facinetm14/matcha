@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Navigation } from '@/components/Navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -16,20 +16,65 @@ import {
 import { MapPin, Star, Search as SearchIcon, Heart, Info } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useGetProfile } from '@/hooks/useGetProfile';
-import { UserProfile } from '@/types/user';
+import { FilterUsersDto, UserProfile } from '@/types/user';
 import { Loadder } from '@/components/ui/Loadder';
+import { QUERY_KEYS } from '@/utils/utils';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { userApi } from '@/api/user.api';
+import { logout } from '@/utils/auth';
+import { getInitials } from '@/utils/get-initials';
 
 export default function Search() {
   const navigate = useNavigate();
-  const { isPending, data: connectedUser } = useGetProfile();
+  const queryClient = useQueryClient();
 
-  const userList = [];
+  const {
+    isPending: isPendingProfile,
+    data: connectedUser,
+    error: errorProfile,
+  } = useGetProfile();
+
+  const { isPending, data, error } = useQuery({
+    queryKey: [QUERY_KEYS.FILTER_USERS],
+    queryFn: async () => {
+      const filterDto: FilterUsersDto = {
+        age: {
+          from: ageRange[0],
+          to: ageRange[1],
+        },
+        fameRating: {
+          from: fameRange[0],
+          to: fameRange[1],
+        },
+      };
+      const res = await userApi.filterUsers(filterDto);
+      if (!res.ok) {
+        console.log('what ??');
+        throw new Error('Failed to browse users');
+      }
+      const users = await res.json();
+
+      const sortedUsers = users?.sort((a, b) => {
+        switch (sortBy) {
+          case 'age':
+            return a.age - b.age;
+          case 'fame':
+            return b.fameRating - a.fameRating;
+          case 'distance':
+          default:
+            return 0;
+        }
+      });
+
+      return sortedUsers;
+    },
+  });
 
   const [ageRange, setAgeRange] = useState([18, 50]);
   const [fameRange, setFameRange] = useState([1, 1000]);
   const [city, setCity] = useState('');
   const [sortBy, setSortBy] = useState('distance');
-  const [filteredUsers, setFilteredUsers] = useState<UserProfile[]>(userList);
+  const [filteredUsers, setFilteredUsers] = useState<UserProfile[]>([]);
 
   const notificationList = connectedUser?.notifications ?? [];
   const unreadNotifications = notificationList.filter((n) => !n.isRead).length;
@@ -38,31 +83,25 @@ export default function Search() {
   ).length;
 
   const handleSearch = () => {
-    let results = userList.filter((user) => {
-      const ageMatch = user.age >= ageRange[0] && user.age <= ageRange[1];
-      const fameMatch =
-        user.fameRating >= fameRange[0] && user.fameRating <= fameRange[1];
-      const cityMatch =
-        !city || user.location.city.toLowerCase().includes(city.toLowerCase());
-      return ageMatch && fameMatch && cityMatch;
+    queryClient.invalidateQueries({
+      queryKey: [QUERY_KEYS.FILTER_USERS],
+      exact: true,
     });
-
-    results = results.sort((a, b) => {
-      switch (sortBy) {
-        case 'age':
-          return a.age - b.age;
-        case 'fame':
-          return b.fameRating - a.fameRating;
-        case 'distance':
-        default:
-          return 0;
-      }
-    });
-
-    setFilteredUsers(results);
   };
 
-  if (isPending) {
+  useEffect(() => {
+    if (error || errorProfile) {
+      logout(navigate);
+    }
+  }, [error, errorProfile, navigate]);
+
+  useEffect(() => {
+    if (data) {
+      setFilteredUsers(data);
+    }
+  }, [data]);
+
+  if (isPendingProfile || isPending) {
     return <Loadder />;
   }
 
@@ -154,11 +193,17 @@ export default function Search() {
               className="overflow-hidden shadow-card hover:shadow-soft transition-all"
             >
               <div className="relative h-64">
-                <img
-                  src={user.photos[0]}
-                  alt={user.firstName}
-                  className="w-full h-full object-cover"
-                />
+                {user.photos.length ? (
+                  <img
+                    src={user.photos[0].preview}
+                    alt={user.firstName}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-muted text-3xl font-bold text-primary">
+                    {getInitials(user.firstName, user.lastName)}
+                  </div>
+                )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
 
                 {user.isOnline && (
@@ -174,7 +219,7 @@ export default function Search() {
                   </h3>
                   <div className="flex items-center gap-2 text-sm mb-2">
                     <MapPin className="w-3 h-3" />
-                    <span>{user.location.city}</span>
+                    <span>{user.location?.city}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Star className="w-3 h-3 fill-primary text-primary" />
