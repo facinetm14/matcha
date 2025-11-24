@@ -26,7 +26,8 @@ export type User = {
 export type Gender = 'male' | 'female' | 'non-binary';
 
 export type Location = {
-  city: string;
+  isEnabledByUser: boolean;
+  city?: string;
   lat: number;
   lng: number;
 };
