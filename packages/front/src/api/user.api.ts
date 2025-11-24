@@ -3,6 +3,7 @@ import { UserIdentifier } from '../../../shared/user-identifier';
 import { DeleteUserImageDto } from '@/types/dto/delete-image.dto';
 import { UpdateImagePositionDto } from '@/types/dto/update-image-position.dto';
 import { CreateInteractionDto } from '@/types/dto/create-interaction.dto';
+import { FilterUsersDto } from '@/types/user';
 
 const API_BASE_ROUTE = import.meta.env.VITE_BASE_API;
 
@@ -61,6 +62,7 @@ const checkUserIdentifierAvailability = async (
 };
 
 const updateUserProfile = async (updateUserDto: UpdateUserDto) => {
+  console.log(updateUserDto);
   return fetch(`${API_BASE_ROUTE}/users/update`, {
     headers: {
       'Content-Type': 'application/json',
@@ -119,6 +121,17 @@ const browseUsers = async () => {
   });
 };
 
+const filterUsers = async (filter: FilterUsersDto) => {
+  return fetch(`${API_BASE_ROUTE}/users/search`, {
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    method: 'POST',
+    body: JSON.stringify(filter),
+    credentials: 'include',
+  });
+};
+
 const interactWithUser = async (
   createUserInteractionDto: CreateInteractionDto,
 ) => {
@@ -155,4 +168,5 @@ export const userApi = {
   getUserProfileList,
   viewUserProfile,
   getChannels,
+  filterUsers,
 };

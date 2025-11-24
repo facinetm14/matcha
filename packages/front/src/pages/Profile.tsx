@@ -28,7 +28,7 @@ import { userApi } from '@/api/user.api';
 import { useProfileStore } from '@/store/profileStore';
 import { getInitials } from '@/utils/get-initials';
 import { UpdateUserDto } from '@/types/dto/update-user.dto';
-import { Gender } from '@/types/user';
+import { Gender, UserProfile } from '@/types/user';
 import { TagInput } from '@/components/ui/tag-input';
 import { PhotoGallery } from '@/components/PhotoGalery';
 import { getGenderLabel } from '@/utils/get-gender-label';
@@ -49,10 +49,11 @@ const BIRTH_DATE_KEY = 'birthDate';
 export default function Profile() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { isPending, error, data: profile } = useGetProfile();
+  const { isPending, error, data } = useGetProfile();
   const queryClient = useQueryClient();
 
   const [isEditing, setIsEditing] = useState(false);
+  const [profile, setProfile] = useState<UserProfile>();
 
   const {
     draft,
@@ -63,6 +64,7 @@ export default function Profile() {
     updateBirthDateDraft,
     updateUserDraft,
     updateImagesToDelete,
+    updateUserPhotos,
     updateImagesPositionToUpdate,
   } = useProfileStore((state) => state);
 
@@ -171,6 +173,13 @@ export default function Profile() {
 
     setIsEditing(false);
   };
+
+  useEffect(() => {
+    if (data) {
+      setProfile(data);
+      updateUserPhotos(data.photos);
+    }
+  }, [data, updateUserPhotos]);
 
   useEffect(() => {
     const openEdition = searchParams.get('openEdition');
