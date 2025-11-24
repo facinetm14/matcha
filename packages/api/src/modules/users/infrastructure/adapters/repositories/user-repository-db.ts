@@ -17,6 +17,7 @@ import { CacheService } from '@/modules/shared/ports/cache.service';
 import { TYPE } from '@/config/ioc/inversify-type';
 import { UpdateUserDto } from '@/modules/users/application/dto/update-user.dto';
 import { CacheResourceKeys } from '@/modules/shared/consts/cache-ressource-keys';
+import { FilterUsersDto } from '@/modules/users/application/dto/filter-users.dto';
 
 @injectable()
 export class UserRepositoryDb implements UserRepository {
@@ -238,5 +239,57 @@ export class UserRepositoryDb implements UserRepository {
     }
 
     return lastConnection.lastSeen;
+  }
+
+  /**
+   *
+   * @param filter {age: Range<number>, fameRating, tags}
+   * @returns users list UserProfile[]
+   */
+  async findUsersByFilter(
+    filter: FilterUsersDto,
+    userId: string,
+  ): Promise<UserProfile[]> {
+    const values = [];
+
+    let clauseWhere = ' WHERE id != $1';
+    values.push(userId);
+    let valuesIndex = 2;
+
+    if (filter.age?.from) {
+      const now = new Date();
+      const startDate = new Date(
+        `${now.getFullYear() - filter.age.from}-01-01`,
+      );
+
+      clauseWhere += ` AND (birth_date <= $${valuesIndex})`;
+      values.push(startDate);
+      valuesIndex += 1;
+    }
+
+    if (filter.age?.to) {
+      const now = new Date();
+      const endDate = new Date(`${now.getFullYear() - filter.age.to}-12-31`);
+      clauseWhere += ` AND (birth_date >= $${valuesIndex})`;
+      values.push(endDate);
+      valuesIndex += 1;
+    }
+
+    const queryIdUsers = {
+      text: `SELECT id FROM users ${clauseWhere}`,
+      values,
+    };
+
+    const connexion = await pgClient.connect();
+    const result = await pgClient.query(queryIdUsers);
+    connexion.release();
+
+    if (!result.rows.length) {
+      return [];
+    }
+
+    const idList = result.rows.map((u) => u.id);
+
+    return await this.findUserProfileByIdList(idList);
   }
 }

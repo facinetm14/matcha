@@ -78,3 +78,14 @@ export type Channel = {
   createdAt: Date;
   updatedAt: Date;
 };
+
+
+interface Range<T> {
+  from: T;
+  to?: T;
+}
+export interface FilterUsersDto {
+  age?: Range<number>;
+  fameRating?: Range<number>;
+  tags?: string[];
+}
