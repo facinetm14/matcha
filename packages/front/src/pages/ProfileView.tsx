@@ -19,23 +19,26 @@ import { formatDistanceToNow } from 'date-fns';
 import { getInitials } from '@/utils/get-initials';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { userApi } from '@/api/user.api';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { CreateInteractionDto } from '@/types/dto/create-interaction.dto';
 import { useGetProfile } from '@/hooks/useGetProfile';
 import { Loadder } from '@/components/ui/Loadder';
 import { logout } from '@/utils/auth';
 import { QUERY_KEYS } from '@/utils/utils';
+import { UserProfile } from '@/types/user';
 
 export default function ProfileView() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
   const {
     isPending: isPendingConnectedUser,
     error: errorProfile,
     data: connectedUser,
   } = useGetProfile();
 
-  const queryClient = useQueryClient();
+  const [selectedUser, setSelectedUser] = useState<UserProfile>();
 
   const notificationList = connectedUser?.notifications ?? [];
 
@@ -44,11 +47,7 @@ export default function ProfileView() {
     (n) => n.category == 'message' && !n.isRead,
   ).length;
 
-  const {
-    isPending,
-    data: selectedUser,
-    error,
-  } = useQuery({
+  const { isPending, data, error } = useQuery({
     queryKey: [QUERY_KEYS.VIEW_USER],
     queryFn: async () => {
       const res = await userApi.viewUserProfile(id);
@@ -97,6 +96,19 @@ export default function ProfileView() {
   });
 
   useEffect(() => {
+    queryClient.invalidateQueries({
+      queryKey: [QUERY_KEYS.VIEW_USER],
+      exact: true,
+    });
+  }, [connectedUser, queryClient]);
+
+  useEffect(() => {
+    if (data) {
+      setSelectedUser(data);
+    }
+  }, [data]);
+
+  useEffect(() => {
     if (error || errorProfile || !id) {
       logout(navigate);
     }
@@ -141,7 +153,7 @@ export default function ProfileView() {
   const hasMatched = hasAlreadyLikedSelectedUser && hasSelectedAlreadyLiked;
 
   const hasAlreadyBlocked = (currentUserId: string): boolean => {
-    return !selectedUser.likedBy.includes(currentUserId);
+    return false;
   };
 
   const handleUnlike = () => {

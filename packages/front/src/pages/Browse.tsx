@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Navigation } from '@/components/Navigation';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,7 @@ import { logout } from '@/utils/auth';
 import { Loadder } from '@/components/ui/Loadder';
 import { useGetProfile } from '@/hooks/useGetProfile';
 import { QUERY_KEYS } from '@/utils/utils';
+import { UserProfile } from '@/types/user';
 
 export default function Browse() {
   const navigate = useNavigate();
@@ -21,8 +22,11 @@ export default function Browse() {
   const {
     isPending: isPendingConnectedUser,
     error: errorConnectedUser,
-    data: connectedUser,
+    data,
   } = useGetProfile();
+
+  const [connectedUser, setConnectedUser] = useState<UserProfile>();
+  const [users, setUsers] = useState<UserProfile[]>([]);
 
   const notificationList = connectedUser?.notifications ?? [];
   const unreadNotifications = notificationList.filter((n) => !n.isRead).length;
@@ -32,12 +36,12 @@ export default function Browse() {
 
   const {
     isPending,
-    data: users,
+    data: userList,
     error,
   } = useQuery({
     queryKey: [QUERY_KEYS.BROWSE_USERS],
     queryFn: async () => {
-      const res = await userApi.browseUsers();
+      const res = await userApi.filterUsers({});
       if (!res.ok) {
         throw new Error('Failed to browse users');
       }
@@ -61,6 +65,16 @@ export default function Browse() {
   const viewProfile = () => {
     navigate(`/profile/${currentUser.id}`);
   };
+
+  useEffect(() => {
+    if (data) {
+      setConnectedUser(data);
+    }
+
+    if (userList) {
+      setUsers(userList);
+    }
+  }, [data, userList]);
 
   useEffect(() => {
     if (error || errorConnectedUser) {

@@ -8,7 +8,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { useGetProfile } from '@/hooks/useGetProfile';
 import { connectSocket } from '@/api/socket.api';
 import { userApi } from '@/api/user.api';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { UserProfile } from '@/types/user';
 import { Notification } from '@/types/user';
 import { getInitials } from '@/utils/get-initials';
@@ -21,6 +21,7 @@ import { INCOMMING_MESSAGE_TIMEOUT_MS } from '../../../shared/notification-time'
 
 export default function Notifications() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const {
     isPending: isPendingProfile,
@@ -32,7 +33,7 @@ export default function Notifications() {
 
   const {
     isPending: isPendingUserList,
-    data: users,
+    data,
     error: errorUserList,
   } = useQuery({
     queryKey: [QUERY_KEYS.GET_USERS_PROFILE_LIST],
@@ -52,7 +53,7 @@ export default function Notifications() {
   });
 
   const [filter, setFilter] = useState<string | null>(null);
-  const usersList = users || [];
+  const [usersList, setUsersList] = useState<UserProfile[]>([]);
 
   const unreadNotifications = notificationList.filter((n) => !n.isRead).length;
   const unreadMessages = notificationList.filter(
@@ -98,12 +99,6 @@ export default function Notifications() {
     ? notificationList.filter((n) => n.category === filter)
     : notificationList;
 
-  useEffect(() => {
-    if (errorUserList || errorProfile) {
-      logout(navigate);
-    }
-  }, [errorProfile, errorUserList, navigate]);
-
   const handleReadNotification = (notification: Notification) => {
     const socket = connectSocket();
     if (!socket) {
@@ -137,6 +132,25 @@ export default function Notifications() {
 
     navigate(redirectUrl);
   };
+
+  useEffect(() => {
+    queryClient.invalidateQueries({
+      queryKey: [QUERY_KEYS.GET_USERS_PROFILE_LIST],
+      exact: true,
+    });
+  }, [connectedUser, queryClient]);
+
+  useEffect(() => {
+    if (errorUserList || errorProfile) {
+      logout(navigate);
+    }
+  }, [errorProfile, errorUserList, navigate]);
+
+  useEffect(() => {
+    if (data) {
+      setUsersList(data);
+    }
+  }, [data]);
 
   if (isPendingProfile || isPendingUserList) {
     return <Loadder />;
@@ -194,7 +208,7 @@ export default function Notifications() {
                   <CardContent className="p-4">
                     <div className="flex items-center gap-4">
                       <Avatar className="w-12 h-12">
-                        <AvatarImage src={user?.photos[0].preview} />
+                        <AvatarImage src={user?.photos[0]?.preview} />
                         <AvatarFallback>
                           {getInitials(user?.firstName, user?.lastName)}
                         </AvatarFallback>
