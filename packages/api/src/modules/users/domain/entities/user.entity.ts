@@ -1,4 +1,5 @@
 import { UserStatus } from '../../application/consts/user-status.enum';
+import { Location } from './user-profile.entity';
 
 export type User = {
   id: string;
@@ -15,4 +16,5 @@ export type User = {
   createdAt: Date;
   updatedAt: Date;
   birthDate?: Date;
+  location?: Location;
 };

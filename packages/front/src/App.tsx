@@ -21,6 +21,7 @@ import { SocketEvents } from '../../shared/socket-events';
 import { QUERY_KEYS } from './utils/utils';
 import { connectSocket } from './api/socket.api';
 import { useEffect } from 'react';
+import 'leaflet/dist/leaflet.css';
 
 export const IS_LOGGED_IN_KEY = 'isLoggedIn';
 

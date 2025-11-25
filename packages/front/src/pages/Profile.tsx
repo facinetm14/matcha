@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
 import {
   Select,
   SelectContent,
@@ -21,6 +22,7 @@ import {
   Eye,
   Heart as HeartIcon,
   X as Cancel,
+  Info,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -28,7 +30,7 @@ import { userApi } from '@/api/user.api';
 import { useProfileStore } from '@/store/profileStore';
 import { getInitials } from '@/utils/get-initials';
 import { UpdateUserDto } from '@/types/dto/update-user.dto';
-import { Gender, UserProfile } from '@/types/user';
+import { Gender, UserProfile, Location } from '@/types/user';
 import { TagInput } from '@/components/ui/tag-input';
 import { PhotoGallery } from '@/components/PhotoGalery';
 import { getGenderLabel } from '@/utils/get-gender-label';
@@ -45,6 +47,9 @@ import { QUERY_KEYS } from '@/utils/utils';
 
 const PHOTOS_KEY = 'photos';
 const BIRTH_DATE_KEY = 'birthDate';
+import 'leaflet/dist/leaflet.css'
+import MapView from '@/components/ui/map-view';
+
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -265,6 +270,7 @@ export default function Profile() {
                               sexualOrientation: profile.sexualOrientation,
                               bio: profile.bio,
                               photos: [],
+                              location: profile.location as Location,
                             });
                             setIsEditing(true);
                           }}
@@ -518,6 +524,72 @@ export default function Profile() {
                       #{tag}
                     </Badge>
                   ))}
+                </div>
+              )}
+            </div>
+            
+            {/* Location Tracking Opt-in */}
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2">
+                I live near...
+              </Label>
+
+              {isEditing ? (
+                <div className="border rounded-md p-3 space-y-4 bg-muted">
+                  <div className="flex justify-between items-start gap-4">
+                    <div className="space-y-2">
+                      <p className="text-sm">
+                        {'Location tracking'}
+                      </p>
+                      <p className="text-sm text-muted-foreground flex items-start gap-2">
+                        <Info className="w-4 h-4 mt-0.5 shrink-0" />
+                        Share your approximate location to improve nearby matches. You can
+                        change this anytime.
+                      </p>
+                    </div>
+
+                    <Switch
+                      checked={Boolean(draft?.location?.isEnabledByUser)}
+                      onCheckedChange={(checked) =>
+                        updateUserDraft({
+                          ...(draft ?? {}),
+                          location: {
+                            ...(draft?.location ?? profile.location),
+                            isEnabledByUser: Boolean(checked),
+                          },
+                        })
+                      }
+                    />
+                  </div>
+
+                  {Boolean(draft?.location?.isEnabledByUser) && (
+                    <MapView
+                      latitude={draft?.location?.lat}
+                      longitude={draft?.location?.lng}
+                      isEditable={isEditing}
+                      onLocationSelect={(lat, lng, city) =>
+                        updateUserDraft({
+                          ...(draft ?? {}),
+                          location: {
+                            ...(draft?.location ?? profile.location ?? {}),
+                            lat,
+                            lng,
+                            city: city ?? (draft?.location ?? profile.location)?.city,
+                            isEnabledByUser: (draft?.location ?? profile.location)?.isEnabledByUser,
+                          },
+                        })
+                      }
+                    />
+                  )}
+                </div>
+              ) : (
+                <div className="p-2 bg-muted rounded read-only flex items-center gap-2">
+                  <MapPin className="w-4 h-4" />
+                  {profile.location?.isEnabledByUser ? (
+                    <p>{ profile.location?.city }</p>
+                  ) : (
+                    <p>Location tracking disabled</p>
+                  )}
                 </div>
               )}
             </div>
