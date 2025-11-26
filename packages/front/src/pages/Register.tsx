@@ -177,6 +177,7 @@ export default function Register() {
                 value={formData.username}
                 onChange={(e) => handleChange('username', e.target.value)}
                 className={errors.username ? 'border-destructive' : ''}
+                autoComplete='username'
               />
               {errors.username && (
                 <p className="text-sm text-destructive">{errors.username}</p>
@@ -221,6 +222,7 @@ export default function Register() {
                 value={formData.password}
                 onChange={(e) => handleChange('password', e.target.value)}
                 className={errors.password ? 'border-destructive' : ''}
+                autoComplete='new-password'
               />
               {errors.password && (
                 <p className="text-sm text-destructive">{errors.password}</p>
@@ -237,6 +239,7 @@ export default function Register() {
                   handleChange('confirmPassword', e.target.value)
                 }
                 className={errors.confirmPassword ? 'border-destructive' : ''}
+                autoComplete='new-password'
               />
               {errors.confirmPassword && (
                 <p className="text-sm text-destructive">
