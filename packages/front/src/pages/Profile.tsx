@@ -47,8 +47,12 @@ import { QUERY_KEYS } from '@/utils/utils';
 
 const PHOTOS_KEY = 'photos';
 const BIRTH_DATE_KEY = 'birthDate';
+const MAX_BIO_CHARACTERS = 500;
 import 'leaflet/dist/leaflet.css'
 import MapView from '@/components/ui/map-view';
+import { isValidFirstname } from '../../../shared/input-validation/is-valid-firstname';
+import { isValidLastname } from '../../../shared/input-validation/is-valid-lastname';
+import { isValidEmail } from '../../../shared/input-validation/is-valid-email';
 
 
 export default function Profile() {
@@ -59,6 +63,7 @@ export default function Profile() {
 
   const [isEditing, setIsEditing] = useState(false);
   const [profile, setProfile] = useState<UserProfile>();
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const {
     draft,
@@ -72,6 +77,65 @@ export default function Profile() {
     updateUserPhotos,
     updateImagesPositionToUpdate,
   } = useProfileStore((state) => state);
+
+  const isBlank = (value?: string | null) => {
+    if (!value) {
+      return true;
+    }
+
+    return value.trim().length === 0;
+  };
+
+  const clearError = (field: string) => {
+    if (!errors[field]) {
+      return;
+    }
+
+    setErrors((prev) => {
+      const nextErrors = { ...prev };
+      delete nextErrors[field];
+      return nextErrors;
+    });
+  };
+
+  const validateDraft = () => {
+    const validationErrors: Record<string, string> = {};
+
+    if (!draft || !profile) {
+      return validationErrors;
+    }
+
+    const validateFirstNameResult = isValidFirstname(draft.firstName);
+    if (!validateFirstNameResult.valid) {
+      validationErrors.firstName =
+        validateFirstNameResult.error || 'First name is invalid';
+    }
+
+    const validateLastNameResult = isValidLastname(draft.lastName);
+    if (!validateLastNameResult.valid) {
+      validationErrors.lastName =
+        validateLastNameResult.error || 'Last name is invalid';
+    }
+
+    const validateEmailResult = isValidEmail(draft.email);
+    if (!validateEmailResult.valid) {
+      validationErrors.email = validateEmailResult.error || 'Email is invalid';
+    } 
+
+    if (!draft.gender) {
+      validationErrors.gender = 'Please select a gender';
+    }
+
+    if (!draft.sexualOrientation || draft.sexualOrientation.length === 0) {
+      validationErrors.sexualOrientation = 'Select at least one preference';
+    }
+
+    if (!birthDateDraft && !profile.birthDate) {
+      validationErrors.birthDate = 'Birth date is required';
+    }
+
+    return validationErrors;
+  };
 
   const notificationList = profile?.notifications ?? [];
   const unreadNotifications = notificationList.filter((n) => !n.isRead).length;
@@ -145,6 +209,17 @@ export default function Profile() {
   });
 
   const handleSave = () => {
+    if (!draft) {
+      return;
+    }
+
+    const validationErrors = validateDraft();
+    setErrors(validationErrors);
+
+    if (Object.keys(validationErrors).length) {
+      return;
+    }
+
     const toUpdate = {};
 
     for (const [key, value] of Object.entries(draft)) {
@@ -177,6 +252,7 @@ export default function Profile() {
     }
 
     setIsEditing(false);
+    setErrors({});
   };
 
   useEffect(() => {
@@ -190,6 +266,7 @@ export default function Profile() {
     const openEdition = searchParams.get('openEdition');
     if (openEdition) {
       setIsEditing(true);
+      setErrors({});
       setSearchParams({}, { replace: true });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -272,6 +349,7 @@ export default function Profile() {
                               photos: [],
                               location: profile.location as Location,
                             });
+                            setErrors({});
                             setIsEditing(true);
                           }}
                         >
@@ -290,7 +368,10 @@ export default function Profile() {
                         </Button>
                         <Button
                           variant="destructive"
-                          onClick={() => setIsEditing(false)}
+                          onClick={() => {
+                            setIsEditing(false);
+                            setErrors({});
+                          }}
                         >
                           <Cancel className="w-4 h-4" />
                           Cancel
@@ -336,15 +417,26 @@ export default function Profile() {
               <div className="space-y-2">
                 <Label>First Name</Label>
                 {isEditing ? (
-                  <Input
-                    value={draft?.firstName ?? ''}
-                    onChange={(e) =>
-                      updateUserDraft({
-                        ...(draft ?? {}),
-                        firstName: e.target.value,
-                      })
-                    }
-                  />
+                  <>
+                    <Input
+                      value={draft?.firstName ?? ''}
+                      onChange={(e) => {
+                        updateUserDraft({
+                          ...(draft ?? {}),
+                          firstName: e.target.value,
+                        });
+                        clearError('firstName');
+                      }}
+                      className={
+                        errors.firstName ? 'border-destructive' : undefined
+                      }
+                    />
+                    {errors.firstName && (
+                      <p className="text-sm text-destructive">
+                        {errors.firstName}
+                      </p>
+                    )}
+                  </>
                 ) : (
                   <p className="p-2 bg-muted rounded read-only">
                     {profile.firstName}
@@ -355,15 +447,26 @@ export default function Profile() {
               <div className="space-y-2">
                 <Label>Last Name</Label>
                 {isEditing ? (
-                  <Input
-                    value={draft?.lastName ?? ''}
-                    onChange={(e) =>
-                      updateUserDraft({
-                        ...(draft ?? {}),
-                        lastName: e.target.value,
-                      })
-                    }
-                  />
+                  <>
+                    <Input
+                      value={draft?.lastName ?? ''}
+                      onChange={(e) => {
+                        updateUserDraft({
+                          ...(draft ?? {}),
+                          lastName: e.target.value,
+                        });
+                        clearError('lastName');
+                      }}
+                      className={
+                        errors.lastName ? 'border-destructive' : undefined
+                      }
+                    />
+                    {errors.lastName && (
+                      <p className="text-sm text-destructive">
+                        {errors.lastName}
+                      </p>
+                    )}
+                  </>
                 ) : (
                   <p className="p-2 bg-muted rounded read-only">
                     {profile.lastName}
@@ -376,10 +479,20 @@ export default function Profile() {
               <div className="space-y-2">
                 <Label>Birthday</Label>
                 {isEditing ? (
-                  <DatePicker
-                    defaultDate={profile.birthDate}
-                    callBack={updateBirthDateDraft}
-                  />
+                  <>
+                    <DatePicker
+                      defaultDate={profile.birthDate}
+                      callBack={(date) => {
+                        updateBirthDateDraft(date);
+                        clearError('birthDate');
+                      }}
+                    />
+                    {errors.birthDate && (
+                      <p className="text-sm text-destructive">
+                        {errors.birthDate}
+                      </p>
+                    )}
+                  </>
                 ) : (
                   <p className="p-2 bg-muted rounded read-only">
                     {profile.birthDate
@@ -391,16 +504,27 @@ export default function Profile() {
               <div className="space-y-2">
                 <Label>Email</Label>
                 {isEditing ? (
-                  <Input
-                    type="email"
-                    value={draft?.email ?? ''}
-                    onChange={(e) =>
-                      updateUserDraft({
-                        ...(draft ?? {}),
-                        email: e.target.value,
-                      })
-                    }
-                  />
+                  <>
+                    <Input
+                      type="email"
+                      value={draft?.email ?? ''}
+                      onChange={(e) => {
+                        updateUserDraft({
+                          ...(draft ?? {}),
+                          email: e.target.value,
+                        });
+                        clearError('email');
+                      }}
+                      className={
+                        errors.email ? 'border-destructive' : undefined
+                      }
+                    />
+                    {errors.email && (
+                      <p className="text-sm text-destructive">
+                        {errors.email}
+                      </p>
+                    )}
+                  </>
                 ) : (
                   <p className="p-2 bg-muted rounded read-only">
                     {profile.email}
@@ -413,24 +537,34 @@ export default function Profile() {
               <div className="space-y-2">
                 <Label>I am</Label>
                 {isEditing ? (
-                  <Select
-                    value={draft?.gender || profile.gender || ''}
-                    onValueChange={(value: string) =>
-                      updateUserDraft({
-                        ...(draft ?? {}),
-                        gender: value as Gender,
-                      })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="male">Male</SelectItem>
-                      <SelectItem value="female">Female</SelectItem>
-                      <SelectItem value="non-binary">Non-binary</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <>
+                    <Select
+                      value={draft?.gender || profile.gender || ''}
+                      onValueChange={(value: string) => {
+                        updateUserDraft({
+                          ...(draft ?? {}),
+                          gender: value as Gender,
+                        });
+                        clearError('gender');
+                      }}
+                    >
+                      <SelectTrigger
+                        className={
+                          errors.gender ? 'border-destructive' : undefined
+                        }
+                      >
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="male">Male</SelectItem>
+                        <SelectItem value="female">Female</SelectItem>
+                        <SelectItem value="non-binary">Non-binary</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {errors.gender && (
+                      <p className="text-sm text-destructive">{errors.gender}</p>
+                    )}
+                  </>
                 ) : (
                   <p className="p-2 bg-muted rounded capitalize read-only">
                     {profile.gender}
@@ -441,38 +575,46 @@ export default function Profile() {
               <div className="space-y-2">
                 <Label>I'm interested in</Label>
                 {isEditing ? (
-                  <div className="flex flex-wrap gap-2">
-                    {(['male', 'female', 'non-binary'] as const).map(
-                      (preference) => (
-                        <Button
-                          key={preference}
-                          variant={
-                            draft?.sexualOrientation?.includes(preference)
-                              ? 'default'
-                              : 'outline'
-                          }
-                          onClick={() => {
-                            const currentPreferences =
-                              draft?.sexualOrientation ?? [];
-                            const newPreferences = currentPreferences.includes(
-                              preference,
-                            )
-                              ? currentPreferences.filter(
-                                  (pref) => pref !== preference,
-                                )
-                              : [...currentPreferences, preference];
+                  <>
+                    <div className="flex flex-wrap gap-2">
+                      {(['male', 'female', 'non-binary'] as const).map(
+                        (preference) => (
+                          <Button
+                            key={preference}
+                            variant={
+                              draft?.sexualOrientation?.includes(preference)
+                                ? 'default'
+                                : 'outline'
+                            }
+                            onClick={() => {
+                              const currentPreferences =
+                                draft?.sexualOrientation ?? [];
+                              const newPreferences = currentPreferences.includes(
+                                preference,
+                              )
+                                ? currentPreferences.filter(
+                                    (pref) => pref !== preference,
+                                  )
+                                : [...currentPreferences, preference];
 
-                            updateUserDraft({
-                              ...draft,
-                              sexualOrientation: newPreferences,
-                            });
-                          }}
-                        >
-                          {getGenderLabel(preference)}
-                        </Button>
-                      ),
+                              updateUserDraft({
+                                ...draft,
+                                sexualOrientation: newPreferences,
+                              });
+                              clearError('sexualOrientation');
+                            }}
+                          >
+                            {getGenderLabel(preference)}
+                          </Button>
+                        ),
+                      )}
+                    </div>
+                    {errors.sexualOrientation && (
+                      <p className="text-sm text-destructive">
+                        {errors.sexualOrientation}
+                      </p>
                     )}
-                  </div>
+                  </>
                 ) : (
                   <div className="flex flex-wrap gap-2">
                     {profile.sexualOrientation
@@ -490,16 +632,30 @@ export default function Profile() {
             <div className="space-y-2">
               <Label>Biography</Label>
               {isEditing ? (
-                <Textarea
-                  value={draft?.bio ?? ''}
-                  onChange={(e) =>
-                    updateUserDraft({
-                      ...(draft ?? {}),
-                      bio: e.target.value,
-                    })
-                  }
-                  rows={4}
-                />
+                <>
+                  <Textarea
+                    value={draft?.bio ?? ''}
+                    onChange={(e) => {
+                      const nextBio = e.target.value.slice(0, MAX_BIO_CHARACTERS);
+                      updateUserDraft({
+                        ...(draft ?? {}),
+                        bio: nextBio,
+                      });
+                      clearError('bio');
+                    }}
+                    rows={4}
+                    maxLength={MAX_BIO_CHARACTERS}
+                    className={
+                      errors.bio ? 'border-destructive' : undefined
+                    }
+                  />
+                  <div className="text-xs text-muted-foreground text-right">
+                    {(draft?.bio?.length ?? 0)}/{MAX_BIO_CHARACTERS}
+                  </div>
+                  {errors.bio && (
+                    <p className="text-sm text-destructive">{errors.bio}</p>
+                  )}
+                </>
               ) : (
                 <p className="p-2 bg-muted rounded read-only">{profile.bio}</p>
               )}
