@@ -135,6 +135,7 @@ export default function Login() {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 className={errors.username ? 'border-destructive' : ''}
+                autoComplete='username'
               />
               {errors.username && (
                 <p className="text-sm text-destructive">{errors.username}</p>
@@ -150,6 +151,7 @@ export default function Login() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className={errors.password ? 'border-destructive' : ''}
+                autoComplete='current-password'
               />
               {errors.password && (
                 <p className="text-sm text-destructive">{errors.password}</p>

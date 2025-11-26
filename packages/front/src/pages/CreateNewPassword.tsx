@@ -129,6 +129,7 @@ export default function CreateNewPassword() {
                 value={passwd}
                 onChange={(e) => setPassword(e.target.value)}
                 className={errors.passwd ? 'border-destructive' : ''}
+                autoComplete='new-password'
               />
               {errors.passwd && (
                 <p className="text-sm text-destructive">{errors.passwd}</p>
@@ -144,6 +145,7 @@ export default function CreateNewPassword() {
                 value={confirmPasswd}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 className={errors.confirmPasswd ? 'border-destructive' : ''}
+                autoComplete='new-password'
               />
               {errors.confirmPasswd && (
                 <p className="text-sm text-destructive">
