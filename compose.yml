@@ -16,7 +16,7 @@ services:
     networks:
       - matcha-network
     ports:
-      - "6379:6379"
+      - "6380:6379"
     command: ["redis-server", "--save", "", "--appendonly", "no"]
 
   back:
