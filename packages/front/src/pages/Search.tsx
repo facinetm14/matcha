@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { MapPin, Star, Search as SearchIcon, Heart, Info } from 'lucide-react';
+import { MapPin, Star, Search as SearchIcon, Heart, Info, LucideChevronLast } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useGetProfile } from '@/hooks/useGetProfile';
 import { FilterUsersDto, UserProfile } from '@/types/user';
@@ -23,6 +23,18 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { userApi } from '@/api/user.api';
 import { logout } from '@/utils/auth';
 import { getInitials } from '@/utils/get-initials';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination';
+
+const USERS_PER_PAGE = 9;
+const MAX_VISIBLE_PAGES = 5;
 
 export default function Search() {
   const navigate = useNavigate();
@@ -75,6 +87,7 @@ export default function Search() {
   const [city, setCity] = useState('');
   const [sortBy, setSortBy] = useState('distance');
   const [filteredUsers, setFilteredUsers] = useState<UserProfile[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const notificationList = connectedUser?.notifications ?? [];
   const unreadNotifications = notificationList.filter((n) => !n.isRead).length;
@@ -83,6 +96,7 @@ export default function Search() {
   ).length;
 
   const handleSearch = () => {
+    setCurrentPage(1);
     queryClient.invalidateQueries({
       queryKey: [QUERY_KEYS.FILTER_USERS],
       exact: true,
@@ -98,12 +112,48 @@ export default function Search() {
   useEffect(() => {
     if (data) {
       setFilteredUsers(data);
+      setCurrentPage(1);
     }
   }, [data]);
 
   if (isPendingProfile || isPending) {
     return <Loadder />;
   }
+
+  const totalPages = Math.max(1, Math.ceil(filteredUsers.length / USERS_PER_PAGE));
+  const paginatedUsers = filteredUsers.slice(
+    (currentPage - 1) * USERS_PER_PAGE,
+    currentPage * USERS_PER_PAGE,
+  );
+  const shouldShowPagination = filteredUsers.length > USERS_PER_PAGE;
+  const visiblePages = (() => {
+    if (totalPages <= MAX_VISIBLE_PAGES) {
+      return Array.from({ length: totalPages }, (_, index) => index + 1);
+    }
+    const halfRange = Math.floor(MAX_VISIBLE_PAGES / 2);
+    let startPage = currentPage - halfRange;
+    let endPage = currentPage + halfRange;
+
+    if (startPage < 1) {
+      startPage = 1;
+      endPage = MAX_VISIBLE_PAGES;
+    } else if (endPage > totalPages) {
+      endPage = totalPages;
+      startPage = totalPages - MAX_VISIBLE_PAGES + 1;
+    }
+
+    return Array.from({ length: endPage - startPage + 1 }, (_, index) => startPage + index);
+  })();
+  const showStartEllipsis = visiblePages[0] > 1;
+  const showEndEllipsis = visiblePages[visiblePages.length - 1] < totalPages;
+
+  const handlePageChange = (page: number) => {
+    if (page < 1 || page > totalPages) {
+      return;
+    }
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   return (
     <div className="min-h-screen bg-background pb-20 md:pt-20">
@@ -187,7 +237,7 @@ export default function Search() {
 
         {/* Results */}
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredUsers.map((user) => (
+          {paginatedUsers.map((user) => (
             <Card
               key={user.id}
               className="overflow-hidden shadow-card hover:shadow-soft transition-all"
@@ -260,6 +310,97 @@ export default function Search() {
             </Card>
           ))}
         </div>
+        {shouldShowPagination && (
+          <Pagination className="mt-8">
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationLink
+                  href="#"
+                  aria-label="Go to first page"
+                  className={
+                    currentPage === 1 ? 'pointer-events-none opacity-50' : undefined
+                  }
+                  onClick={(event) => {
+                    event.preventDefault();
+                    handlePageChange(1);
+                  }}
+                >
+                  <LucideChevronLast className="rotate-180"/>
+                </PaginationLink>
+              </PaginationItem>
+              <PaginationItem>
+                <PaginationPrevious
+                  href="#"
+                  aria-disabled={currentPage === 1}
+                  className={
+                    currentPage === 1 ? 'pointer-events-none opacity-50' : ''
+                  }
+                  onClick={(event) => {
+                    event.preventDefault();
+                    handlePageChange(currentPage - 1);
+                  }}
+                />
+              </PaginationItem>
+              {showStartEllipsis && (
+                <PaginationItem>
+                  <PaginationEllipsis />
+                </PaginationItem>
+              )}
+              {visiblePages.map((pageNumber) => (
+                <PaginationItem key={pageNumber}>
+                  <PaginationLink
+                    href="#"
+                    isActive={pageNumber === currentPage}
+                    className={pageNumber === currentPage ? 'font-bold' : undefined}
+                    onClick={(event) => {
+                      event.preventDefault();
+                      handlePageChange(pageNumber);
+                    }}
+                  >
+                    {pageNumber}
+                  </PaginationLink>
+                </PaginationItem>
+              ))}
+              {showEndEllipsis && (
+                <PaginationItem>
+                  <PaginationEllipsis />
+                </PaginationItem>
+              )}
+              <PaginationItem>
+                <PaginationNext
+                  href="#"
+                  aria-disabled={currentPage === totalPages}
+                  className={
+                    currentPage === totalPages
+                      ? 'pointer-events-none opacity-50'
+                      : ''
+                  }
+                  onClick={(event) => {
+                    event.preventDefault();
+                    handlePageChange(currentPage + 1);
+                  }}
+                />
+              </PaginationItem>
+              <PaginationItem>
+                <PaginationLink
+                  href="#"
+                  aria-label="Go to last page"
+                  className={
+                    currentPage === totalPages
+                      ? 'pointer-events-none opacity-50'
+                      : undefined
+                  }
+                  onClick={(event) => {
+                    event.preventDefault();
+                    handlePageChange(totalPages);
+                  }}
+                >
+                  <LucideChevronLast/>
+                </PaginationLink>
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        )}
       </div>
     </div>
   );
