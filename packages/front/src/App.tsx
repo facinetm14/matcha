@@ -6,7 +6,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
 import Browse from './pages/Browse';
-import Profile from './pages/profile/Profile';
+import Profile from './pages/user-profile/Profile';
 import ProfileView from './pages/ProfileView';
 import Chat from './pages/Chat';
 import Search from './pages/Search';
