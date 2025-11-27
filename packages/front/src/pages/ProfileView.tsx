@@ -385,16 +385,6 @@ export default function ProfileView() {
                   </Button>
                   {hasAlreadyBlocked(connectedUser?.id) ? (
                     <Button
-                      variant="destructive"
-                      size="sm"
-                      className="flex-1"
-                      onClick={handleBlock}
-                    >
-                      <Ban className="w-4 h-4 mr-2" />
-                      Block
-                    </Button>
-                  ) : (
-                    <Button
                       variant="outline"
                       size="sm"
                       className="flex-1"
@@ -402,6 +392,16 @@ export default function ProfileView() {
                     >
                       <LockKeyholeOpen className="w-4 h-4 mr-2" />
                       Unblock
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      className="flex-1"
+                      onClick={handleBlock}
+                    >
+                      <Ban className="w-4 h-4 mr-2" />
+                      Block
                     </Button>
                   )}
                 </div>

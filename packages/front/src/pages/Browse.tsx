@@ -153,7 +153,7 @@ export default function Browse() {
                   </h2>
                   <div className="flex items-center gap-2 text-sm">
                     <MapPin className="w-4 h-4" />
-                    <span>{currentUser.location?.city ?? 'PARIS'}</span>
+                    <span>{currentUser.location?.city ?? 'unknown'}</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 bg-primary/20 backdrop-blur-sm px-3 py-1 rounded-full">
