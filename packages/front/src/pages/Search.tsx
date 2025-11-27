@@ -269,7 +269,7 @@ export default function Search() {
                   </h3>
                   <div className="flex items-center gap-2 text-sm mb-2">
                     <MapPin className="w-3 h-3" />
-                    <span>{user.location?.city}</span>
+                    <span>{user.location?.city || 'unknown'}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Star className="w-3 h-3 fill-primary text-primary" />
