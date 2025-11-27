@@ -15,8 +15,8 @@ import { Loadder } from '@/components/ui/Loadder';
 import { IS_LOGGED_IN_KEY } from '@/App';
 import { logout } from '@/utils/auth';
 import { QUERY_KEYS } from '@/utils/utils';
-import { ProfileHeaderCard } from '@/pages/profile/ProfileHeaderCard';
-import { ProfileInformationCard } from '@/pages/profile/ProfileInformationCard';
+import { ProfileHeaderCard } from '@/pages/user-profile/ProfileHeaderCard';
+import { ProfileInformationCard } from '@/pages/user-profile/ProfileInformationCard';
 
 const PHOTOS_KEY = 'photos';
 const BIRTH_DATE_KEY = 'birthDate';
@@ -224,6 +224,10 @@ export default function Profile() {
       updatedKeys.length === 1 &&
       updatedKeys[0] === PHOTOS_KEY &&
       toUpdate[PHOTOS_KEY].length === 0;
+
+    if (isOnlyEmptyPhotos) {
+      toast.info('Set a profile picture to be able to like other profiles!');
+    }
 
     if (updatedKeys.length && !isOnlyEmptyPhotos) {
       updateProfileMutation.mutate(toUpdate);
