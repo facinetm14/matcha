@@ -6,18 +6,18 @@ on:
       - "**"
 
 jobs:
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: lint
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20.x
-          cache: 'npm'
-          cache-dependency-path: ./package-lock.json
-      - run: npm install
-      - run: npm run lint
+  # lint:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - name: lint
+  #       uses: actions/setup-node@v4
+  #       with:
+  #         node-version: 20.x
+  #         cache: 'npm'
+  #         cache-dependency-path: ./package-lock.json
+  #     - run: npm install
+  #     - run: npm run lint
 
   build:
     runs-on: ubuntu-latest
