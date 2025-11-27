@@ -225,7 +225,7 @@ export default function Profile() {
       updatedKeys[0] === PHOTOS_KEY &&
       toUpdate[PHOTOS_KEY].length === 0;
 
-    if (isOnlyEmptyPhotos) {
+    if (isOnlyEmptyPhotos && profile.photos.length === 0) {
       toast.info('Set a profile picture to be able to like other profiles!');
     }
 

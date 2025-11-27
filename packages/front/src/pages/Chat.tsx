@@ -181,7 +181,9 @@ export default function Chat() {
                     )}
                   </div>
                   <div className="flex-1 text-left min-w-0">
-                    <p className="font-semibold truncate">
+                    <p
+                      className="font-semibold truncate"
+                    >
                       {match.interlocutor.firstName}
                     </p>
                     <p className="text-sm text-muted-foreground truncate">
@@ -220,9 +222,16 @@ export default function Chat() {
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <p className="font-semibold">
+                    <button
+                      key={selectedMatch.id}
+                      className="font-semibold truncate hover:underline"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        navigate(`/profile/${selectedMatch.interlocutor.id}`);
+                      }}
+                    >
                       {selectedMatch.interlocutor.firstName}
-                    </p>
+                    </button>
                     <p className="text-sm text-muted-foreground">
                       {selectedMatch.interlocutor.isOnline
                         ? 'Online'
