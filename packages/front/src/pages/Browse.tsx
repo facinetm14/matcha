@@ -13,7 +13,8 @@ import { logout } from '@/utils/auth';
 import { Loadder } from '@/components/ui/Loadder';
 import { useGetProfile } from '@/hooks/useGetProfile';
 import { QUERY_KEYS } from '@/utils/utils';
-import { UserProfile } from '@/types/user';
+import { FilterUsersDto, UserProfile } from '@/types/user';
+import { AdvancedSearchCard } from '@/components/AdvancedSearchCard';
 
 export default function Browse() {
   const navigate = useNavigate();
@@ -34,19 +35,53 @@ export default function Browse() {
     (n) => n.category == 'message' && !n.isRead,
   ).length;
 
+  const [ageRange, setAgeRange] = useState<[number, number]>([18, 50]);
+  const [fameRange, setFameRange] = useState<[number, number]>([1, 1000]);
+  const [city, setCity] = useState('');
+  const [sortBy, setSortBy] = useState('distance');
+  const [appliedFilters, setAppliedFilters] = useState<FilterUsersDto>({});
+  const [appliedCity, setAppliedCity] = useState('');
+  const [appliedSort, setAppliedSort] = useState('distance');
+
   const {
     isPending,
     data: userList,
     error,
   } = useQuery({
-    queryKey: [QUERY_KEYS.BROWSE_USERS],
+    queryKey: [
+      QUERY_KEYS.BROWSE_USERS,
+      appliedFilters,
+      appliedCity,
+      appliedSort,
+    ],
     queryFn: async () => {
-      const res = await userApi.filterUsers({});
+      const res = await userApi.filterUsers(appliedFilters);
       if (!res.ok) {
         throw new Error('Failed to browse users');
       }
-      const users = await res.json();
-      return users;
+      let fetchedUsers: UserProfile[] = await res.json();
+
+      if (appliedCity) {
+        fetchedUsers = fetchedUsers.filter((user) =>
+          user.location?.city
+            ?.toLowerCase()
+            .includes(appliedCity.toLowerCase()),
+        );
+      }
+
+      const sortedUsers = fetchedUsers.sort((a, b) => {
+        switch (appliedSort) {
+          case 'age':
+            return (a.age ?? 0) - (b.age ?? 0);
+          case 'fame':
+            return b.fameRating - a.fameRating;
+          case 'distance':
+          default:
+            return 0;
+        }
+      });
+
+      return sortedUsers;
     },
   });
 
@@ -64,6 +99,27 @@ export default function Browse() {
 
   const viewProfile = () => {
     navigate(`/profile/${currentUser.id}`);
+  };
+
+  const handleAdvancedSearch = () => {
+    const filterDto: FilterUsersDto = {
+      age: {
+        from: ageRange[0],
+        to: ageRange[1],
+      },
+      fameRating: {
+        from: fameRange[0],
+        to: fameRange[1],
+      },
+    };
+
+    setAppliedFilters(filterDto);
+    setAppliedCity(city.trim());
+    setAppliedSort(sortBy);
+
+    queryClient.invalidateQueries({
+      queryKey: [QUERY_KEYS.BROWSE_USERS],
+    });
   };
 
   useEffect(() => {
@@ -107,7 +163,7 @@ export default function Browse() {
         unreadMessages={unreadMessages}
       />
 
-      <div className="max-w-2xl mx-auto px-4 pt-6 md:pt-8">
+      <div className="max-w-2xl mx-auto px-4 pt-6 md:pt-8 space-y-6">
         <Card className="relative overflow-hidden shadow-card">
           {/* Profile Image */}
           <div className="relative h-[500px] md:h-[600px]">
@@ -203,6 +259,17 @@ export default function Browse() {
             )}
           </div>
         </Card>
+        <AdvancedSearchCard
+          ageRange={ageRange}
+          setAgeRange={setAgeRange}
+          fameRange={fameRange}
+          setFameRange={setFameRange}
+          city={city}
+          setCity={setCity}
+          sortBy={sortBy}
+          setSortBy={setSortBy}
+          onSubmit={handleAdvancedSearch}
+        />
       </div>
     </div>
   );
