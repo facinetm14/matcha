@@ -168,7 +168,7 @@ export default function Chat() {
                 >
                   <div className="relative">
                     <Avatar className="w-12 h-12">
-                      <AvatarImage src={match.interlocutor.photos[0]} />
+                    <AvatarImage src={match.interlocutor.photos[0]?.preview} />
                       <AvatarFallback>
                         {getInitials(
                           match.interlocutor.firstName,
@@ -213,7 +213,9 @@ export default function Chat() {
                 {/* Chat Header */}
                 <div className="p-4 border-b flex items-center gap-3">
                   <Avatar className="w-10 h-10">
-                    <AvatarImage src={selectedMatch.interlocutor.photos[0]} />
+                    <AvatarImage
+                      src={selectedMatch.interlocutor.photos[0]?.preview}
+                    />
                     <AvatarFallback>
                       {getInitials(
                         selectedMatch.interlocutor.firstName[0],
