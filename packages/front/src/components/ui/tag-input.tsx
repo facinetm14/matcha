@@ -9,9 +9,15 @@ interface TagInputProps {
   tags: string[];
   onChange: (tags: string[]) => void;
   disabled?: boolean;
+  isPossibleToAddTags?: boolean;
 }
 
-export function TagInput({ tags, onChange, disabled = false }: TagInputProps) {
+export function TagInput({
+  tags,
+  onChange,
+  disabled = false,
+  isPossibleToAddTags = true,
+}: TagInputProps) {
   const [inputValue, setInputValue] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(0);
@@ -28,7 +34,8 @@ export function TagInput({ tags, onChange, disabled = false }: TagInputProps) {
     },
   });
 
-  const allSuggestions = isPending ? [] : data;
+  const allSuggestions = isPending ? [] : data ?? [];
+  const normalizedSuggestions = allSuggestions.map((tag) => tag.toLowerCase());
 
   const filteredSuggestions = allSuggestions
     .filter((tag) =>
@@ -47,6 +54,9 @@ export function TagInput({ tags, onChange, disabled = false }: TagInputProps) {
     const newTag = tag.trim().toLowerCase();
     if (!newTag) return;
     if (tags.length >= MAX_TAGS) return;
+    if (!isPossibleToAddTags && !normalizedSuggestions.includes(newTag)) {
+      return;
+    }
     if (!tags.includes(newTag)) {
       onChange([...tags, newTag]);
     }
@@ -88,7 +98,7 @@ export function TagInput({ tags, onChange, disabled = false }: TagInputProps) {
         const chosen =
           filteredSuggestions[highlightedIndex] ?? filteredSuggestions[0];
         addTag(chosen);
-      } else {
+      } else if (isPossibleToAddTags) {
         addTag(inputValue);
       }
     }
@@ -135,9 +145,15 @@ export function TagInput({ tags, onChange, disabled = false }: TagInputProps) {
               onKeyDown={handleKeyDown}
               onBlur={handleBlur}
               placeholder={
+                isPossibleToAddTags ? (
                 tags.length === 0
                   ? 'Type and press Enter to add tags...'
                   : 'Add tag...'
+                ) : (
+                tags.length === 0
+                  ? 'Type to search tags...'
+                  : 'Search tag...'
+                )
               }
             />
           )}
@@ -168,7 +184,7 @@ export function TagInput({ tags, onChange, disabled = false }: TagInputProps) {
       {/* help message */}
       {!disabled && (
         <>
-          {inputValue && tags.length < MAX_TAGS && (
+          {inputValue && tags.length < MAX_TAGS && isPossibleToAddTags && (
             <p className="text-xs text-muted-foreground">
               Press Enter to create tag "{inputValue.trim()}"
               {filteredSuggestions.length > 0 && ' or select a suggestion.'}
