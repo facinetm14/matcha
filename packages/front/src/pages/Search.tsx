@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Navigation } from '@/components/Navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -28,6 +28,8 @@ import { getMockLocation, withMockedLocation } from '@/utils/mock-user-location'
 
 const USERS_PER_PAGE = 9;
 const MAX_VISIBLE_PAGES = 5;
+const DEFAULT_DISTANCE_RANGE: [number, number] = [0, 600];
+type FilterKey = 'age' | 'fame' | 'distance' | 'sort' | 'tags';
 
 export default function Search() {
   const navigate = useNavigate();
@@ -39,31 +41,50 @@ export default function Search() {
     error: errorProfile,
   } = useGetProfile();
 
-  const [ageRange, setAgeRange] = useState<[number, number]>([18, 50]);
+  const [ageRange, setAgeRange] = useState<[number, number]>([18, 130]);
   const [fameRange, setFameRange] = useState<[number, number]>([1, 1000]);
   const [sortBy, setSortBy] = useState('distance');
-  const [distanceRange, setDistanceRange] = useState<[number, number]>([0, 500]);
+  const [distanceRange, setDistanceRange] =
+    useState<[number, number]>(DEFAULT_DISTANCE_RANGE);
   const [appliedDistanceRange, setAppliedDistanceRange] =
-    useState<[number, number]>([0, 500]);
+    useState<[number, number]>(DEFAULT_DISTANCE_RANGE);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [appliedTags, setAppliedTags] = useState<string[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<UserProfile[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [filtersEnabled, setFiltersEnabled] = useState<Record<FilterKey, boolean>>({
+    age: true,
+    fame: true,
+    distance: true,
+    sort: true,
+    tags: true,
+  });
+  const handleFilterToggle = (filter: FilterKey) => (enabled: boolean) => {
+    setFiltersEnabled((prev) => ({ ...prev, [filter]: enabled }));
+  };
+  const {
+    distance: isDistanceFilterEnabled,
+    tags: isTagsFilterEnabled,
+    sort: isSortFilterEnabled,
+  } = filtersEnabled;
 
   const { isPending, data, error } = useQuery({
     queryKey: [QUERY_KEYS.FILTER_USERS],
     queryFn: async () => {
-      const filterDto: FilterUsersDto = {
-        age: {
+      const filterDto: FilterUsersDto = {};
+      if (filtersEnabled.age) {
+        filterDto.age = {
           from: ageRange[0],
           to: ageRange[1],
-        },
-        fameRating: {
+        };
+      }
+      if (filtersEnabled.fame) {
+        filterDto.fameRating = {
           from: fameRange[0],
           to: fameRange[1],
-        },
-      };
-      if (appliedTags.length) {
+        };
+      }
+      if (filtersEnabled.tags && appliedTags.length) {
         filterDto.tags = appliedTags;
       }
       const res = await userApi.filterUsers(filterDto);
@@ -97,7 +118,7 @@ export default function Search() {
     }
   }, [error, errorProfile, navigate]);
 
-  const getTagMatchScore = (user: UserProfile) => {
+  const getTagMatchScore = useCallback((user: UserProfile) => {
     if (!appliedTags.length) {
       return 0;
     }
@@ -106,15 +127,15 @@ export default function Search() {
       (score, tag) => (userTags.includes(tag) ? score + 1 : score),
       0,
     );
-  };
+  }, [appliedTags]);
 
-  const matchesSelectedTags = (user: UserProfile) => {
+  const matchesSelectedTags = useCallback((user: UserProfile) => {
     if (!appliedTags.length) {
       return true;
     }
     const userTags = user.tags?.map((tag) => tag.toLowerCase()) ?? [];
     return appliedTags.some((tag) => userTags.includes(tag));
-  };
+  }, [appliedTags]);
 
   useEffect(() => {
     if (!data) {
@@ -131,40 +152,50 @@ export default function Search() {
       withMockedLocation(user, index),
     );
 
-    processedUsers = processedUsers.filter((user) => {
-      const distanceKm = calculateDistanceKm(
-        referenceLocation,
-        user.location,
-      );
-      if (distanceKm === Number.POSITIVE_INFINITY) {
-        return appliedDistanceRange[1] >= 500;
-      }
-      return (
-        distanceKm >= appliedDistanceRange[0] &&
-        distanceKm <= appliedDistanceRange[1]
-      );
-    });
+    if (isDistanceFilterEnabled) {
+      processedUsers = processedUsers.filter((user) => {
+        const distanceKm = calculateDistanceKm(
+          referenceLocation,
+          user.location,
+        );
+        if (distanceKm === Number.POSITIVE_INFINITY) {
+          return appliedDistanceRange[1] >= 500;
+        }
+        return (
+          distanceKm >= appliedDistanceRange[0] &&
+          distanceKm <= appliedDistanceRange[1]
+        );
+      });
+    }
 
-    if (appliedTags.length) {
+    if (isTagsFilterEnabled && appliedTags.length) {
       processedUsers = processedUsers.filter(matchesSelectedTags);
     }
 
-    processedUsers.sort((a, b) => {
-      switch (sortBy) {
-        case 'age':
-          return (a.age ?? 0) - (b.age ?? 0);
-        case 'fame':
-          return b.fameRating - a.fameRating;
-        case 'tags':
-          return getTagMatchScore(b) - getTagMatchScore(a);
-        case 'distance':
-        default: {
-          const distanceA = calculateDistanceKm(referenceLocation, a.location);
-          const distanceB = calculateDistanceKm(referenceLocation, b.location);
-          return distanceA - distanceB;
+    if (isSortFilterEnabled) {
+      processedUsers.sort((a, b) => {
+        switch (sortBy) {
+          case 'age':
+            return (a.age ?? 0) - (b.age ?? 0);
+          case 'fame':
+            return b.fameRating - a.fameRating;
+          case 'tags':
+            return getTagMatchScore(b) - getTagMatchScore(a);
+          case 'distance':
+          default: {
+            const distanceA = calculateDistanceKm(
+              referenceLocation,
+              a.location,
+            );
+            const distanceB = calculateDistanceKm(
+              referenceLocation,
+              b.location,
+            );
+            return distanceA - distanceB;
+          }
         }
-      }
-    });
+      });
+    }
 
     setFilteredUsers(processedUsers);
   }, [
@@ -173,6 +204,11 @@ export default function Search() {
     sortBy,
     appliedTags,
     connectedUser,
+    isDistanceFilterEnabled,
+    isTagsFilterEnabled,
+    isSortFilterEnabled,
+    getTagMatchScore,
+    matchesSelectedTags,
   ]);
 
   if (isPendingProfile || isPending) {
@@ -235,6 +271,16 @@ export default function Search() {
           tags={selectedTags}
           setTags={setSelectedTags}
           onSubmit={handleSearch}
+          ageFilterEnabled={filtersEnabled.age}
+          onToggleAgeFilter={handleFilterToggle('age')}
+          fameFilterEnabled={filtersEnabled.fame}
+          onToggleFameFilter={handleFilterToggle('fame')}
+          distanceFilterEnabled={filtersEnabled.distance}
+          onToggleDistanceFilter={handleFilterToggle('distance')}
+          sortFilterEnabled={filtersEnabled.sort}
+          onToggleSortFilter={handleFilterToggle('sort')}
+          tagsFilterEnabled={filtersEnabled.tags}
+          onToggleTagsFilter={handleFilterToggle('tags')}
         />
 
         {/* Results */}
