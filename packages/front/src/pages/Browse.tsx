@@ -16,6 +16,7 @@ import { QUERY_KEYS } from '@/utils/utils';
 import { FilterUsersDto, UserProfile } from '@/types/user';
 import { AdvancedSearchCard } from '@/components/AdvancedSearchCard';
 import { calculateDistanceKm } from '@/utils/distance';
+import { getMockLocation, withMockedLocation } from '@/utils/mock-user-location';
 
 export default function Browse() {
   const navigate = useNavigate();
@@ -140,23 +141,29 @@ export default function Browse() {
       return;
     }
 
-    let processedUsers = [...userList];
+    const referenceLocation =
+      typeof connectedUser?.location?.lat === 'number' &&
+      typeof connectedUser?.location?.lng === 'number'
+        ? connectedUser.location
+        : getMockLocation();
 
-    if (connectedUser?.location) {
-      processedUsers = processedUsers.filter((user) => {
-        const distanceKm = calculateDistanceKm(
-          connectedUser.location,
-          user.location,
-        );
-        if (distanceKm === Number.POSITIVE_INFINITY) {
-          return appliedDistanceRange[1] >= 500;
-        }
-        return (
-          distanceKm >= appliedDistanceRange[0] &&
-          distanceKm <= appliedDistanceRange[1]
-        );
-      });
-    }
+    let processedUsers = userList.map((user, index) =>
+      withMockedLocation(user, index),
+    );
+
+    processedUsers = processedUsers.filter((user) => {
+      const distanceKm = calculateDistanceKm(
+        referenceLocation,
+        user.location,
+      );
+      if (distanceKm === Number.POSITIVE_INFINITY) {
+        return appliedDistanceRange[1] >= 500;
+      }
+      return (
+        distanceKm >= appliedDistanceRange[0] &&
+        distanceKm <= appliedDistanceRange[1]
+      );
+    });
 
     if (appliedTags.length) {
       processedUsers = processedUsers.filter(matchesSelectedTags);
@@ -172,24 +179,23 @@ export default function Browse() {
           return getTagMatchScore(b) - getTagMatchScore(a);
         case 'distance':
         default: {
-          if (!connectedUser?.location) {
-            return 0;
-          }
-          const distanceA = calculateDistanceKm(
-            connectedUser.location,
-            a.location,
-          );
-          const distanceB = calculateDistanceKm(
-            connectedUser.location,
-            b.location,
-          );
+          const distanceA = calculateDistanceKm(referenceLocation, a.location);
+          const distanceB = calculateDistanceKm(referenceLocation, b.location);
           return distanceA - distanceB;
         }
       }
     });
 
     setUsers(processedUsers);
-  }, [userList, appliedCity, connectedUser, appliedDistanceRange, appliedSort, appliedTags, getTagMatchScore]);
+  }, [
+    userList,
+    connectedUser,
+    appliedDistanceRange,
+    appliedSort,
+    appliedTags,
+    getTagMatchScore,
+    matchesSelectedTags,
+  ]);
 
   useEffect(() => {
     if (error || errorConnectedUser) {
