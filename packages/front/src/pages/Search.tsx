@@ -24,6 +24,7 @@ import {
 } from '@/components/ui/pagination';
 import { AdvancedSearchCard } from '@/components/AdvancedSearchCard';
 import { calculateDistanceKm } from '@/utils/distance';
+import { getMockLocation, withMockedLocation } from '@/utils/mock-user-location';
 
 const USERS_PER_PAGE = 9;
 const MAX_VISIBLE_PAGES = 5;
@@ -120,27 +121,29 @@ export default function Search() {
       return;
     }
 
-    let processedUsers = [...data];
+    const referenceLocation =
+      typeof connectedUser?.location?.lat === 'number' &&
+      typeof connectedUser?.location?.lng === 'number'
+        ? connectedUser.location
+        : getMockLocation();
 
-    if (connectedUser?.location) {
-      processedUsers = processedUsers.filter((user) => {
-        const distanceKm = calculateDistanceKm(
-          connectedUser.location,
-          user.location,
-        );
-        if (distanceKm === Number.POSITIVE_INFINITY) {
-          return appliedDistanceRange[1] >= 500;
-        }
-        return (
-          distanceKm >= appliedDistanceRange[0] &&
-          distanceKm <= appliedDistanceRange[1]
-        );
-      });
-    }
+    let processedUsers = data.map((user, index) =>
+      withMockedLocation(user, index),
+    );
 
-    if (appliedTags.length) {
-      processedUsers = processedUsers.filter(matchesSelectedTags);
-    }
+    processedUsers = processedUsers.filter((user) => {
+      const distanceKm = calculateDistanceKm(
+        referenceLocation,
+        user.location,
+      );
+      if (distanceKm === Number.POSITIVE_INFINITY) {
+        return appliedDistanceRange[1] >= 500;
+      }
+      return (
+        distanceKm >= appliedDistanceRange[0] &&
+        distanceKm <= appliedDistanceRange[1]
+      );
+    });
 
     if (appliedTags.length) {
       processedUsers = processedUsers.filter(matchesSelectedTags);
@@ -156,17 +159,8 @@ export default function Search() {
           return getTagMatchScore(b) - getTagMatchScore(a);
         case 'distance':
         default: {
-          if (!connectedUser?.location) {
-            return 0;
-          }
-          const distanceA = calculateDistanceKm(
-            connectedUser.location,
-            a.location,
-          );
-          const distanceB = calculateDistanceKm(
-            connectedUser.location,
-            b.location,
-          );
+          const distanceA = calculateDistanceKm(referenceLocation, a.location);
+          const distanceB = calculateDistanceKm(referenceLocation, b.location);
           return distanceA - distanceB;
         }
       }
@@ -176,9 +170,9 @@ export default function Search() {
   }, [
     data,
     appliedDistanceRange,
-    connectedUser,
     sortBy,
     appliedTags,
+    connectedUser,
   ]);
 
   if (isPendingProfile || isPending) {
