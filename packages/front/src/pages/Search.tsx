@@ -96,21 +96,29 @@ export default function Search() {
     }
   }, [error, errorProfile, navigate]);
 
+  const getTagMatchScore = (user: UserProfile) => {
+    if (!appliedTags.length) {
+      return 0;
+    }
+    const userTags = user.tags?.map((tag) => tag.toLowerCase()) ?? [];
+    return appliedTags.reduce(
+      (score, tag) => (userTags.includes(tag) ? score + 1 : score),
+      0,
+    );
+  };
+
+  const matchesSelectedTags = (user: UserProfile) => {
+    if (!appliedTags.length) {
+      return true;
+    }
+    const userTags = user.tags?.map((tag) => tag.toLowerCase()) ?? [];
+    return appliedTags.some((tag) => userTags.includes(tag));
+  };
+
   useEffect(() => {
     if (!data) {
       return;
     }
-
-    const getTagMatchScore = (user: UserProfile) => {
-      if (!appliedTags.length) {
-        return 0;
-      }
-      const userTags = user.tags?.map((tag) => tag.toLowerCase()) ?? [];
-      return appliedTags.reduce(
-        (score, tag) => (userTags.includes(tag) ? score + 1 : score),
-        0,
-      );
-    };
 
     let processedUsers = [...data];
 
@@ -128,6 +136,14 @@ export default function Search() {
           distanceKm <= appliedDistanceRange[1]
         );
       });
+    }
+
+    if (appliedTags.length) {
+      processedUsers = processedUsers.filter(matchesSelectedTags);
+    }
+
+    if (appliedTags.length) {
+      processedUsers = processedUsers.filter(matchesSelectedTags);
     }
 
     processedUsers.sort((a, b) => {
