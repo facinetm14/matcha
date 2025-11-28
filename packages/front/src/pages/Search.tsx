@@ -3,7 +3,7 @@ import { Navigation } from '@/components/Navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { MapPin, Star, Search as SearchIcon, Heart, Info, LucideChevronLast } from 'lucide-react';
+import { MapPin, Star, Heart, Info, LucideChevronLast } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useGetProfile } from '@/hooks/useGetProfile';
 import { FilterUsersDto, UserProfile } from '@/types/user';
@@ -23,6 +23,7 @@ import {
   PaginationPrevious,
 } from '@/components/ui/pagination';
 import { AdvancedSearchCard } from '@/components/AdvancedSearchCard';
+import { calculateDistanceKm } from '@/utils/distance';
 
 const USERS_PER_PAGE = 9;
 const MAX_VISIBLE_PAGES = 5;
@@ -37,6 +38,17 @@ export default function Search() {
     error: errorProfile,
   } = useGetProfile();
 
+  const [ageRange, setAgeRange] = useState<[number, number]>([18, 50]);
+  const [fameRange, setFameRange] = useState<[number, number]>([1, 1000]);
+  const [sortBy, setSortBy] = useState('distance');
+  const [distanceRange, setDistanceRange] = useState<[number, number]>([0, 500]);
+  const [appliedDistanceRange, setAppliedDistanceRange] =
+    useState<[number, number]>([0, 500]);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [appliedTags, setAppliedTags] = useState<string[]>([]);
+  const [filteredUsers, setFilteredUsers] = useState<UserProfile[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+
   const { isPending, data, error } = useQuery({
     queryKey: [QUERY_KEYS.FILTER_USERS],
     queryFn: async () => {
@@ -50,35 +62,17 @@ export default function Search() {
           to: fameRange[1],
         },
       };
+      if (appliedTags.length) {
+        filterDto.tags = appliedTags;
+      }
       const res = await userApi.filterUsers(filterDto);
       if (!res.ok) {
-        console.log('what ??');
         throw new Error('Failed to browse users');
       }
       const users = await res.json();
-
-      const sortedUsers = users?.sort((a, b) => {
-        switch (sortBy) {
-          case 'age':
-            return a.age - b.age;
-          case 'fame':
-            return b.fameRating - a.fameRating;
-          case 'distance':
-          default:
-            return 0;
-        }
-      });
-
-      return sortedUsers;
+      return users;
     },
   });
-
-  const [ageRange, setAgeRange] = useState<[number, number]>([18, 50]);
-  const [fameRange, setFameRange] = useState<[number, number]>([1, 1000]);
-  const [city, setCity] = useState('');
-  const [sortBy, setSortBy] = useState('distance');
-  const [filteredUsers, setFilteredUsers] = useState<UserProfile[]>([]);
-  const [currentPage, setCurrentPage] = useState(1);
 
   const notificationList = connectedUser?.notifications ?? [];
   const unreadNotifications = notificationList.filter((n) => !n.isRead).length;
@@ -88,6 +82,8 @@ export default function Search() {
 
   const handleSearch = () => {
     setCurrentPage(1);
+    setAppliedDistanceRange(distanceRange);
+    setAppliedTags(selectedTags);
     queryClient.invalidateQueries({
       queryKey: [QUERY_KEYS.FILTER_USERS],
       exact: true,
@@ -101,11 +97,73 @@ export default function Search() {
   }, [error, errorProfile, navigate]);
 
   useEffect(() => {
-    if (data) {
-      setFilteredUsers(data);
-      setCurrentPage(1);
+    if (!data) {
+      return;
     }
-  }, [data]);
+
+    const getTagMatchScore = (user: UserProfile) => {
+      if (!appliedTags.length) {
+        return 0;
+      }
+      const userTags = user.tags?.map((tag) => tag.toLowerCase()) ?? [];
+      return appliedTags.reduce(
+        (score, tag) => (userTags.includes(tag) ? score + 1 : score),
+        0,
+      );
+    };
+
+    let processedUsers = [...data];
+
+    if (connectedUser?.location) {
+      processedUsers = processedUsers.filter((user) => {
+        const distanceKm = calculateDistanceKm(
+          connectedUser.location,
+          user.location,
+        );
+        if (distanceKm === Number.POSITIVE_INFINITY) {
+          return appliedDistanceRange[1] >= 500;
+        }
+        return (
+          distanceKm >= appliedDistanceRange[0] &&
+          distanceKm <= appliedDistanceRange[1]
+        );
+      });
+    }
+
+    processedUsers.sort((a, b) => {
+      switch (sortBy) {
+        case 'age':
+          return (a.age ?? 0) - (b.age ?? 0);
+        case 'fame':
+          return b.fameRating - a.fameRating;
+        case 'tags':
+          return getTagMatchScore(b) - getTagMatchScore(a);
+        case 'distance':
+        default: {
+          if (!connectedUser?.location) {
+            return 0;
+          }
+          const distanceA = calculateDistanceKm(
+            connectedUser.location,
+            a.location,
+          );
+          const distanceB = calculateDistanceKm(
+            connectedUser.location,
+            b.location,
+          );
+          return distanceA - distanceB;
+        }
+      }
+    });
+
+    setFilteredUsers(processedUsers);
+  }, [
+    data,
+    appliedDistanceRange,
+    connectedUser,
+    sortBy,
+    appliedTags,
+  ]);
 
   if (isPendingProfile || isPending) {
     return <Loadder />;
@@ -160,10 +218,12 @@ export default function Search() {
           setAgeRange={setAgeRange}
           fameRange={fameRange}
           setFameRange={setFameRange}
-          city={city}
-          setCity={setCity}
           sortBy={sortBy}
           setSortBy={setSortBy}
+          distanceRange={distanceRange}
+          setDistanceRange={setDistanceRange}
+          tags={selectedTags}
+          setTags={setSelectedTags}
           onSubmit={handleSearch}
         />
 
