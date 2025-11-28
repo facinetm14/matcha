@@ -1,18 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Navigation } from '@/components/Navigation';
 import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Slider } from '@/components/ui/slider';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { MapPin, Star, Search as SearchIcon, Heart, Info, LucideChevronLast } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useGetProfile } from '@/hooks/useGetProfile';
@@ -32,6 +22,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination';
+import { AdvancedSearchCard } from '@/components/AdvancedSearchCard';
 
 const USERS_PER_PAGE = 9;
 const MAX_VISIBLE_PAGES = 5;
@@ -82,8 +73,8 @@ export default function Search() {
     },
   });
 
-  const [ageRange, setAgeRange] = useState([18, 50]);
-  const [fameRange, setFameRange] = useState([1, 1000]);
+  const [ageRange, setAgeRange] = useState<[number, number]>([18, 50]);
+  const [fameRange, setFameRange] = useState<[number, number]>([1, 1000]);
   const [city, setCity] = useState('');
   const [sortBy, setSortBy] = useState('distance');
   const [filteredUsers, setFilteredUsers] = useState<UserProfile[]>([]);
@@ -164,76 +155,17 @@ export default function Search() {
 
       <div className="max-w-7xl mx-auto px-4 pt-6 md:pt-8">
         {/* Search Filters */}
-        <Card className="mb-6 shadow-card">
-          <CardContent className="p-6">
-            <h2 className="text-2xl font-bold mb-6">Advanced Search</h2>
-
-            <div className="grid md:grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <div>
-                  <Label className="mb-2 block">
-                    Age Range: {ageRange[0]} - {ageRange[1]}
-                  </Label>
-                  <Slider
-                    min={18}
-                    max={80}
-                    step={1}
-                    value={ageRange}
-                    onValueChange={setAgeRange}
-                  />
-                </div>
-
-                <div>
-                  <Label className="mb-2 block">
-                    Fame Rating: {fameRange[0]} - {fameRange[1]}
-                  </Label>
-                  <Slider
-                    min={0}
-                    max={1000}
-                    step={50}
-                    value={fameRange}
-                    onValueChange={setFameRange}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="city">City</Label>
-                  <Input
-                    id="city"
-                    placeholder="Enter city name"
-                    value={city}
-                    onChange={(e) => setCity(e.target.value)}
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="sort">Sort By</Label>
-                  <Select value={sortBy} onValueChange={setSortBy}>
-                    <SelectTrigger id="sort">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="distance">Distance</SelectItem>
-                      <SelectItem value="age">Age</SelectItem>
-                      <SelectItem value="fame">Fame Rating</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </div>
-
-            <Button
-              onClick={handleSearch}
-              variant="outline"
-              className="w-full mt-6 bg-gradient-romantic"
-            >
-              <SearchIcon className="w-4 h-4 mr-2" />
-              Search
-            </Button>
-          </CardContent>
-        </Card>
+        <AdvancedSearchCard
+          ageRange={ageRange}
+          setAgeRange={setAgeRange}
+          fameRange={fameRange}
+          setFameRange={setFameRange}
+          city={city}
+          setCity={setCity}
+          sortBy={sortBy}
+          setSortBy={setSortBy}
+          onSubmit={handleSearch}
+        />
 
         {/* Results */}
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
