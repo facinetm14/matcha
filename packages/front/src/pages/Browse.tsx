@@ -18,6 +18,9 @@ import { AdvancedSearchCard } from '@/components/AdvancedSearchCard';
 import { calculateDistanceKm } from '@/utils/distance';
 import { getMockLocation, withMockedLocation } from '@/utils/mock-user-location';
 
+const DEFAULT_DISTANCE_RANGE: [number, number] = [0, 600];
+type FilterKey = 'age' | 'fame' | 'distance' | 'sort' | 'tags';
+
 export default function Browse() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -37,17 +40,32 @@ export default function Browse() {
     (n) => n.category == 'message' && !n.isRead,
   ).length;
 
-  const [ageRange, setAgeRange] = useState<[number, number]>([18, 50]);
+  const [ageRange, setAgeRange] = useState<[number, number]>([18, 130]);
   const [fameRange, setFameRange] = useState<[number, number]>([1, 1000]);
   const [sortBy, setSortBy] = useState('distance');
   const [appliedFilters, setAppliedFilters] = useState<FilterUsersDto>({});
-  const [appliedCity, setAppliedCity] = useState('');
   const [appliedSort, setAppliedSort] = useState('distance');
-  const [distanceRange, setDistanceRange] = useState<[number, number]>([0, 500]);
+  const [distanceRange, setDistanceRange] =
+    useState<[number, number]>(DEFAULT_DISTANCE_RANGE);
   const [appliedDistanceRange, setAppliedDistanceRange] =
-    useState<[number, number]>([0, 500]);
+    useState<[number, number]>(DEFAULT_DISTANCE_RANGE);
   const [tags, setTags] = useState<string[]>([]);
   const [appliedTags, setAppliedTags] = useState<string[]>([]);
+  const [filtersEnabled, setFiltersEnabled] = useState<Record<FilterKey, boolean>>({
+    age: true,
+    fame: true,
+    distance: true,
+    sort: true,
+    tags: true,
+  });
+  const handleFilterToggle = (filter: FilterKey) => (enabled: boolean) => {
+    setFiltersEnabled((prev) => ({ ...prev, [filter]: enabled }));
+  };
+  const {
+    distance: isDistanceFilterEnabled,
+    tags: isTagsFilterEnabled,
+    sort: isSortFilterEnabled,
+  } = filtersEnabled;
 
   const {
     isPending,
@@ -106,17 +124,20 @@ export default function Browse() {
   );
 
   const handleAdvancedSearch = () => {
-    const filterDto: FilterUsersDto = {
-      age: {
+    const filterDto: FilterUsersDto = {};
+    if (filtersEnabled.age) {
+      filterDto.age = {
         from: ageRange[0],
         to: ageRange[1],
-      },
-      fameRating: {
+      };
+    }
+    if (filtersEnabled.fame) {
+      filterDto.fameRating = {
         from: fameRange[0],
         to: fameRange[1],
-      },
-    };
-    if (tags.length) {
+      };
+    }
+    if (filtersEnabled.tags && tags.length) {
       filterDto.tags = tags;
     }
 
@@ -151,40 +172,44 @@ export default function Browse() {
       withMockedLocation(user, index),
     );
 
-    processedUsers = processedUsers.filter((user) => {
-      const distanceKm = calculateDistanceKm(
-        referenceLocation,
-        user.location,
-      );
-      if (distanceKm === Number.POSITIVE_INFINITY) {
-        return appliedDistanceRange[1] >= 500;
-      }
-      return (
-        distanceKm >= appliedDistanceRange[0] &&
-        distanceKm <= appliedDistanceRange[1]
-      );
-    });
+    if (isDistanceFilterEnabled) {
+      processedUsers = processedUsers.filter((user) => {
+        const distanceKm = calculateDistanceKm(
+          referenceLocation,
+          user.location,
+        );
+        if (distanceKm === Number.POSITIVE_INFINITY) {
+          return appliedDistanceRange[1] >= 500;
+        }
+        return (
+          distanceKm >= appliedDistanceRange[0] &&
+          distanceKm <= appliedDistanceRange[1]
+        );
+      });
+    }
 
-    if (appliedTags.length) {
+    if (isTagsFilterEnabled && appliedTags.length) {
       processedUsers = processedUsers.filter(matchesSelectedTags);
     }
 
-    processedUsers.sort((a, b) => {
-      switch (appliedSort) {
-        case 'age':
-          return (a.age ?? 0) - (b.age ?? 0);
-        case 'fame':
-          return b.fameRating - a.fameRating;
-        case 'tags':
-          return getTagMatchScore(b) - getTagMatchScore(a);
-        case 'distance':
-        default: {
-          const distanceA = calculateDistanceKm(referenceLocation, a.location);
-          const distanceB = calculateDistanceKm(referenceLocation, b.location);
-          return distanceA - distanceB;
+    if (isSortFilterEnabled) {
+      processedUsers.sort((a, b) => {
+        switch (appliedSort) {
+          case 'age':
+            return (a.age ?? 0) - (b.age ?? 0);
+          case 'fame':
+            return b.fameRating - a.fameRating;
+          case 'tags':
+            return getTagMatchScore(b) - getTagMatchScore(a);
+          case 'distance':
+          default: {
+            const distanceA = calculateDistanceKm(referenceLocation, a.location);
+            const distanceB = calculateDistanceKm(referenceLocation, b.location);
+            return distanceA - distanceB;
+          }
         }
-      }
-    });
+      });
+    }
 
     setUsers(processedUsers);
   }, [
@@ -195,6 +220,9 @@ export default function Browse() {
     appliedTags,
     getTagMatchScore,
     matchesSelectedTags,
+    isDistanceFilterEnabled,
+    isTagsFilterEnabled,
+    isSortFilterEnabled,
   ]);
 
   useEffect(() => {
@@ -336,6 +364,16 @@ export default function Browse() {
           tags={tags}
           setTags={setTags}
           onSubmit={handleAdvancedSearch}
+          ageFilterEnabled={filtersEnabled.age}
+          onToggleAgeFilter={handleFilterToggle('age')}
+          fameFilterEnabled={filtersEnabled.fame}
+          onToggleFameFilter={handleFilterToggle('fame')}
+          distanceFilterEnabled={filtersEnabled.distance}
+          onToggleDistanceFilter={handleFilterToggle('distance')}
+          sortFilterEnabled={filtersEnabled.sort}
+          onToggleSortFilter={handleFilterToggle('sort')}
+          tagsFilterEnabled={filtersEnabled.tags}
+          onToggleTagsFilter={handleFilterToggle('tags')}
         />
       </div>
     </div>
