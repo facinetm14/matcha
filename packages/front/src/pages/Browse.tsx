@@ -79,16 +79,30 @@ export default function Browse() {
     navigate(`/profile/${currentUser.id}`);
   };
 
-  const getTagMatchScore = useCallback((user: UserProfile) => {
-    if (!appliedTags.length) {
-      return 0;
-    }
-    const userTags = user.tags?.map((tag) => tag.toLowerCase()) ?? [];
-    return appliedTags.reduce(
-      (score, tag) => (userTags.includes(tag) ? score + 1 : score),
-      0,
-    );
-  }, [appliedTags]);
+  const getTagMatchScore = useCallback(
+    (user: UserProfile) => {
+      if (!appliedTags.length) {
+        return 0;
+      }
+      const userTags = user.tags?.map((tag) => tag.toLowerCase()) ?? [];
+      return appliedTags.reduce(
+        (score, tag) => (userTags.includes(tag) ? score + 1 : score),
+        0,
+      );
+    },
+    [appliedTags],
+  );
+
+  const matchesSelectedTags = useCallback(
+    (user: UserProfile) => {
+      if (!appliedTags.length) {
+        return true;
+      }
+      const userTags = user.tags?.map((tag) => tag.toLowerCase()) ?? [];
+      return appliedTags.some((tag) => userTags.includes(tag));
+    },
+    [appliedTags],
+  );
 
   const handleAdvancedSearch = () => {
     const filterDto: FilterUsersDto = {
@@ -142,6 +156,10 @@ export default function Browse() {
           distanceKm <= appliedDistanceRange[1]
         );
       });
+    }
+
+    if (appliedTags.length) {
+      processedUsers = processedUsers.filter(matchesSelectedTags);
     }
 
     processedUsers.sort((a, b) => {
