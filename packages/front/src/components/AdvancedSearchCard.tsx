@@ -11,16 +11,19 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Search as SearchIcon } from 'lucide-react';
+import { TagInput } from '@/components/ui/tag-input';
 
 type AdvancedSearchCardProps = {
   ageRange: [number, number];
   setAgeRange: (value: [number, number]) => void;
   fameRange: [number, number];
   setFameRange: (value: [number, number]) => void;
-  city: string;
-  setCity: (value: string) => void;
   sortBy: string;
   setSortBy: (value: string) => void;
+  distanceRange: [number, number];
+  setDistanceRange: (value: [number, number]) => void;
+  tags: string[];
+  setTags: (value: string[]) => void;
   onSubmit: () => void;
 };
 
@@ -29,10 +32,12 @@ export function AdvancedSearchCard({
   setAgeRange,
   fameRange,
   setFameRange,
-  city,
-  setCity,
   sortBy,
   setSortBy,
+  distanceRange,
+  setDistanceRange,
+  tags,
+  setTags,
   onSubmit,
 }: AdvancedSearchCardProps) {
   return (
@@ -67,18 +72,23 @@ export function AdvancedSearchCard({
                 onValueChange={(value) => setFameRange(value as [number, number])}
               />
             </div>
+            <div>
+              <Label className="mb-2 block">
+                Distance Range: {distanceRange[0]} km - {distanceRange[1]} km
+              </Label>
+              <Slider
+                min={0}
+                max={500}
+                step={10}
+                value={distanceRange}
+                onValueChange={(value) =>
+                  setDistanceRange(value as [number, number])
+                }
+              />
+            </div>
           </div>
 
           <div className="space-y-4">
-            <div>
-              <Label htmlFor="city">City</Label>
-              <Input
-                id="city"
-                placeholder="Enter city name"
-                value={city}
-                onChange={(e) => setCity(e.target.value)}
-              />
-            </div>
 
             <div>
               <Label htmlFor="sort">Sort By</Label>
@@ -90,8 +100,18 @@ export function AdvancedSearchCard({
                   <SelectItem value="distance">Distance</SelectItem>
                   <SelectItem value="age">Age</SelectItem>
                   <SelectItem value="fame">Fame Rating</SelectItem>
+                  <SelectItem value="tags">Tags</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+
+            <div>
+              <Label className="mb-2 block">Tags</Label>
+              <TagInput
+                tags={tags}
+                onChange={setTags}
+                isPossibleToAddTags={false}
+              />
             </div>
           </div>
         </div>

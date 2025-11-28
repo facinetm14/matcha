@@ -335,6 +335,7 @@ export function ProfileInformationCard({
                   tags,
                 })
               }
+              isPossibleToAddTags
             />
           ) : (
             <div className="flex flex-wrap gap-2 p-2 bg-muted rounded">
