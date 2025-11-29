@@ -29,4 +29,6 @@ export const QUERY_KEYS = {
   GET_USERS_PROFILE_LIST: 'getUserProfileList',
   FILTER_USERS: 'filerUsers',
   BLOCKED_USERS: 'blockedUsers',
+  CONFIRM_RESET_PASSWORD: 'confirmResetPassword',
+  VERIFY_RESET_PASSWORD_TOKEN: 'verifyResetPasswordToken',
 } as const;

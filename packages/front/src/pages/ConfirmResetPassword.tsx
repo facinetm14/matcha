@@ -3,13 +3,16 @@ import { useQuery } from '@tanstack/react-query';
 import { authApi } from '@/api/auth.api';
 import Login from './Login';
 import { Loadder } from '@/components/ui/Loadder';
+import { QUERY_KEYS } from '@/utils/utils';
+import { useEffect, useState } from 'react';
 
 export const ConfirmResetPassword = () => {
   const { token } = useParams();
   const navigate = useNavigate();
+  const [isVerified, setIsVerified] = useState(false);
 
-  const { isPending, error } = useQuery({
-    queryKey: ['confirmResetPassword', token],
+  const { isPending, error, data } = useQuery({
+    queryKey: [QUERY_KEYS.VERIFY_RESET_PASSWORD_TOKEN, token],
     queryFn: async () => {
       if (!token) {
         throw new Error('No token provided');
@@ -22,11 +25,17 @@ export const ConfirmResetPassword = () => {
 
       throw new Error('Verification failed');
     },
+    enabled: !isVerified,
   });
 
-  if (isPending) return <Loadder />;
+  useEffect(() => {
+    if (data) {
+      setIsVerified(true);
+    }
+    if (error) navigate('/not-found');
+  }, [data, error, navigate]);
 
-  if (error) navigate('/not-found');
+  if (isPending) return <Loadder />;
 
   return <Login />;
 };
