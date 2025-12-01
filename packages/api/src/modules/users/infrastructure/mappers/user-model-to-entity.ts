@@ -1,4 +1,7 @@
-import { UserProfile } from '@/modules/users/domain/entities/user-profile.entity';
+import {
+  Gender,
+  UserProfile,
+} from '@/modules/users/domain/entities/user-profile.entity';
 import { User } from '../../domain/entities/user.entity';
 import { UserModel } from '../models/user.model';
 import { InteractionCategory } from '@/modules/users/domain/entities/user-profile-interaction.entity';
@@ -19,18 +22,18 @@ export function mapUserModelToEntity(userModel: UserModel): User {
     status: userModel.status,
     isFirstLogin: userModel.is_first_login,
     gender: userModel.gender,
-    sexualOrientation: userModel.sexual_orientation,
     bio: userModel.bio,
     birthDate: userModel.birth_date,
+    sexualOrientation: userModel.sexual_orientation,
   };
 }
 
 const isCorrectCategory = (
-  cateoryToMatch: InteractionCategory,
+  categoryToMatch: InteractionCategory,
   author?: string,
   category?: InteractionCategory,
 ) => {
-  return author && category === cateoryToMatch;
+  return author && category === categoryToMatch;
 };
 
 export type UserAggregate = UserModel & {
@@ -49,6 +52,8 @@ export type UserAggregate = UserModel & {
   notif_updated_at: Date;
   notif_is_read: Date;
   notif_category: InteractionCategory;
+  sexual_orientation: string;
+  interaction_recipient: string;
 };
 
 export function buildUserProfileFromUserAggregate(
@@ -63,8 +68,12 @@ export function buildUserProfileFromUserAggregate(
   const now = new Date();
 
   for (const user of userAggregate) {
-    const interactionKey = `${user.id}+${user.author}+${user.category}`;
+    const interactionKey = `${user.id}+${user.author}+${user.interaction_recipient}+${user.category}`;
     const tagKey = `${user.id}+${user.interest}`;
+
+    if (isCorrectCategory('block', user.author, user.category)) {
+      console.log({ user });
+    }
 
     const notification = {
       id: user.notif_id,
@@ -89,6 +98,15 @@ export function buildUserProfileFromUserAggregate(
         viewedBy: isCorrectCategory('view', user.author, user.category)
           ? [user.author]
           : [],
+        blocked:
+          isCorrectCategory(
+            'block',
+            user.interaction_recipient,
+            user.category,
+          ) && user.id === user.author
+            ? [user.interaction_recipient]
+            : [],
+
         matched: user.notif_category === 'match' ? [user.notif_id] : [],
         notifications: user.notif_author ? [notification] : [],
 
@@ -104,6 +122,8 @@ export function buildUserProfileFromUserAggregate(
             ]
           : [],
         age: user.birth_date ? calculateAge(user.birth_date, now) : undefined,
+        sexualOrientation: (user.sexual_orientation?.split(' ') ??
+          []) as Gender[],
       });
 
       interactors.add(interactionKey);
@@ -126,6 +146,13 @@ export function buildUserProfileFromUserAggregate(
 
       if (isCorrectCategory('like', user.author, user.category)) {
         existingProfile.likedBy.push(user.author);
+      }
+
+      if (
+        isCorrectCategory('block', user.interaction_recipient, user.category) &&
+        user.author === user.id
+      ) {
+        existingProfile.blocked.push(user.interaction_recipient);
       }
 
       interactors.add(interactionKey);

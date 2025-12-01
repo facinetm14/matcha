@@ -105,9 +105,8 @@ export function ProfileInformationCard({
                   city ??
                   (draft?.location ?? profile.location)?.city ??
                   undefined,
-                isEnabledByUser: (
-                  draft?.location ?? profile.location
-                )?.isEnabledByUser,
+                isEnabledByUser: (draft?.location ?? profile.location)
+                  ?.isEnabledByUser,
               } as Location,
             })
           }
@@ -122,7 +121,9 @@ export function ProfileInformationCard({
         <Button
           key={preference}
           variant={
-            draft?.sexualOrientation?.includes(preference) ? 'default' : 'outline'
+            draft?.sexualOrientation?.includes(preference)
+              ? 'default'
+              : 'outline'
           }
           onClick={() => {
             const currentPreferences = draft?.sexualOrientation ?? [];
@@ -131,7 +132,8 @@ export function ProfileInformationCard({
               : [...currentPreferences, preference];
 
             updateDraftField({
-              sexualOrientation: newPreferences as UpdateUserDto['sexualOrientation'],
+              sexualOrientation:
+                newPreferences as UpdateUserDto['sexualOrientation'],
             });
             clearError('sexualOrientation');
           }}
@@ -159,7 +161,9 @@ export function ProfileInformationCard({
                     updateDraftField({ firstName: e.target.value });
                     clearError('firstName');
                   }}
-                  className={errors.firstName ? 'border-destructive' : undefined}
+                  className={
+                    errors.firstName ? 'border-destructive' : undefined
+                  }
                 />
                 {errors.firstName && (
                   <p className="text-sm text-destructive">{errors.firstName}</p>
@@ -314,7 +318,7 @@ export function ProfileInformationCard({
                 className={errors.bio ? 'border-destructive' : undefined}
               />
               <div className="text-xs text-muted-foreground text-right">
-                {(draft?.bio?.length ?? 0)}/{MAX_BIO_CHARACTERS}
+                {draft?.bio?.length ?? 0}/{MAX_BIO_CHARACTERS}
               </div>
               {errors.bio && (
                 <p className="text-sm text-destructive">{errors.bio}</p>

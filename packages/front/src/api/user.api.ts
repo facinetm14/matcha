@@ -62,16 +62,17 @@ const checkUserIdentifierAvailability = async (
 };
 
 const updateUserProfile = async (updateUserDto: UpdateUserDto) => {
-  console.log(updateUserDto);
+  const { sexualOrientation, ...user } = updateUserDto;
+  const orientation = sexualOrientation?.filter((p) => !!p) ?? [];
+
   return fetch(`${API_BASE_ROUTE}/users/update`, {
     headers: {
       'Content-Type': 'application/json',
     },
     method: 'PATCH',
     body: JSON.stringify({
-      ...updateUserDto,
-      sexualOrientation:
-        updateUserDto.sexualOrientation?.filter((p) => !!p) ?? [],
+      ...user,
+      ...(orientation && { sexualOrientation: orientation }),
     }),
     credentials: 'include',
   });
