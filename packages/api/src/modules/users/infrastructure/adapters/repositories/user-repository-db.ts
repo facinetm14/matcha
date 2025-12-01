@@ -134,7 +134,7 @@ export class UserRepositoryDb implements UserRepository {
               SELECT u.*, 
               uim.id as img_id, uim.position as img_position, uim.preview as img_preview,
               ui.interest,
-              upi.author, upi.category, upi.created_at as interaction_created_at ,
+              upi.author, upi.category, upi.created_at as interaction_created_at, upi.recipient as interaction_recipient,
               notif.id as notif_id, notif.author as notif_author, notif.from_user as notif_from_user,
               notif.created_at as notif_created_at, notif.updated_at as notif_updated_at, notif.is_read as notif_is_read,
               notif.category as notif_category
@@ -180,7 +180,7 @@ export class UserRepositoryDb implements UserRepository {
               SELECT u.*, 
               uim.id as img_id, uim.position as img_position, uim.preview as img_preview,
               ui.interest,
-              upi.author, upi.category, upi.created_at as interaction_created_at ,
+              upi.author, upi.category, upi.created_at as interaction_created_at, upi.recipient as interaction_recipient,
               notif.id as notif_id, notif.author as notif_author, notif.from_user as notif_from_user,
               notif.created_at as notif_created_at, notif.updated_at as notif_updated_at, notif.is_read as notif_is_read,
               notif.category as notif_category

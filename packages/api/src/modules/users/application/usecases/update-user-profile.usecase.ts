@@ -54,11 +54,13 @@ export class UpdateUserProfileUseCase {
         return Err(UpdateUserProfileError.EMAIL_AREDAY_EXISTS);
       }
 
+      const { sexualOrientation, ...updateUserDto } = user;
+
       const updatedUser = await this.userRepository.update(userId, {
-        ...user,
-        sexualOrientation: user.sexualOrientation
-          ? user.sexualOrientation.join(' ')
-          : '',
+        ...updateUserDto,
+        ...(sexualOrientation?.length && {
+          sexualOrientation: sexualOrientation.join(' '),
+        }),
       });
 
       if (!updatedUser) {

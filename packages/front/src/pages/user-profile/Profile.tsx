@@ -25,7 +25,6 @@ import { isValidFirstname } from '../../../../shared/input-validation/is-valid-f
 import { isValidLastname } from '../../../../shared/input-validation/is-valid-lastname';
 import { isValidEmail } from '../../../../shared/input-validation/is-valid-email';
 
-
 export default function Profile() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -149,14 +148,10 @@ export default function Profile() {
     const validateEmailResult = isValidEmail(draft.email);
     if (!validateEmailResult.valid) {
       validationErrors.email = validateEmailResult.error || 'Email is invalid';
-    } 
+    }
 
     if (!draft.gender) {
       validationErrors.gender = 'Please select a gender';
-    }
-
-    if (!draft.sexualOrientation || draft.sexualOrientation.length === 0) {
-      draft.sexualOrientation = ['male', 'female', 'non-binary'];
     }
 
     if (!birthDateDraft && !profile.birthDate) {

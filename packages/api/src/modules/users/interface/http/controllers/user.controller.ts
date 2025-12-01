@@ -21,7 +21,6 @@ import { DeleteUserImageUsceCase } from '@/modules/users/application/usecases/de
 import { ReorderUserImageUseCase } from '@/modules/users/application/usecases/reorder-user-image-usecase';
 import { GetAllTagsUseCase } from '@/modules/users/application/usecases/get-all-tags.usecase';
 import { FetchBestUserSuggestion } from '@/modules/users/application/usecases/fetch-best-user-suggestion.usecase';
-import { UserProfile } from '@/modules/users/domain/entities/user-profile.entity';
 import { GetUserListFromIdListUseCase } from '@/modules/users/application/usecases/get-user-list-from-id.usecase';
 import { TYPE } from '@/config/ioc/inversify-type';
 import { CheckUserIdentifierAvailabilityDtoSchema } from '../../validations/check-user-identifier-availability-dto.validation';
@@ -82,10 +81,7 @@ export class UserController {
       return;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { passwd, ...user } = getCurrentUserResult.data;
-
-    resp.status(200).json(user);
+    resp.status(200).json(getCurrentUserResult.data);
   }
 
   async filterUsers(req: Request, resp: Response) {
@@ -107,7 +103,7 @@ export class UserController {
 
     const filteredUsers = await this.filterUsersUseCase.execute(
       parsedBody.data,
-      connectedUserResult.data
+      connectedUserResult.data,
     );
 
     resp.status(200).json(filteredUsers);
@@ -142,10 +138,7 @@ export class UserController {
       return;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { passwd, ...user } = getCurrentUserResult.data;
-
-    resp.status(200).json(user);
+    resp.status(200).json(getCurrentUserResult.data);
   }
 
   async viewUserProfileList(req: Request, resp: Response) {
@@ -169,15 +162,10 @@ export class UserController {
 
     const userIdList = parsedBody.data.userIdList;
 
-    const userList: UserProfile[] =
+    const userList =
       await this.getUserListFromIdListUseCase.execute(userIdList);
-    const safeUserList = userList.map((u) => {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { passwd, ...user } = u;
-      return user;
-    });
 
-    resp.status(200).send(safeUserList);
+    resp.status(200).send(userList);
   }
 
   async checkUserIdentifierAvailability(req: Request, resp: Response) {
@@ -438,9 +426,6 @@ export class UserController {
       return;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { passwd, ...user } = bestUserSuggestion;
-
-    resp.status(200).json([user]);
+    resp.status(200).json([bestUserSuggestion]);
   }
 }
