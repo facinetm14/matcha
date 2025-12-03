@@ -28,4 +28,5 @@ export const QUERY_KEYS = {
   GET_CHANNELS: 'getchannels',
   GET_USERS_PROFILE_LIST: 'getUserProfileList',
   FILTER_USERS: 'filerUsers',
+  BLOCKED_USERS: 'blockedUsers',
 } as const;
