@@ -38,6 +38,7 @@ const isCorrectCategory = (
 
 export type UserAggregate = UserModel & {
   interest: string;
+  tag_id: string;
   author: string;
   category: InteractionCategory;
   img_position: string;
@@ -54,6 +55,7 @@ export type UserAggregate = UserModel & {
   notif_category: InteractionCategory;
   sexual_orientation: string;
   interaction_recipient: string;
+  interaction_id: string;
 };
 
 export function buildUserProfileFromUserAggregate(
@@ -71,10 +73,6 @@ export function buildUserProfileFromUserAggregate(
     const interactionKey = `${user.id}+${user.author}+${user.interaction_recipient}+${user.category}`;
     const tagKey = `${user.id}+${user.interest}`;
 
-    if (isCorrectCategory('block', user.author, user.category)) {
-      console.log({ user });
-    }
-
     const notification = {
       id: user.notif_id,
       isRead: user.notif_is_read ? true : false,
@@ -86,30 +84,17 @@ export function buildUserProfileFromUserAggregate(
     };
 
     if (!userProfilesMap.has(user.id)) {
-      userProfilesMap.set(user.id, {
+      const currentUserProfile: UserProfile = {
         ...mapUserModelToEntity(user),
         tags: user.interest ? [user.interest] : [],
         fameRating: 0,
         isOnline: user.isOnline,
         lastSeen: user.lastSeen,
-        likedBy: isCorrectCategory('like', user.author, user.category)
-          ? [user.author]
-          : [],
-        viewedBy: isCorrectCategory('view', user.author, user.category)
-          ? [user.author]
-          : [],
-        blocked:
-          isCorrectCategory(
-            'block',
-            user.interaction_recipient,
-            user.category,
-          ) && user.id === user.author
-            ? [user.interaction_recipient]
-            : [],
-
+        likedBy: [],
+        viewedBy: [],
+        blocked: [],
         matched: user.notif_category === 'match' ? [user.notif_id] : [],
         notifications: user.notif_author ? [notification] : [],
-
         reported: false,
         photos: user.img_id
           ? [
@@ -124,12 +109,35 @@ export function buildUserProfileFromUserAggregate(
         age: user.birth_date ? calculateAge(user.birth_date, now) : undefined,
         sexualOrientation: (user.sexual_orientation?.split(' ') ??
           []) as Gender[],
-      });
+      };
 
-      interactors.add(interactionKey);
-      visitedTags.add(tagKey);
       visitedImages.add(user.img_id);
       visitedNotif.add(notification.id);
+      visitedTags.add(tagKey);
+
+      if (isCorrectCategory('view', user.author, user.category)) {
+        currentUserProfile.viewedBy.push(user.author);
+        interactors.add(interactionKey);
+        userProfilesMap.set(user.id, currentUserProfile);
+        continue;
+      }
+
+      if (isCorrectCategory('like', user.author, user.category)) {
+        currentUserProfile.likedBy.push(user.author);
+        interactors.add(interactionKey);
+        userProfilesMap.set(user.id, currentUserProfile);
+        continue;
+      }
+
+      if (
+        isCorrectCategory('block', user.interaction_recipient, user.category) &&
+        user.author === user.id
+      ) {
+        currentUserProfile.blocked.push(user.interaction_recipient);
+        interactors.add(interactionKey);
+        userProfilesMap.set(user.id, currentUserProfile);
+      }
+
       continue;
     }
 
@@ -137,25 +145,6 @@ export function buildUserProfileFromUserAggregate(
     if (user.interest && !visitedTags.has(tagKey)) {
       existingProfile.tags.push(user.interest);
       visitedTags.add(tagKey);
-    }
-
-    if (!interactors.has(interactionKey)) {
-      if (isCorrectCategory('view', user.author, user.category)) {
-        existingProfile.viewedBy.push(user.author);
-      }
-
-      if (isCorrectCategory('like', user.author, user.category)) {
-        existingProfile.likedBy.push(user.author);
-      }
-
-      if (
-        isCorrectCategory('block', user.interaction_recipient, user.category) &&
-        user.author === user.id
-      ) {
-        existingProfile.blocked.push(user.interaction_recipient);
-      }
-
-      interactors.add(interactionKey);
     }
 
     if (user.img_id && !visitedImages.has(user.img_id)) {
@@ -177,6 +166,30 @@ export function buildUserProfileFromUserAggregate(
       }
 
       visitedNotif.add(notification.id);
+    }
+
+    if (interactors.has(interactionKey)) {
+      continue;
+    }
+
+    if (isCorrectCategory('view', user.author, user.category)) {
+      existingProfile.viewedBy.push(user.author);
+      interactors.add(interactionKey);
+      continue;
+    }
+
+    if (isCorrectCategory('like', user.author, user.category)) {
+      existingProfile.likedBy.push(user.author);
+      interactors.add(interactionKey);
+      continue;
+    }
+
+    if (
+      isCorrectCategory('block', user.interaction_recipient, user.category) &&
+      user.author === existingProfile.id
+    ) {
+      existingProfile.blocked.push(user.interaction_recipient);
+      interactors.add(interactionKey);
     }
   }
 

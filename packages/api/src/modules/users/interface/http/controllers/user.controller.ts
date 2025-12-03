@@ -32,6 +32,7 @@ import { CreateInteractionDtoSchema } from '../../validations/create-user-intera
 import { UpdateUserProfileDto } from '@/modules/users/application/dto/update-user-profile.dto';
 import { FilterUsersDtoSchema } from '../../validations/filter-users-dto.validation';
 import { FilterUsersUseCase } from '@/modules/users/application/usecases/filter-users.usecase';
+import { UserProfile } from '@/modules/users/domain/entities/user-profile.entity';
 
 @injectable()
 export class UserController {
@@ -81,7 +82,9 @@ export class UserController {
       return;
     }
 
-    resp.status(200).json(getCurrentUserResult.data);
+    const { passwd: _passw, ...safeUser } = getCurrentUserResult.data;
+
+    resp.status(200).json(safeUser);
   }
 
   async filterUsers(req: Request, resp: Response) {
@@ -106,7 +109,12 @@ export class UserController {
       connectedUserResult.data,
     );
 
-    resp.status(200).json(filteredUsers);
+    const safeUserList = filteredUsers.map((user) => {
+      const { passwd: _passwd, email: _email, ...safeUser } = user;
+      return { ...safeUser, blocked: [] };
+    });
+
+    resp.status(200).send(safeUserList);
   }
 
   async viewUserProfile(
@@ -138,7 +146,13 @@ export class UserController {
       return;
     }
 
-    resp.status(200).json(getCurrentUserResult.data);
+    const {
+      passwd: _passwd,
+      email: _email,
+      ...safeUser
+    } = getCurrentUserResult.data;
+
+    resp.status(200).json(safeUser);
   }
 
   async viewUserProfileList(req: Request, resp: Response) {
@@ -165,7 +179,12 @@ export class UserController {
     const userList =
       await this.getUserListFromIdListUseCase.execute(userIdList);
 
-    resp.status(200).send(userList);
+    const safeUserList = userList.map((user) => {
+      const { email: _email, ...safeUser } = user;
+      return { ...safeUser, blocked: [] };
+    });
+
+    resp.status(200).send(safeUserList);
   }
 
   async checkUserIdentifierAvailability(req: Request, resp: Response) {
