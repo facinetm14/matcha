@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import {
   Edit,
   Eye,
+  Settings,
   Heart as HeartIcon,
   MapPin,
   Save,
@@ -22,6 +23,7 @@ type ProfileHeaderCardProps = {
   onEdit: () => void;
   onSave: () => void;
   onCancel: () => void;
+  onOpenSettings: () => void;
 };
 
 export function ProfileHeaderCard({
@@ -32,6 +34,7 @@ export function ProfileHeaderCard({
   onEdit,
   onSave,
   onCancel,
+  onOpenSettings,
 }: ProfileHeaderCardProps) {
   const renderActionButtons = (): ReactNode =>
     !isEditing ? (
@@ -91,6 +94,14 @@ export function ProfileHeaderCard({
               </div>
 
               <div className="flex gap-2 mt-4 md:mt-0 justify-center">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label="Open settings"
+                  onClick={onOpenSettings}
+                >
+                  <Settings className="w-5 h-5" />
+                </Button>
                 {renderActionButtons()}
               </div>
             </div>
