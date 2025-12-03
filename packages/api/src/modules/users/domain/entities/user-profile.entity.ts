@@ -11,7 +11,7 @@ export type Location = {
   lng: number;
 };
 
-export type UserProfile = Omit<User, 'sexualOrientation' | 'passwd'> & {
+export type UserProfile = Omit<User, 'sexualOrientation'> & {
   tags: string[];
   photos: UserImage[];
   location?: Location;
