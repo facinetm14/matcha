@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Navigation } from '@/components/Navigation';
 import { toast } from 'sonner';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { userApi } from '@/api/user.api';
 import { useProfileStore } from '@/store/profileStore';
 import { UpdateUserDto } from '@/types/dto/update-user.dto';
-import { Gender, UserProfile, Location } from '@/types/user';
+import { Gender, UserProfile, Location, UserStatus } from '@/types/user';
 import { DeleteUserImageDto } from '@/types/dto/delete-image.dto';
 import { UpdateImagePositionDto } from '@/types/dto/update-image-position.dto';
 import { useGetProfile } from '@/hooks/useGetProfile';
@@ -17,6 +17,7 @@ import { logout } from '@/utils/auth';
 import { QUERY_KEYS } from '@/utils/utils';
 import { ProfileHeaderCard } from '@/pages/user-profile/ProfileHeaderCard';
 import { ProfileInformationCard } from '@/pages/user-profile/ProfileInformationCard';
+import { SettingsModal } from '@/pages/user-profile/SettingsModal';
 
 const PHOTOS_KEY = 'photos';
 const BIRTH_DATE_KEY = 'birthDate';
@@ -32,8 +33,74 @@ export default function Profile() {
   const queryClient = useQueryClient();
 
   const [isEditing, setIsEditing] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [unblockingUserId, setUnblockingUserId] = useState<string | null>(null);
   const [profile, setProfile] = useState<UserProfile>();
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const MOCK_BLOCKED_USERS: UserProfile[] = [
+    {
+      id: 'mock-1',
+      email: 'nina.rios@example.com',
+      firstName: 'Nina',
+      lastName: 'Rios',
+      username: 'nina_r',
+      status: UserStatus.VERIFIED,
+      isFirstLogin: null,
+      gender: 'female',
+      sexualOrientation: ['male'],
+      bio: 'Adore les cafés cosy et les escapades le week-end.',
+      tags: ['coffee', 'travel', 'yoga'],
+      photos: [],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      birthDate: undefined,
+      fameRating: 4.2,
+      location: { isEnabledByUser: true, city: 'Lyon', lat: 45.76, lng: 4.83 },
+      isOnline: false,
+      lastSeen: new Date(),
+      likedBy: [],
+      viewedBy: [],
+      blocked: [],
+      reported: false,
+      notifications: [],
+      matched: [],
+      age: 29,
+    },
+    {
+      id: 'mock-2',
+      email: 'adam.lee@example.com',
+      firstName: 'Adam',
+      lastName: 'Lee',
+      username: 'adam_lee',
+      status: UserStatus.VERIFIED,
+      isFirstLogin: null,
+      gender: 'male',
+      sexualOrientation: ['female'],
+      bio: 'Fan de concerts, cuisine italienne et course à pied.',
+      tags: ['music', 'cooking', 'running'],
+      photos: [],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      birthDate: undefined,
+      fameRating: 3.8,
+      location: {
+        isEnabledByUser: true,
+        city: 'Marseille',
+        lat: 43.3,
+        lng: 5.37,
+      },
+      isOnline: true,
+      lastSeen: null,
+      likedBy: [],
+      viewedBy: [],
+      blocked: [],
+      reported: false,
+      notifications: [],
+      matched: [],
+      age: 31,
+    },
+  ];
 
   const {
     draft,
@@ -105,6 +172,35 @@ export default function Profile() {
     (n) => n.category == 'message' && !n.isRead,
   ).length;
 
+  const blockedUserIds = [...(profile?.blocked ?? [])].sort();
+
+  const {
+    data: blockedUsersFromApi = [],
+    isFetching: isLoadingBlockedUsersFromApi,
+  } = useQuery<UserProfile[]>({
+    queryKey: [QUERY_KEYS.BLOCKED_USERS, blockedUserIds.join(',')],
+    queryFn: async (): Promise<UserProfile[]> => {
+      if (!blockedUserIds.length) {
+        return [];
+      }
+
+      const res = await userApi.getUserProfileList(blockedUserIds);
+      if (!res.ok) {
+        throw new Error('Failed to fetch blocked users');
+      }
+      const userList = await res.json();
+      return userList;
+    },
+    enabled: !!profile,
+  });
+  const useMockBlockedUsers = blockedUserIds.length === 0;
+  const blockedUsers = useMockBlockedUsers
+    ? MOCK_BLOCKED_USERS
+    : blockedUsersFromApi;
+  const isLoadingBlockedUsers = useMockBlockedUsers
+    ? false
+    : isLoadingBlockedUsersFromApi;
+
   const updateProfileMutation = useMutation({
     mutationFn: async (updateUserDto: UpdateUserDto) => {
       const response = await userApi.updateUserProfile(updateUserDto);
@@ -169,6 +265,47 @@ export default function Profile() {
       toast.error(error.message);
     },
   });
+
+  const unblockUserMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      const response = await userApi.interactWithUser({
+        recipient: userId,
+        category: 'unblock',
+      });
+      if (response.status !== 201) {
+        const error = await response.text();
+        throw new Error(
+          error || 'Failed to unblock user. Please try again.',
+        );
+      }
+
+      return true;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.ME], exact: true });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.BLOCKED_USERS] });
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+    onSettled: () => {
+      setUnblockingUserId(null);
+    },
+  });
+
+  const handleUnblockUser = (user: UserProfile) => {
+    if (useMockBlockedUsers) {
+      toast.info('Démo : les utilisateurs mockés ne déclenchent pas la requête API.');
+      return;
+    }
+
+    setUnblockingUserId(user.id);
+    unblockUserMutation.mutate(user.id, {
+      onSuccess: () => {
+        toast.success(`You unblocked ${user.firstName}!`);
+      },
+    });
+  };
 
   const handleEditStart = () => {
     if (!profile) {
@@ -293,6 +430,7 @@ export default function Profile() {
           onEdit={handleEditStart}
           onSave={handleSave}
           onCancel={handleCancelEdit}
+          onOpenSettings={() => setIsSettingsOpen(true)}
         />
 
         <ProfileInformationCard
@@ -305,6 +443,14 @@ export default function Profile() {
           updateBirthDateDraft={updateBirthDateDraft}
         />
       </div>
+      <SettingsModal
+        open={isSettingsOpen}
+        onOpenChange={setIsSettingsOpen}
+        blockedUsers={blockedUsers}
+        isLoadingBlockedUsers={isLoadingBlockedUsers}
+        onUnblockUser={handleUnblockUser}
+        unblockingUserId={unblockingUserId}
+      />
     </div>
   );
 }
