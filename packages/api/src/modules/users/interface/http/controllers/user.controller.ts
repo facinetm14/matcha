@@ -32,7 +32,6 @@ import { CreateInteractionDtoSchema } from '../../validations/create-user-intera
 import { UpdateUserProfileDto } from '@/modules/users/application/dto/update-user-profile.dto';
 import { FilterUsersDtoSchema } from '../../validations/filter-users-dto.validation';
 import { FilterUsersUseCase } from '@/modules/users/application/usecases/filter-users.usecase';
-import { UserProfile } from '@/modules/users/domain/entities/user-profile.entity';
 
 @injectable()
 export class UserController {
@@ -82,7 +81,7 @@ export class UserController {
       return;
     }
 
-    const { passwd: _passw, ...safeUser } = getCurrentUserResult.data;
+    const { passwd: _passwd, ...safeUser } = getCurrentUserResult.data;
 
     resp.status(200).json(safeUser);
   }
@@ -113,6 +112,8 @@ export class UserController {
       const { passwd: _passwd, email: _email, ...safeUser } = user;
       return { ...safeUser, blocked: [] };
     });
+
+    console.log(safeUserList.length);
 
     resp.status(200).send(safeUserList);
   }
@@ -446,5 +447,27 @@ export class UserController {
     }
 
     resp.status(200).json([bestUserSuggestion]);
+  }
+
+  async geoGode(req: Request, resp: Response) {
+    const { lat, lng } = req.query as { lat?: string; lng?: string };
+
+    const result = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`,
+      {
+        headers: {
+          'User-Agent': 'matcha-app',
+        },
+      },
+    );
+
+    if (!result.ok) {
+      resp.status(500).send('Reverse geocoding failed');
+      return;
+    }
+
+    const data = await result.json();
+
+    resp.status(200).send(data);
   }
 }

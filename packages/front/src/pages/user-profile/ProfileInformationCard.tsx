@@ -21,6 +21,9 @@ import { Gender, Location, UserProfile } from '@/types/user';
 import { UpdateUserDto } from '@/types/dto/update-user.dto';
 import { getGenderLabel } from '@/utils/get-gender-label';
 import { Info, MapPin } from 'lucide-react';
+import { defaultLocation, getUserCurrentPosition } from '@/utils/location';
+import { useMutation } from '@tanstack/react-query';
+import { Loadder } from '@/components/ui/Loadder';
 
 const MAX_BIO_CHARACTERS = 500;
 
@@ -54,6 +57,41 @@ export function ProfileInformationCard({
     } as UpdateUserDto);
   };
 
+  const updateUserLocationMutation = useMutation({
+    mutationFn: async (checked: boolean): Promise<Location> => {
+      if (!checked) {
+        return {
+          isEnabledByUser: false,
+          lat: defaultLocation.lat,
+          lng: defaultLocation.lng,
+        };
+      }
+
+      const location = await getUserCurrentPosition();
+
+      if (!location.isEnabledByUser) {
+        throw new Error('Geolocation permission denied');
+      }
+
+      return location;
+    },
+
+    onSuccess: (location) => {
+      updateDraftField({ location });
+    },
+
+    onError: (error) => {
+      console.warn('ERROR:', error);
+
+      updateDraftField({
+        location: {
+          ...draft?.location,
+          isEnabledByUser: false,
+        },
+      });
+    },
+  });
+
   const renderLocationDisplay = () => (
     <div className="p-2 bg-muted rounded read-only flex items-center gap-2">
       <MapPin className="w-4 h-4" />
@@ -76,41 +114,45 @@ export function ProfileInformationCard({
             change this anytime.
           </p>
         </div>
-
-        <Switch
-          checked={Boolean(draft?.location?.isEnabledByUser)}
-          onCheckedChange={(checked) =>
-            updateDraftField({
-              location: {
-                ...(draft?.location ?? profile.location),
-                isEnabledByUser: Boolean(checked),
-              } as Location,
-            })
-          }
-        />
+        {updateUserLocationMutation.isPending ? (
+          <Switch checked={true} disabled={true} />
+        ) : (
+          <Switch
+            checked={Boolean(draft?.location?.isEnabledByUser)}
+            onCheckedChange={(checked) => {
+              updateUserLocationMutation.mutate(checked);
+            }}
+          />
+        )}
       </div>
 
-      {Boolean(draft?.location?.isEnabledByUser) && (
-        <MapView
-          latitude={draft?.location?.lat}
-          longitude={draft?.location?.lng}
-          isEditable={isEditing}
-          onLocationSelect={(lat, lng, city) =>
-            updateDraftField({
-              location: {
-                ...(draft?.location ?? profile.location ?? {}),
-                lat,
-                lng,
-                city:
-                  city ??
-                  (draft?.location ?? profile.location)?.city ??
-                  undefined,
-                isEnabledByUser: (draft?.location ?? profile.location)
-                  ?.isEnabledByUser,
-              } as Location,
-            })
-          }
-        />
+      {updateUserLocationMutation.isPending ? (
+        <Loadder />
+      ) : (
+        <>
+          {Boolean(draft?.location?.isEnabledByUser) && (
+            <MapView
+              latitude={draft?.location?.lat}
+              longitude={draft?.location?.lng}
+              isEditable={isEditing}
+              onLocationSelect={(lat, lng, city) =>
+                updateDraftField({
+                  location: {
+                    ...(draft?.location ?? profile.location ?? {}),
+                    lat,
+                    lng,
+                    city:
+                      city ??
+                      (draft?.location ?? profile.location)?.city ??
+                      undefined,
+                    isEnabledByUser: (draft?.location ?? profile.location)
+                      ?.isEnabledByUser,
+                  } as Location,
+                })
+              }
+            />
+          )}
+        </>
       )}
     </div>
   );

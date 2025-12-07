@@ -24,7 +24,10 @@ import {
 } from '@/components/ui/pagination';
 import { AdvancedSearchCard } from '@/components/AdvancedSearchCard';
 import { calculateDistanceKm } from '@/utils/distance';
-import { getMockLocation, withMockedLocation } from '@/utils/mock-user-location';
+import {
+  getMockLocation,
+  withMockedLocation,
+} from '@/utils/mock-user-location';
 
 const USERS_PER_PAGE = 9;
 const MAX_VISIBLE_PAGES = 5;
@@ -44,15 +47,20 @@ export default function Search() {
   const [ageRange, setAgeRange] = useState<[number, number]>([18, 130]);
   const [fameRange, setFameRange] = useState<[number, number]>([1, 1000]);
   const [sortBy, setSortBy] = useState('distance');
-  const [distanceRange, setDistanceRange] =
-    useState<[number, number]>(DEFAULT_DISTANCE_RANGE);
-  const [appliedDistanceRange, setAppliedDistanceRange] =
-    useState<[number, number]>(DEFAULT_DISTANCE_RANGE);
+  const [distanceRange, setDistanceRange] = useState<[number, number]>(
+    DEFAULT_DISTANCE_RANGE,
+  );
+  const [appliedDistanceRange, setAppliedDistanceRange] = useState<
+    [number, number]
+  >(DEFAULT_DISTANCE_RANGE);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [appliedTags, setAppliedTags] = useState<string[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<UserProfile[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [filtersEnabled, setFiltersEnabled] = useState<Record<FilterKey, boolean>>({
+
+  const [filtersEnabled, setFiltersEnabled] = useState<
+    Record<FilterKey, boolean>
+  >({
     age: true,
     fame: true,
     distance: true,
@@ -118,24 +126,30 @@ export default function Search() {
     }
   }, [error, errorProfile, navigate]);
 
-  const getTagMatchScore = useCallback((user: UserProfile) => {
-    if (!appliedTags.length) {
-      return 0;
-    }
-    const userTags = user.tags?.map((tag) => tag.toLowerCase()) ?? [];
-    return appliedTags.reduce(
-      (score, tag) => (userTags.includes(tag) ? score + 1 : score),
-      0,
-    );
-  }, [appliedTags]);
+  const getTagMatchScore = useCallback(
+    (user: UserProfile) => {
+      if (!appliedTags.length) {
+        return 0;
+      }
+      const userTags = user.tags?.map((tag) => tag.toLowerCase()) ?? [];
+      return appliedTags.reduce(
+        (score, tag) => (userTags.includes(tag) ? score + 1 : score),
+        0,
+      );
+    },
+    [appliedTags],
+  );
 
-  const matchesSelectedTags = useCallback((user: UserProfile) => {
-    if (!appliedTags.length) {
-      return true;
-    }
-    const userTags = user.tags?.map((tag) => tag.toLowerCase()) ?? [];
-    return appliedTags.some((tag) => userTags.includes(tag));
-  }, [appliedTags]);
+  const matchesSelectedTags = useCallback(
+    (user: UserProfile) => {
+      if (!appliedTags.length) {
+        return true;
+      }
+      const userTags = user.tags?.map((tag) => tag.toLowerCase()) ?? [];
+      return appliedTags.some((tag) => userTags.includes(tag));
+    },
+    [appliedTags],
+  );
 
   useEffect(() => {
     if (!data) {
@@ -215,7 +229,10 @@ export default function Search() {
     return <Loadder />;
   }
 
-  const totalPages = Math.max(1, Math.ceil(filteredUsers.length / USERS_PER_PAGE));
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredUsers.length / USERS_PER_PAGE),
+  );
   const paginatedUsers = filteredUsers.slice(
     (currentPage - 1) * USERS_PER_PAGE,
     currentPage * USERS_PER_PAGE,
@@ -237,7 +254,10 @@ export default function Search() {
       startPage = totalPages - MAX_VISIBLE_PAGES + 1;
     }
 
-    return Array.from({ length: endPage - startPage + 1 }, (_, index) => startPage + index);
+    return Array.from(
+      { length: endPage - startPage + 1 },
+      (_, index) => startPage + index,
+    );
   })();
   const showStartEllipsis = visiblePages[0] > 1;
   const showEndEllipsis = visiblePages[visiblePages.length - 1] < totalPages;
@@ -366,14 +386,16 @@ export default function Search() {
                   href="#"
                   aria-label="Go to first page"
                   className={
-                    currentPage === 1 ? 'pointer-events-none opacity-50' : undefined
+                    currentPage === 1
+                      ? 'pointer-events-none opacity-50'
+                      : undefined
                   }
                   onClick={(event) => {
                     event.preventDefault();
                     handlePageChange(1);
                   }}
                 >
-                  <LucideChevronLast className="rotate-180"/>
+                  <LucideChevronLast className="rotate-180" />
                 </PaginationLink>
               </PaginationItem>
               <PaginationItem>
@@ -399,7 +421,9 @@ export default function Search() {
                   <PaginationLink
                     href="#"
                     isActive={pageNumber === currentPage}
-                    className={pageNumber === currentPage ? 'font-bold' : undefined}
+                    className={
+                      pageNumber === currentPage ? 'font-bold' : undefined
+                    }
                     onClick={(event) => {
                       event.preventDefault();
                       handlePageChange(pageNumber);
@@ -443,7 +467,7 @@ export default function Search() {
                     handlePageChange(totalPages);
                   }}
                 >
-                  <LucideChevronLast/>
+                  <LucideChevronLast />
                 </PaginationLink>
               </PaginationItem>
             </PaginationContent>

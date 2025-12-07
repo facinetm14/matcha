@@ -37,70 +37,6 @@ export default function Profile() {
   const [profile, setProfile] = useState<UserProfile>();
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const MOCK_BLOCKED_USERS: UserProfile[] = [
-    {
-      id: 'mock-1',
-      email: 'nina.rios@example.com',
-      firstName: 'Nina',
-      lastName: 'Rios',
-      username: 'nina_r',
-      status: UserStatus.VERIFIED,
-      isFirstLogin: null,
-      gender: 'female',
-      sexualOrientation: ['male'],
-      bio: 'Adore les cafés cosy et les escapades le week-end.',
-      tags: ['coffee', 'travel', 'yoga'],
-      photos: [],
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      birthDate: undefined,
-      fameRating: 4.2,
-      location: { isEnabledByUser: true, city: 'Lyon', lat: 45.76, lng: 4.83 },
-      isOnline: false,
-      lastSeen: new Date(),
-      likedBy: [],
-      viewedBy: [],
-      blocked: [],
-      reported: false,
-      notifications: [],
-      matched: [],
-      age: 29,
-    },
-    {
-      id: 'mock-2',
-      email: 'adam.lee@example.com',
-      firstName: 'Adam',
-      lastName: 'Lee',
-      username: 'adam_lee',
-      status: UserStatus.VERIFIED,
-      isFirstLogin: null,
-      gender: 'male',
-      sexualOrientation: ['female'],
-      bio: 'Fan de concerts, cuisine italienne et course à pied.',
-      tags: ['music', 'cooking', 'running'],
-      photos: [],
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      birthDate: undefined,
-      fameRating: 3.8,
-      location: {
-        isEnabledByUser: true,
-        city: 'Marseille',
-        lat: 43.3,
-        lng: 5.37,
-      },
-      isOnline: true,
-      lastSeen: null,
-      likedBy: [],
-      viewedBy: [],
-      blocked: [],
-      reported: false,
-      notifications: [],
-      matched: [],
-      age: 31,
-    },
-  ];
-
   const {
     draft,
     photos,
@@ -167,34 +103,27 @@ export default function Profile() {
     (n) => n.category == 'message' && !n.isRead,
   ).length;
 
-  const blockedUserIds = [...(profile?.blocked ?? [])].sort();
+  const blockedUserIds = profile?.blocked ?? [];
 
-  const {
-    data: blockedUsersFromApi = [],
-    isFetching: isLoadingBlockedUsersFromApi,
-  } = useQuery<UserProfile[]>({
-    queryKey: [QUERY_KEYS.BLOCKED_USERS, blockedUserIds.join(',')],
-    queryFn: async (): Promise<UserProfile[]> => {
-      if (!blockedUserIds.length) {
-        return [];
-      }
+  const { isPending: isPendingBlockedUserList, data: blockedUserData } =
+    useQuery<UserProfile[]>({
+      queryKey: [QUERY_KEYS.BLOCKED_USERS, blockedUserIds.join(',')],
+      queryFn: async (): Promise<UserProfile[]> => {
+        if (!blockedUserIds.length) {
+          return [];
+        }
 
-      const res = await userApi.getUserProfileList(blockedUserIds);
-      if (!res.ok) {
-        throw new Error('Failed to fetch blocked users');
-      }
-      const userList = await res.json();
-      return userList;
-    },
-    enabled: !!profile,
-  });
-  const useMockBlockedUsers = blockedUserIds.length === 0;
-  const blockedUsers = useMockBlockedUsers
-    ? MOCK_BLOCKED_USERS
-    : blockedUsersFromApi;
-  const isLoadingBlockedUsers = useMockBlockedUsers
-    ? false
-    : isLoadingBlockedUsersFromApi;
+        const res = await userApi.getUserProfileList(blockedUserIds);
+        if (!res.ok) {
+          throw new Error('Failed to fetch blocked users');
+        }
+        const userList = await res.json();
+        return userList;
+      },
+      enabled: !!profile,
+    });
+
+  const [blockedUsersList, setBlockedUsersList] = useState<UserProfile[]>([]);
 
   const updateProfileMutation = useMutation({
     mutationFn: async (updateUserDto: UpdateUserDto) => {
@@ -262,44 +191,39 @@ export default function Profile() {
   });
 
   const unblockUserMutation = useMutation({
-    mutationFn: async (userId: string) => {
+    mutationFn: async ({
+      userId,
+      message,
+    }: {
+      userId: string;
+      message: string;
+    }) => {
       const response = await userApi.interactWithUser({
         recipient: userId,
         category: 'unblock',
       });
       if (response.status !== 201) {
         const error = await response.text();
-        throw new Error(
-          error || 'Failed to unblock user. Please try again.',
-        );
+        throw new Error(error || 'Failed to unblock user. Please try again.');
       }
 
-      return true;
+      return message;
     },
-    onSuccess: () => {
+    onSuccess: (message) => {
+      toast.success(`${message}`);
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.ME], exact: true });
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.BLOCKED_USERS] });
+      setUnblockingUserId(null);
     },
     onError: (error) => {
       toast.error(error.message);
     },
-    onSettled: () => {
-      setUnblockingUserId(null);
-    },
   });
 
   const handleUnblockUser = (user: UserProfile) => {
-    if (useMockBlockedUsers) {
-      toast.info('Démo : les utilisateurs mockés ne déclenchent pas la requête API.');
-      return;
-    }
-
     setUnblockingUserId(user.id);
-    unblockUserMutation.mutate(user.id, {
-      onSuccess: () => {
-        toast.success(`You unblocked ${user.firstName}!`);
-      },
-    });
+    const message = `You unblocked ${user.firstName}!`;
+    unblockUserMutation.mutate({ userId: user.id, message });
   };
 
   const handleEditStart = () => {
@@ -382,7 +306,12 @@ export default function Profile() {
       setProfile(data);
       updateUserPhotos(data.photos);
     }
-  }, [data, updateUserPhotos]);
+
+    queryClient.invalidateQueries({
+      queryKey: [QUERY_KEYS.BLOCKED_USERS],
+      exact: true,
+    });
+  }, [data, updateUserPhotos, queryClient]);
 
   useEffect(() => {
     const openEdition = searchParams.get('openEdition');
@@ -392,8 +321,19 @@ export default function Profile() {
       setSearchParams({}, { replace: true });
       toast.info('Complete your profile to get started!');
     }
+
+    queryClient.invalidateQueries({
+      queryKey: [QUERY_KEYS.BLOCKED_USERS],
+      exact: true,
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile]);
+
+  useEffect(() => {
+    if (blockedUserData) {
+      setBlockedUsersList(blockedUserData);
+    }
+  }, [blockedUserData]);
 
   useEffect(() => {
     if (error) {
@@ -441,8 +381,8 @@ export default function Profile() {
       <SettingsModal
         open={isSettingsOpen}
         onOpenChange={setIsSettingsOpen}
-        blockedUsers={blockedUsers}
-        isLoadingBlockedUsers={isLoadingBlockedUsers}
+        blockedUsers={blockedUsersList}
+        isLoadingBlockedUsers={isPendingBlockedUserList}
         onUnblockUser={handleUnblockUser}
         unblockingUserId={unblockingUserId}
       />

@@ -1,12 +1,37 @@
 import { hashPassword } from '@/modules/auth/infrastructure/utils/password';
 import { UserStatus } from '@/modules/users/application/consts/user-status.enum';
 import { faker } from '@faker-js/faker';
+import {
+  extractCityFromGeocode,
+  GeocodeAddressType,
+} from '@shared/extract-city-from-geocode';
 import { uuid } from '@shared/uuid';
 import { Pool } from 'pg';
 
 const genders = ['male', 'female', 'non-binary'];
+const tagList1 = [
+  'Traveling',
+  'Cooking',
+  'Fitness',
+  'Yoga',
+  'Reading',
+  'Movies',
+  'Sports',
+  'Dancing',
+];
+const tagList2 = [
+  'Photography',
+  'Hiking',
+  'Gaming',
+  'Art',
+  'Pets',
+  'Wine Tasting',
+  'Coffee',
+  'Technology',
+];
 
 const SEED_SIZE = 500;
+const FIRST_HUNDRED = 100;
 
 export const pgClient = new Pool({
   user: process.env.POSTGRES_USER,
@@ -20,6 +45,28 @@ function cleanUsername(str: string): string {
   return str.toLowerCase().replace(/[^a-z0-9]/g, '');
 }
 
+async function getGeocode(
+  lat: number,
+  lng: number,
+): Promise<{ address: GeocodeAddressType } | null> {
+  const result = await fetch(
+    `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`,
+    {
+      headers: {
+        'User-Agent': 'matcha-app',
+      },
+    },
+  );
+
+  if (!result.ok) {
+    return null;
+  }
+
+  const data = await result.json();
+
+  return data;
+}
+
 async function seedUsers() {
   const client = await pgClient.connect();
 
@@ -27,6 +74,8 @@ async function seedUsers() {
     console.log(
       `--------------------Seeding users with ${SEED_SIZE} profiles-----------------`,
     );
+
+    const saveUserAttributes = [];
 
     for (let i = 0; i < SEED_SIZE; i++) {
       const firstName = faker.person.firstName();
@@ -47,6 +96,9 @@ async function seedUsers() {
       const status = UserStatus.VERIFIED;
       const isFirstLogin = 'yes';
       const sexualOrientation = 'male female';
+
+      const tag1 = faker.helpers.arrayElement(tagList1);
+      const tag2 = faker.helpers.arrayElement(tagList2);
 
       await client.query(
         `
@@ -100,7 +152,46 @@ async function seedUsers() {
           birthdate,
         ],
       );
+
+      const insertTag1 = client.query(
+        `
+        INSERT INTO user_interests (id, user_id, interest)
+        VALUES ($1, $2, $3)
+        `,
+        [uuid(), id, tag1],
+      );
+
+      const insertTag2 = client.query(
+        `
+        INSERT INTO user_interests (id, user_id, interest)
+        VALUES ($1, $2, $3)
+        `,
+        [uuid(), id, tag2],
+      );
+
+      if (i < FIRST_HUNDRED) {
+        const lat = faker.location.latitude({ min: 48.5, max: 49.9 });
+        const lng = faker.location.longitude({ min: 1.8, max: 3.9 });
+
+        const geocodeData = await getGeocode(lat, lng);
+
+        const city = geocodeData
+          ? extractCityFromGeocode(geocodeData.address)
+          : undefined;
+
+        const insertLocation = client.query(
+          `
+          INSERT INTO users_location(id, user_id, shared_by_user_at, lat, lng, city)
+          VALUES($1, $2, $3, $4, $5, $6)
+          `,
+          [uuid(), id, createdAt, lat, lng, city],
+        );
+
+        saveUserAttributes.push(...[insertTag1, insertTag2, insertLocation]);
+      }
     }
+
+    await Promise.all(saveUserAttributes);
 
     console.log('Done! 500 users inserted-----------------');
   } catch (error) {
