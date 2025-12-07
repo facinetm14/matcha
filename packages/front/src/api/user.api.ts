@@ -156,6 +156,18 @@ const getChannels = async () => {
   });
 };
 
+const reverseGeocode = async (lat: number, lng: number) => {
+  return fetch(
+    `${API_BASE_ROUTE}/users/reverse-geocode?&lat=${lat}&lng=${lng}`,
+    {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      method: 'GET',
+    },
+  );
+};
+
 export const userApi = {
   getMe,
   checkUserIdentifierAvailability,
@@ -170,4 +182,5 @@ export const userApi = {
   viewUserProfile,
   getChannels,
   filterUsers,
+  reverseGeocode,
 };

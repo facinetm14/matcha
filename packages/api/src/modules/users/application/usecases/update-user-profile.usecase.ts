@@ -9,6 +9,9 @@ import { EventBus } from '@/modules/shared/ports/event-bus';
 import { injectable, inject } from 'inversify';
 import { TYPE } from '@/config/ioc/inversify-type';
 import { UpdateUserProfileDto } from '../dto/update-user-profile.dto';
+import { CreateUserLocationDto } from '../dto/create-user-location-dto';
+import { uuid } from '@shared/uuid';
+import { UserLocationRepository } from '../ports/repositories/user-location.repository';
 
 @injectable()
 export class UpdateUserProfileUseCase {
@@ -19,13 +22,15 @@ export class UpdateUserProfileUseCase {
     private readonly userInterestRepository: UserInterestRepository,
     @inject(TYPE.EventBus)
     private readonly eventBus: EventBus,
+    @inject(TYPE.UserLocationRepository)
+    private readonly userLocationRepository: UserLocationRepository,
   ) {}
 
   async execute(
     userId: string,
     updateUserProfileDto: UpdateUserProfileDto,
   ): Promise<Result<UserProfile, UpdateUserProfileError>> {
-    const { tags, photos, ...user } = updateUserProfileDto;
+    const { tags, photos, location, ...user } = updateUserProfileDto;
 
     if (user) {
       const existingUsername = user.username
@@ -56,15 +61,17 @@ export class UpdateUserProfileUseCase {
 
       const { sexualOrientation, ...updateUserDto } = user;
 
-      const updatedUser = await this.userRepository.update(userId, {
-        ...updateUserDto,
-        ...(sexualOrientation?.length && {
-          sexualOrientation: sexualOrientation.join(' '),
-        }),
-      });
+      if (Object.entries(updateUserDto).length || sexualOrientation?.length) {
+        const updatedUser = await this.userRepository.update(userId, {
+          ...updateUserDto,
+          ...(sexualOrientation?.length && {
+            sexualOrientation: sexualOrientation.join(' '),
+          }),
+        });
 
-      if (!updatedUser) {
-        return Err(UpdateUserProfileError.UNKNOWN_ERROR);
+        if (!updatedUser) {
+          return Err(UpdateUserProfileError.UNKNOWN_ERROR);
+        }
       }
     }
 
@@ -79,6 +86,25 @@ export class UpdateUserProfileUseCase {
       await this.userInterestRepository.deleteByUserId(userId);
       if (tags.length) {
         await this.userInterestRepository.bulkCreate(userId, tags);
+      }
+    }
+
+    if (location) {
+     
+
+      const existingLocation =
+        await this.userLocationRepository.findByUserId(userId);
+
+      if (existingLocation) {
+        await this.userLocationRepository.update(userId, location);
+      } else {
+        const createUserLocation: CreateUserLocationDto = {
+          ...location,
+          id: uuid(),
+          userId,
+        };
+
+        await this.userLocationRepository.create(createUserLocation);
       }
     }
 

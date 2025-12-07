@@ -56,6 +56,11 @@ export type UserAggregate = UserModel & {
   sexual_orientation: string;
   interaction_recipient: string;
   interaction_id: string;
+  location_id: string;
+  location_city: string;
+  location_lat: string;
+  location_lng: string;
+  location_shared_by_user_at: Date | null;
 };
 
 export function buildUserProfileFromUserAggregate(
@@ -96,6 +101,7 @@ export function buildUserProfileFromUserAggregate(
         matched: user.notif_category === 'match' ? [user.notif_id] : [],
         notifications: user.notif_author ? [notification] : [],
         reported: false,
+
         photos: user.img_id
           ? [
               {
@@ -109,6 +115,15 @@ export function buildUserProfileFromUserAggregate(
         age: user.birth_date ? calculateAge(user.birth_date, now) : undefined,
         sexualOrientation: (user.sexual_orientation?.split(' ') ??
           []) as Gender[],
+
+        ...(user.location_id && {
+          location: {
+            isEnabledByUser: user.location_shared_by_user_at ? true : false,
+            lat: +user.location_lat,
+            lng: +user.location_lng,
+            city: user.location_city,
+          },
+        }),
       };
 
       visitedImages.add(user.img_id);
@@ -190,6 +205,15 @@ export function buildUserProfileFromUserAggregate(
     ) {
       existingProfile.blocked.push(user.interaction_recipient);
       interactors.add(interactionKey);
+    }
+
+    if (!existingProfile.location && user.location_id) {
+      existingProfile.location = {
+        isEnabledByUser: user.location_shared_by_user_at ? true : false,
+        lat: +user.location_lat,
+        lng: +user.location_lng,
+        city: user.location_city,
+      };
     }
   }
 

@@ -106,4 +106,6 @@ UserRouter.get(
   },
 );
 
+UserRouter.get('/reverse-geocode', userController.geoGode);
+
 export default UserRouter;
