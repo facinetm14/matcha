@@ -1,4 +1,7 @@
-import { UserProfile } from '@/modules/users/domain/entities/user-profile.entity';
+import {
+  Gender,
+  UserProfile,
+} from '@/modules/users/domain/entities/user-profile.entity';
 import { User } from '../../domain/entities/user.entity';
 import { UserModel } from '../models/user.model';
 import { InteractionCategory } from '@/modules/users/domain/entities/user-profile-interaction.entity';
@@ -19,22 +22,23 @@ export function mapUserModelToEntity(userModel: UserModel): User {
     status: userModel.status,
     isFirstLogin: userModel.is_first_login,
     gender: userModel.gender,
-    sexualOrientation: userModel.sexual_orientation,
     bio: userModel.bio,
     birthDate: userModel.birth_date,
+    sexualOrientation: userModel.sexual_orientation,
   };
 }
 
 const isCorrectCategory = (
-  cateoryToMatch: InteractionCategory,
+  categoryToMatch: InteractionCategory,
   author?: string,
   category?: InteractionCategory,
 ) => {
-  return author && category === cateoryToMatch;
+  return author && category === categoryToMatch;
 };
 
 export type UserAggregate = UserModel & {
   interest: string;
+  tag_id: string;
   author: string;
   category: InteractionCategory;
   img_position: string;
@@ -49,6 +53,14 @@ export type UserAggregate = UserModel & {
   notif_updated_at: Date;
   notif_is_read: Date;
   notif_category: InteractionCategory;
+  sexual_orientation: string;
+  interaction_recipient: string;
+  interaction_id: string;
+  location_id: string;
+  location_city: string;
+  location_lat: string;
+  location_lng: string;
+  location_shared_by_user_at: Date | null;
 };
 
 export function buildUserProfileFromUserAggregate(
@@ -63,7 +75,7 @@ export function buildUserProfileFromUserAggregate(
   const now = new Date();
 
   for (const user of userAggregate) {
-    const interactionKey = `${user.id}+${user.author}+${user.category}`;
+    const interactionKey = `${user.id}+${user.author}+${user.interaction_recipient}+${user.category}`;
     const tagKey = `${user.id}+${user.interest}`;
 
     const notification = {
@@ -77,22 +89,19 @@ export function buildUserProfileFromUserAggregate(
     };
 
     if (!userProfilesMap.has(user.id)) {
-      userProfilesMap.set(user.id, {
+      const currentUserProfile: UserProfile = {
         ...mapUserModelToEntity(user),
         tags: user.interest ? [user.interest] : [],
         fameRating: 0,
         isOnline: user.isOnline,
         lastSeen: user.lastSeen,
-        likedBy: isCorrectCategory('like', user.author, user.category)
-          ? [user.author]
-          : [],
-        viewedBy: isCorrectCategory('view', user.author, user.category)
-          ? [user.author]
-          : [],
+        likedBy: [],
+        viewedBy: [],
+        blocked: [],
         matched: user.notif_category === 'match' ? [user.notif_id] : [],
         notifications: user.notif_author ? [notification] : [],
-
         reported: false,
+
         photos: user.img_id
           ? [
               {
@@ -104,12 +113,42 @@ export function buildUserProfileFromUserAggregate(
             ]
           : [],
         age: user.birth_date ? calculateAge(user.birth_date, now) : undefined,
-      });
+        sexualOrientation: (user.sexual_orientation?.split(' ') ??
+          []) as Gender[],
 
-      interactors.add(interactionKey);
-      visitedTags.add(tagKey);
+        ...(user.location_id && {
+          location: {
+            isEnabledByUser: user.location_shared_by_user_at ? true : false,
+            lat: +user.location_lat,
+            lng: +user.location_lng,
+            city: user.location_city,
+          },
+        }),
+      };
+
       visitedImages.add(user.img_id);
       visitedNotif.add(notification.id);
+      visitedTags.add(tagKey);
+      userProfilesMap.set(user.id, currentUserProfile);
+
+      if (isCorrectCategory('view', user.author, user.category)) {
+        currentUserProfile.viewedBy.push(user.author);
+        interactors.add(interactionKey);
+      }
+
+      if (isCorrectCategory('like', user.author, user.category)) {
+        currentUserProfile.likedBy.push(user.author);
+        interactors.add(interactionKey);
+      }
+
+      if (
+        isCorrectCategory('block', user.interaction_recipient, user.category) &&
+        user.author === user.id
+      ) {
+        currentUserProfile.blocked.push(user.interaction_recipient);
+        interactors.add(interactionKey);
+      }
+
       continue;
     }
 
@@ -117,18 +156,6 @@ export function buildUserProfileFromUserAggregate(
     if (user.interest && !visitedTags.has(tagKey)) {
       existingProfile.tags.push(user.interest);
       visitedTags.add(tagKey);
-    }
-
-    if (!interactors.has(interactionKey)) {
-      if (isCorrectCategory('view', user.author, user.category)) {
-        existingProfile.viewedBy.push(user.author);
-      }
-
-      if (isCorrectCategory('like', user.author, user.category)) {
-        existingProfile.likedBy.push(user.author);
-      }
-
-      interactors.add(interactionKey);
     }
 
     if (user.img_id && !visitedImages.has(user.img_id)) {
@@ -151,6 +178,37 @@ export function buildUserProfileFromUserAggregate(
 
       visitedNotif.add(notification.id);
     }
+
+    if (interactors.has(interactionKey)) {
+      continue;
+    }
+
+    if (isCorrectCategory('view', user.author, user.category)) {
+      existingProfile.viewedBy.push(user.author);
+      interactors.add(interactionKey);
+    }
+
+    if (isCorrectCategory('like', user.author, user.category)) {
+      existingProfile.likedBy.push(user.author);
+      interactors.add(interactionKey);
+    }
+
+    if (
+      isCorrectCategory('block', user.interaction_recipient, user.category) &&
+      user.author === existingProfile.id
+    ) {
+      existingProfile.blocked.push(user.interaction_recipient);
+      interactors.add(interactionKey);
+    }
+
+    if (!existingProfile.location && user.location_id) {
+      existingProfile.location = {
+        isEnabledByUser: user.location_shared_by_user_at ? true : false,
+        lat: +user.location_lat,
+        lng: +user.location_lng,
+        city: user.location_city,
+      };
+    }
   }
 
   return [...userProfilesMap.values()].map((profile) => ({
@@ -162,5 +220,6 @@ export function buildUserProfileFromUserAggregate(
         new Date(a.createdAt) > new Date(b.createdAt) ? -1 : 1,
       ),
     ),
+    tags: profile.tags.sort((a, b) => (a < b ? -1 : 1)),
   }));
 }

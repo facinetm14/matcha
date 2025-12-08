@@ -1,11 +1,10 @@
-import { Location } from '@/types/user';
+import { Location } from '@/modules/users/domain/entities/user-profile.entity';
+
+export const MAX_SUGGESTED_DISTANCE_KM = 200;
 
 const toRadians = (value: number) => (value * Math.PI) / 180;
 
-export const calculateDistanceKm = (
-  from?: Location,
-  to?: Location,
-): number => {
+export const calculateDistanceKm = (from?: Location, to?: Location): number => {
   const hasFromCoords =
     typeof from?.lat === 'number' && typeof from?.lng === 'number';
   const hasToCoords =
@@ -27,5 +26,5 @@ export const calculateDistanceKm = (
       Math.sin(deltaLng / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
-  return earthRadiusKm * c;
+  return Math.floor(earthRadiusKm * c);
 };

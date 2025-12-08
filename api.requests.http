@@ -98,7 +98,12 @@ Content-Type: application/json
   "gender": "male",
   "bio": "lorem dkskdsd",
   "tags": ["coding", "singing", "dancing"],
-  "birthDate": "2005-10-21"
+  "birthDate": "2005-10-21",
+  "location": {
+    "isEnabledByUser": false,
+    "lat": 48.8566,
+    "lng": 4.3522
+  }
 }
 
 
@@ -156,3 +161,7 @@ Content-Type: application/json
   }, 
   "tags": []
 }
+
+### browse users
+GET {{baseUrl}}/users/browse
+Authorization: Bearer {{accessToken}} {{refreshToken}}

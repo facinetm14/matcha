@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,11 +17,13 @@ import { authApi } from '@/api/auth.api';
 import { useParams } from 'react-router-dom';
 import NotFound from './NotFound';
 import { Loadder } from '@/components/ui/Loadder';
+import { QUERY_KEYS } from '@/utils/utils';
 
 export default function CreateNewPassword() {
   const navigate = useNavigate();
   const [passwd, setPassword] = useState('');
   const [confirmPasswd, setConfirmPassword] = useState('');
+  const [isConfirmed, setIsConfirmed] = useState(false);
 
   const [errors, setErrors] = useState<{
     passwd?: string;
@@ -30,8 +32,8 @@ export default function CreateNewPassword() {
 
   const { token } = useParams();
 
-  const { isPending, error } = useQuery({
-    queryKey: ['confirmResetPassword', token],
+  const { isPending, error, data } = useQuery({
+    queryKey: [QUERY_KEYS.CONFIRM_RESET_PASSWORD, token],
     queryFn: async () => {
       if (!token) {
         throw new Error('No token provided');
@@ -44,6 +46,7 @@ export default function CreateNewPassword() {
 
       throw new Error('Verification failed');
     },
+    enabled: !isConfirmed,
   });
 
   const createNewPasswordMutation = useMutation({
@@ -72,12 +75,6 @@ export default function CreateNewPassword() {
     },
   });
 
-  if (isPending) return <Loadder />;;
-
-  if (error) {
-    return <NotFound />;
-  }
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const newErrors: { passwd?: string; confirmPasswd?: string } = {};
@@ -100,6 +97,17 @@ export default function CreateNewPassword() {
       createNewPasswordMutation.mutate({ passwd, confirmPasswd });
     }
   };
+
+  useEffect(() => {
+    if (data) {
+      setIsConfirmed(true);
+    }
+    if (error) {
+      navigate('not-found');
+    }
+  }, [data, error, navigate]);
+
+  if (isPending) return <Loadder />;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-subtle p-4">
@@ -129,7 +137,7 @@ export default function CreateNewPassword() {
                 value={passwd}
                 onChange={(e) => setPassword(e.target.value)}
                 className={errors.passwd ? 'border-destructive' : ''}
-                autoComplete='new-password'
+                autoComplete="new-password"
               />
               {errors.passwd && (
                 <p className="text-sm text-destructive">{errors.passwd}</p>
@@ -145,7 +153,7 @@ export default function CreateNewPassword() {
                 value={confirmPasswd}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 className={errors.confirmPasswd ? 'border-destructive' : ''}
-                autoComplete='new-password'
+                autoComplete="new-password"
               />
               {errors.confirmPasswd && (
                 <p className="text-sm text-destructive">

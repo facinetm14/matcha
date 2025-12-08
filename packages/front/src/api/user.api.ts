@@ -62,16 +62,17 @@ const checkUserIdentifierAvailability = async (
 };
 
 const updateUserProfile = async (updateUserDto: UpdateUserDto) => {
-  console.log(updateUserDto);
+  const { sexualOrientation, ...user } = updateUserDto;
+  const orientation = sexualOrientation?.filter((p) => !!p) ?? [];
+
   return fetch(`${API_BASE_ROUTE}/users/update`, {
     headers: {
       'Content-Type': 'application/json',
     },
     method: 'PATCH',
     body: JSON.stringify({
-      ...updateUserDto,
-      sexualOrientation:
-        updateUserDto.sexualOrientation?.filter((p) => !!p) ?? [],
+      ...user,
+      ...(orientation && { sexualOrientation: orientation }),
     }),
     credentials: 'include',
   });
@@ -155,6 +156,18 @@ const getChannels = async () => {
   });
 };
 
+const reverseGeocode = async (lat: number, lng: number) => {
+  return fetch(
+    `${API_BASE_ROUTE}/users/reverse-geocode?&lat=${lat}&lng=${lng}`,
+    {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      method: 'GET',
+    },
+  );
+};
+
 export const userApi = {
   getMe,
   checkUserIdentifierAvailability,
@@ -169,4 +182,5 @@ export const userApi = {
   viewUserProfile,
   getChannels,
   filterUsers,
+  reverseGeocode,
 };

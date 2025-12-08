@@ -46,7 +46,7 @@ export const buildResetPasswordEmailTemplate = (
         <div class="container m-auto">
             <div class="content">
               <p>Hello ${username}! We received a request to reset your password, if it was you, simply follow the link bellow to create a new one otherwise ignore this mail:</p>
-              <a href="${newPasswordLink}" class="btn btn-primary">Verify Email</a>
+              <a href="${newPasswordLink}" class="btn btn-primary">Reset password</a>
             </div>
             <div class="footer">
                 <p>&copy; 2025 MatchaApp. All rights reserved.</p>

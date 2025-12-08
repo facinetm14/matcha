@@ -1,4 +1,7 @@
-import { Gender } from '@/modules/users/domain/entities/user-profile.entity';
+import {
+  Gender,
+  Location,
+} from '@/modules/users/domain/entities/user-profile.entity';
 import { UploadImageDto } from './upload-image.dto';
 
 export interface UpdateUserProfileDto {
@@ -14,4 +17,5 @@ export interface UpdateUserProfileDto {
   bio?: string;
   tags?: string[];
   photos?: UploadImageDto[];
+  location?: Location;
 }

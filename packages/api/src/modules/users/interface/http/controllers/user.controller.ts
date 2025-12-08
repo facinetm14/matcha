@@ -21,7 +21,6 @@ import { DeleteUserImageUsceCase } from '@/modules/users/application/usecases/de
 import { ReorderUserImageUseCase } from '@/modules/users/application/usecases/reorder-user-image-usecase';
 import { GetAllTagsUseCase } from '@/modules/users/application/usecases/get-all-tags.usecase';
 import { FetchBestUserSuggestion } from '@/modules/users/application/usecases/fetch-best-user-suggestion.usecase';
-import { UserProfile } from '@/modules/users/domain/entities/user-profile.entity';
 import { GetUserListFromIdListUseCase } from '@/modules/users/application/usecases/get-user-list-from-id.usecase';
 import { TYPE } from '@/config/ioc/inversify-type';
 import { CheckUserIdentifierAvailabilityDtoSchema } from '../../validations/check-user-identifier-availability-dto.validation';
@@ -82,10 +81,9 @@ export class UserController {
       return;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { passwd, ...user } = getCurrentUserResult.data;
+    const { passwd: _passwd, ...safeUser } = getCurrentUserResult.data;
 
-    resp.status(200).json(user);
+    resp.status(200).json(safeUser);
   }
 
   async filterUsers(req: Request, resp: Response) {
@@ -107,10 +105,15 @@ export class UserController {
 
     const filteredUsers = await this.filterUsersUseCase.execute(
       parsedBody.data,
-      connectedUserResult.data
+      connectedUserResult.data,
     );
 
-    resp.status(200).json(filteredUsers);
+    const safeUserList = filteredUsers.map((user) => {
+      const { passwd: _passwd, email: _email, ...safeUser } = user;
+      return { ...safeUser, blocked: [] };
+    });
+
+    resp.status(200).send(safeUserList);
   }
 
   async viewUserProfile(
@@ -142,10 +145,13 @@ export class UserController {
       return;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { passwd, ...user } = getCurrentUserResult.data;
+    const {
+      passwd: _passwd,
+      email: _email,
+      ...safeUser
+    } = getCurrentUserResult.data;
 
-    resp.status(200).json(user);
+    resp.status(200).json(safeUser);
   }
 
   async viewUserProfileList(req: Request, resp: Response) {
@@ -169,12 +175,12 @@ export class UserController {
 
     const userIdList = parsedBody.data.userIdList;
 
-    const userList: UserProfile[] =
+    const userList =
       await this.getUserListFromIdListUseCase.execute(userIdList);
-    const safeUserList = userList.map((u) => {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { passwd, ...user } = u;
-      return user;
+
+    const safeUserList = userList.map((user) => {
+      const { email: _email, ...safeUser } = user;
+      return { ...safeUser, blocked: [] };
     });
 
     resp.status(200).send(safeUserList);
@@ -438,9 +444,28 @@ export class UserController {
       return;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { passwd, ...user } = bestUserSuggestion;
+    resp.status(200).json(bestUserSuggestion);
+  }
 
-    resp.status(200).json([user]);
+  async geoGode(req: Request, resp: Response) {
+    const { lat, lng } = req.query as { lat?: string; lng?: string };
+
+    const result = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`,
+      {
+        headers: {
+          'User-Agent': 'matcha-app',
+        },
+      },
+    );
+
+    if (!result.ok) {
+      resp.status(500).send('Reverse geocoding failed');
+      return;
+    }
+
+    const data = await result.json();
+
+    resp.status(200).send(data);
   }
 }

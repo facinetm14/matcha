@@ -11,7 +11,7 @@ export type Location = {
   lng: number;
 };
 
-export type UserProfile = User & {
+export type UserProfile = Omit<User, 'sexualOrientation'> & {
   tags: string[];
   photos: UserImage[];
   location?: Location;
@@ -22,7 +22,8 @@ export type UserProfile = User & {
   viewedBy: string[];
   matched: string[];
   notifications: Notification[];
-  blocked?: string[];
+  blocked: string[];
   reported: boolean;
   age?: number;
+  sexualOrientation: Gender[];
 };
