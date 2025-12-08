@@ -37,7 +37,7 @@ content-type: application/json
 # return status 200 -> successfully fetched user profile
 GET {{baseUrl}}/users/me
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI5dzI5eHAtbWd6MDVnMzEtd3dteTF4LWhlM3FrOCIsImlhdCI6MTc2NTE0MjIyNSwiZXhwIjoxNzY1MTQzMTI1LCJqdGkiOiJqajdvdnEtbWl3ODN0eGMtazRxYmF0LXF0MzJmcyJ9.8B7QtLtUZoWXN4oSoqxSCJAzyxB6EOzmL2KY6gixL4E {{refreshToken}}
+Authorization: Bearer {{accessToken}} {{refreshToken}}
 
 ### check user identifier availability
 # return status 200 -> successfully checked user identifier availability
@@ -90,7 +90,7 @@ Authorization: Bearer {{accessToken}} {{refreshToken}}
 
 ### update user infos
 PATCH {{baseUrl}}/users/update
-Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI5dzI5eHAtbWd6MDVnMzEtd3dteTF4LWhlM3FrOCIsImlhdCI6MTc2NTE0MDM1MywiZXhwIjoxNzY1MTQxMjUzLCJqdGkiOiJhOHBjeGItbWl3NnpwOTgtZWp2OGJiLTQyN2xyZSJ9.51pK4Uq5V0wI4jP9KxJaDEQLU8x0z0CrFHOlQ_QE4Kk {{refreshToken}}
+Authorization: Bearer {{accessToken}} {{refreshToken}}
 Content-Type: application/json
 
 {
@@ -161,3 +161,7 @@ Content-Type: application/json
   }, 
   "tags": []
 }
+
+### browse users
+GET {{baseUrl}}/users/browse
+Authorization: Bearer {{accessToken}} {{refreshToken}}
