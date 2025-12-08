@@ -113,8 +113,6 @@ export class UserController {
       return { ...safeUser, blocked: [] };
     });
 
-    console.log(safeUserList.length);
-
     resp.status(200).send(safeUserList);
   }
 
@@ -446,7 +444,7 @@ export class UserController {
       return;
     }
 
-    resp.status(200).json([bestUserSuggestion]);
+    resp.status(200).json(bestUserSuggestion);
   }
 
   async geoGode(req: Request, resp: Response) {

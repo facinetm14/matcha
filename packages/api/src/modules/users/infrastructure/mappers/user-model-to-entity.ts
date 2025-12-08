@@ -129,19 +129,16 @@ export function buildUserProfileFromUserAggregate(
       visitedImages.add(user.img_id);
       visitedNotif.add(notification.id);
       visitedTags.add(tagKey);
+      userProfilesMap.set(user.id, currentUserProfile);
 
       if (isCorrectCategory('view', user.author, user.category)) {
         currentUserProfile.viewedBy.push(user.author);
         interactors.add(interactionKey);
-        userProfilesMap.set(user.id, currentUserProfile);
-        continue;
       }
 
       if (isCorrectCategory('like', user.author, user.category)) {
         currentUserProfile.likedBy.push(user.author);
         interactors.add(interactionKey);
-        userProfilesMap.set(user.id, currentUserProfile);
-        continue;
       }
 
       if (
@@ -150,7 +147,6 @@ export function buildUserProfileFromUserAggregate(
       ) {
         currentUserProfile.blocked.push(user.interaction_recipient);
         interactors.add(interactionKey);
-        userProfilesMap.set(user.id, currentUserProfile);
       }
 
       continue;
@@ -190,13 +186,11 @@ export function buildUserProfileFromUserAggregate(
     if (isCorrectCategory('view', user.author, user.category)) {
       existingProfile.viewedBy.push(user.author);
       interactors.add(interactionKey);
-      continue;
     }
 
     if (isCorrectCategory('like', user.author, user.category)) {
       existingProfile.likedBy.push(user.author);
       interactors.add(interactionKey);
-      continue;
     }
 
     if (
@@ -226,5 +220,6 @@ export function buildUserProfileFromUserAggregate(
         new Date(a.createdAt) > new Date(b.createdAt) ? -1 : 1,
       ),
     ),
+    tags: profile.tags.sort((a, b) => (a < b ? -1 : 1)),
   }));
 }

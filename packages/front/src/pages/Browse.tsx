@@ -15,8 +15,11 @@ import { useGetProfile } from '@/hooks/useGetProfile';
 import { QUERY_KEYS } from '@/utils/utils';
 import { FilterUsersDto, UserProfile } from '@/types/user';
 import { AdvancedSearchCard } from '@/components/AdvancedSearchCard';
-import { calculateDistanceKm } from '@/utils/distance';
-import { getMockLocation, withMockedLocation } from '@/utils/mock-user-location';
+import { calculateDistanceKm } from '../../../shared//distance';
+import {
+  getMockLocation,
+  withMockedLocation,
+} from '@/utils/mock-user-location';
 
 const DEFAULT_DISTANCE_RANGE: [number, number] = [0, 600];
 type FilterKey = 'age' | 'fame' | 'distance' | 'sort' | 'tags';
@@ -45,13 +48,17 @@ export default function Browse() {
   const [sortBy, setSortBy] = useState('distance');
   const [appliedFilters, setAppliedFilters] = useState<FilterUsersDto>({});
   const [appliedSort, setAppliedSort] = useState('distance');
-  const [distanceRange, setDistanceRange] =
-    useState<[number, number]>(DEFAULT_DISTANCE_RANGE);
-  const [appliedDistanceRange, setAppliedDistanceRange] =
-    useState<[number, number]>(DEFAULT_DISTANCE_RANGE);
+  const [distanceRange, setDistanceRange] = useState<[number, number]>(
+    DEFAULT_DISTANCE_RANGE,
+  );
+  const [appliedDistanceRange, setAppliedDistanceRange] = useState<
+    [number, number]
+  >(DEFAULT_DISTANCE_RANGE);
   const [tags, setTags] = useState<string[]>([]);
   const [appliedTags, setAppliedTags] = useState<string[]>([]);
-  const [filtersEnabled, setFiltersEnabled] = useState<Record<FilterKey, boolean>>({
+  const [filtersEnabled, setFiltersEnabled] = useState<
+    Record<FilterKey, boolean>
+  >({
     age: true,
     fame: true,
     distance: true,
@@ -74,7 +81,7 @@ export default function Browse() {
   } = useQuery({
     queryKey: [QUERY_KEYS.BROWSE_USERS, appliedFilters],
     queryFn: async () => {
-      const res = await userApi.filterUsers(appliedFilters);
+      const res = await userApi.browseUsers();
       if (!res.ok) {
         throw new Error('Failed to browse users');
       }
@@ -203,8 +210,14 @@ export default function Browse() {
             return getTagMatchScore(b) - getTagMatchScore(a);
           case 'distance':
           default: {
-            const distanceA = calculateDistanceKm(referenceLocation, a.location);
-            const distanceB = calculateDistanceKm(referenceLocation, b.location);
+            const distanceA = calculateDistanceKm(
+              referenceLocation,
+              a.location,
+            );
+            const distanceB = calculateDistanceKm(
+              referenceLocation,
+              b.location,
+            );
             return distanceA - distanceB;
           }
         }
@@ -303,6 +316,14 @@ export default function Browse() {
                   <div className="flex items-center gap-2 text-sm">
                     <MapPin className="w-4 h-4" />
                     <span>{currentUser.location?.city ?? 'unknown'}</span>
+                    {currentUser?.location?.isEnabledByUser && (
+                      <span>
+                        {` [ ${calculateDistanceKm(
+                          connectedUser?.location,
+                          currentUser?.location,
+                        )} KM ]`}
+                      </span>
+                    )}
                   </div>
                 </div>
                 <div className="flex items-center gap-2 bg-primary/20 backdrop-blur-sm px-3 py-1 rounded-full">

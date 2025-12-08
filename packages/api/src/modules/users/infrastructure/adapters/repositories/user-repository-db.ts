@@ -300,8 +300,67 @@ export class UserRepositoryDb implements UserRepository {
       return [];
     }
 
-    const idList = result.rows.map((u) => u.id);
+    const user = await this.findUserProfileById(userId);
+    if (!user) {
+      return [];
+    }
+
+    const idList = result.rows
+      .map((u) => u.id)
+      .filter((u) => !user.blocked.includes(u));
 
     return await this.findUserProfileByIdList(idList);
+  }
+
+  async findAllUsers(userId: string): Promise<UserProfile[]> {
+    const queryUser = {
+      text: `
+              SELECT u.*, 
+              uim.id as img_id, uim.position as img_position, uim.preview as img_preview,
+              ui.interest, ui.id as tag_id,
+              upi.author, upi.category, upi.created_at as interaction_created_at, upi.recipient as interaction_recipient, upi.id as interaction_id,
+              notif.id as notif_id, notif.author as notif_author, notif.from_user as notif_from_user,
+              notif.created_at as notif_created_at, notif.updated_at as notif_updated_at, notif.is_read as notif_is_read,
+              notif.category as notif_category,
+              uloc.id as location_id, uloc.city as location_city, uloc.shared_by_user_at as location_shared_by_user_at, uloc.lat as location_lat, uloc.lng as location_lng
+              FROM users as u
+              LEFT JOIN user_images as uim ON u.id = uim.user_id
+              LEFT JOIN user_interests as ui ON u.id = ui.user_id
+              LEFT JOIN users_location as uloc ON u.id = uloc.user_id
+              LEFT JOIN user_profile_interactions as upi ON (
+                (upi.author = u.id AND upi.category = $2)
+                  OR
+                (upi.recipient = u.id)
+              )
+              LEFT JOIN user_notifications as notif ON (
+                (notif.author = u.id AND notif.category != $1)
+                 OR 
+                (notif.category = $1 AND (notif.author = u.id OR notif.from_user = u.id))
+              )
+              WHERE u.id != $3
+              ORDER BY interaction_created_at DESC
+            `,
+      values: ['match', 'block', userId],
+    };
+
+    const connexion = await pgClient.connect();
+    const result = await pgClient.query(queryUser);
+    connexion.release();
+    const userProfileRawList = result.rows;
+    if (!userProfileRawList.length) {
+      return [];
+    }
+
+    const userProfileRawListWithOnlineStatus = [];
+    for (const user of userProfileRawList) {
+      const isOnline = await this.getOnlineStatus(user.id);
+      const lastSeen = await this.getLastConnection(user.id);
+      userProfileRawListWithOnlineStatus.push({ ...user, isOnline, lastSeen });
+    }
+
+    const userProfiles = buildUserProfileFromUserAggregate(
+      userProfileRawListWithOnlineStatus,
+    );
+    return userProfiles;
   }
 }

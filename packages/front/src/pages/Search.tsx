@@ -23,7 +23,8 @@ import {
   PaginationPrevious,
 } from '@/components/ui/pagination';
 import { AdvancedSearchCard } from '@/components/AdvancedSearchCard';
-import { calculateDistanceKm } from '@/utils/distance';
+import { calculateDistanceKm } from '../../../shared/distance';
+
 import {
   getMockLocation,
   withMockedLocation,
@@ -338,6 +339,14 @@ export default function Search() {
                   <div className="flex items-center gap-2 text-sm mb-2">
                     <MapPin className="w-3 h-3" />
                     <span>{user.location?.city || 'unknown'}</span>
+                    {user?.location?.isEnabledByUser && (
+                      <span>
+                        {` [ ${calculateDistanceKm(
+                          connectedUser?.location,
+                          user?.location,
+                        )} KM ]`}
+                      </span>
+                    )}
                   </div>
                   <div className="flex items-center gap-2">
                     <Star className="w-3 h-3 fill-primary text-primary" />

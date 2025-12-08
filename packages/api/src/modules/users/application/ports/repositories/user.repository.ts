@@ -12,4 +12,5 @@ export interface UserRepository {
   findUserProfileById(id: string): Promise<UserProfile | null>;
   findUserProfileByIdList(idList: string[]): Promise<UserProfile[]>;
   findUsersByFilter(filter: FilterUsersDto, id: string): Promise<UserProfile[]>;
+  findAllUsers(userId: string): Promise<UserProfile[]>;
 }
