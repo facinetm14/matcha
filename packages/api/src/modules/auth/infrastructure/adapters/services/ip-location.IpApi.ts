@@ -1,5 +1,6 @@
 import { IpLocation } from '@/modules/auth/application/ports/services/ip-location-service';
 import { Location } from '@/modules/users/domain/entities/user-profile.entity';
+import { defaultLocation } from '@shared/distance';
 import { injectable } from 'inversify';
 
 @injectable()
@@ -17,14 +18,17 @@ export class IpLocationIpApi implements IpLocation {
 
     if (resp.ok) {
       const data = await resp.json();
-
-      console.log({ data });
+      return {
+        isEnabledByUser: false,
+        lat: data.latitude ?? defaultLocation.lat,
+        lng: data.longitude ?? defaultLocation.lng,
+      };
     }
 
     return {
       isEnabledByUser: false,
-      lat: 0,
-      lng: 0,
+      lat: defaultLocation.lat,
+      lng: defaultLocation.lng,
     };
   }
 }
