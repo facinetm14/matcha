@@ -7,7 +7,7 @@ import { Heart, X, MapPin, Star, Info } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { userApi } from '@/api/user.api';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { getInitials } from '@/utils/get-initials';
 import { logout } from '@/utils/auth';
 import { Loadder } from '@/components/ui/Loadder';
@@ -20,6 +20,7 @@ import {
   getMockLocation,
   withMockedLocation,
 } from '@/utils/mock-user-location';
+import { CreateInteractionDto } from '@/types/dto/create-interaction.dto';
 
 const DEFAULT_DISTANCE_RANGE: [number, number] = [0, 600];
 type FilterKey = 'age' | 'fame' | 'distance' | 'sort' | 'tags';
@@ -90,16 +91,64 @@ export default function Browse() {
     },
   });
 
+  const userInteractionMutation = useMutation({
+    mutationFn: async ({
+      query,
+      message,
+    }: {
+      query: CreateInteractionDto;
+      message: string;
+    }) => {
+      const actionResult = await userApi.interactWithUser(query);
+      if (actionResult.status !== 201) {
+        throw new Error(`Failed to ${query.category} user. Please try again.`);
+      }
+      const currentUserResp = await userApi.getMe();
+      if (!currentUserResp.ok) {
+        throw new Error('Failled to retrieve user infos');
+      }
+      return message;
+    },
+
+    onSuccess: (message: string) => {
+      if (message.length) {
+        toast.success(`${message}`);
+      }
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.BROWSE_USERS, appliedFilters],
+        exact: true,
+      });
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.ME],
+        exact: true,
+      });
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
+
   const currentUser = users ? users[0] : null;
 
   const handleLike = () => {
-    toast.success(`You liked ${currentUser.firstName}! 💕`);
-    queryClient.invalidateQueries({
-      queryKey: [QUERY_KEYS.BROWSE_USERS],
-    });
+    const message = `You liked ${currentUser.firstName}! 💕`;
+    const query: CreateInteractionDto = {
+      recipient: currentUser.id,
+      category: 'like',
+    };
+
+    userInteractionMutation.mutate({ query, message });
   };
 
-  const handlePass = () => {};
+  const handlePass = () => {
+    const message = ``;
+    const query: CreateInteractionDto = {
+      recipient: currentUser.id,
+      category: 'swipe',
+    };
+
+    userInteractionMutation.mutate({ query, message });
+  };
 
   const viewProfile = () => {
     navigate(`/profile/${currentUser.id}`);

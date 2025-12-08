@@ -54,9 +54,7 @@ export class FetchBestUserSuggestion {
         sharedTagsWithConnectedUser.set(user.id, sharedTag);
       }
 
-      if (matched) {
         suggestedUsers.push(user);
-      }
     }
 
     return suggestedUsers.sort((a, b) =>
