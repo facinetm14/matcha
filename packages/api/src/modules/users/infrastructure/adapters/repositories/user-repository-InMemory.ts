@@ -90,6 +90,7 @@ export class UserRepositoryInMemory implements UserRepository {
       notifications: [],
       matched: [],
       sexualOrientation: [],
+      swiped: [],
     });
   }
 
