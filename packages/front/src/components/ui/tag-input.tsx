@@ -21,7 +21,7 @@ export function TagInput({
   const [inputValue, setInputValue] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(0);
-  const MAX_TAGS = 15;
+  const MAX_TAGS = 5;
 
   const { isPending, data } = useQuery({
     queryKey: ['fetchAllTags'],
@@ -191,7 +191,7 @@ export function TagInput({
             </p>
           )}
           {tags.length >= MAX_TAGS && (
-            <p className="text-xs text-destructive">
+            <p className="text-xs">
               Maximum {MAX_TAGS} tags reached.
             </p>
           )}

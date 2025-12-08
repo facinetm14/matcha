@@ -148,8 +148,8 @@ export async function buildUserProfileFromUserAggregate(
             lat: +user.location_lat,
             lng: +user.location_lng,
             city:
-              user.location_city ??
-              (await buildCity(+user.location_lat, +user.location_lng)),
+              user.location_city ?? ''
+              //(await buildCity(+user.location_lat, +user.location_lng)),
           },
         }),
       };
