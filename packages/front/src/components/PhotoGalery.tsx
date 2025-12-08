@@ -126,32 +126,28 @@ export const PhotoGallery = ({ isEditing }: { isEditing: boolean }) => {
   };
 
   const switchPhotoPosition = async (idPhoto1: string, idPhoto2: string) => {
-    const [position1, position2] = photos
-      .filter((p) => p.id === idPhoto1 || p.id === idPhoto2)
-      .map((p) => p.position);
+    const photo1 = photos
+      .find((p) => p.id === idPhoto1)
+    const photo2 = photos
+      .find((p) => p.id === idPhoto2)
 
     const orderedPhotos: UserImage[] = [];
     const newImagePositions: ImagePosition[] = [];
 
+    orderedPhotos.push({ ...photo1, position: photo2.position });
+    newImagePositions.push({
+      preview: cleanPreview(photo1.preview),
+      position: photo2.position,
+    });
+
+    orderedPhotos.push({ ...photo2, position: photo1.position });
+    newImagePositions.push({
+      preview: cleanPreview(photo2.preview),
+      position: photo1.position,
+    });
+
     for (const p of photos) {
-      if (p.position === position1) {
-        orderedPhotos.push({ ...p, position: position2 });
-        newImagePositions.push({
-          preview: cleanPreview(p.preview),
-          position: position2,
-        });
-        continue;
-      }
-
-      if (p.position === position2) {
-        orderedPhotos.push({ ...p, position: position1 });
-        newImagePositions.push({
-          preview: cleanPreview(p.preview),
-          position: position1,
-        });
-        continue;
-      }
-
+      if (p.position !== photo1.position && p.position !== photo2.position)
       orderedPhotos.push(p);
     }
 

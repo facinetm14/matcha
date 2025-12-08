@@ -89,6 +89,10 @@ export default function ProfileView() {
         queryKey: [QUERY_KEYS.BROWSE_USERS],
         exact: true,
       });
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.ME],
+        exact: true,
+      });
     },
     onError: (error) => {
       toast.error(error.message);
@@ -387,7 +391,7 @@ export default function ProfileView() {
                     <Flag className="w-4 h-4 mr-2" />
                     Report
                   </Button>
-                  {hasAlreadyBlocked(selectedUser.id) ? (
+                  {hasAlreadyBlocked(selectedUser?.id) ? (
                     <Button
                       variant="outline"
                       size="sm"

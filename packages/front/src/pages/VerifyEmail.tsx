@@ -3,13 +3,14 @@ import { useQuery } from '@tanstack/react-query';
 import { authApi } from '@/api/auth.api';
 import Login from './Login';
 import { Loadder } from '@/components/ui/Loadder';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 export const VerifyEmail = () => {
   const { token } = useParams();
   const navigate = useNavigate();
+  const [isVerified, setIsVerified] = useState(false);
 
-  const { isPending, error } = useQuery({
+  const { isPending, error, data } = useQuery({
     queryKey: ['verifyEmail', token],
     queryFn: async () => {
       if (!token) {
@@ -23,11 +24,15 @@ export const VerifyEmail = () => {
 
       throw new Error('Verification failed');
     },
+    enabled: !isVerified,
   });
 
   useEffect(() => {
+    if (data) {
+      setIsVerified(true);
+    }
     if (error) navigate('/not-found');
-  }, [error, navigate]);
+  }, [data, error, navigate]);
 
   if (isPending) return <Loadder />;
 
