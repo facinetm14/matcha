@@ -1,10 +1,6 @@
 import { hashPassword } from '@/modules/auth/infrastructure/utils/password';
 import { UserStatus } from '@/modules/users/application/consts/user-status.enum';
 import { faker } from '@faker-js/faker';
-import {
-  extractCityFromGeocode,
-  GeocodeAddressType,
-} from '@shared/extract-city-from-geocode';
 import { uuid } from '@shared/uuid';
 import { Pool } from 'pg';
 
@@ -31,7 +27,6 @@ const tagList2 = [
 ];
 
 const SEED_SIZE = 500;
-const FIRST_HUNDRED = 100;
 
 export const pgClient = new Pool({
   user: process.env.POSTGRES_USER,
@@ -43,28 +38,6 @@ export const pgClient = new Pool({
 
 function cleanUsername(str: string): string {
   return str.toLowerCase().replace(/[^a-z0-9]/g, '');
-}
-
-async function getGeocode(
-  lat: number,
-  lng: number,
-): Promise<{ address: GeocodeAddressType } | null> {
-  const result = await fetch(
-    `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`,
-    {
-      headers: {
-        'User-Agent': 'matcha-app',
-      },
-    },
-  );
-
-  if (!result.ok) {
-    return null;
-  }
-
-  const data = await result.json();
-
-  return data;
 }
 
 async function seedUsers() {
@@ -169,26 +142,18 @@ async function seedUsers() {
         [uuid(), id, tag2],
       );
 
-      if (i < FIRST_HUNDRED) {
-        const lat = faker.location.latitude({ min: 48.5, max: 49.9 });
-        const lng = faker.location.longitude({ min: 1.8, max: 3.9 });
+      const lat = faker.location.latitude({ min: 48.5, max: 49.9 });
+      const lng = faker.location.longitude({ min: 1.8, max: 3.9 });
 
-        const geocodeData = await getGeocode(lat, lng);
-
-        const city = geocodeData
-          ? extractCityFromGeocode(geocodeData.address)
-          : undefined;
-
-        const insertLocation = client.query(
-          `
-          INSERT INTO users_location(id, user_id, shared_by_user_at, lat, lng, city)
-          VALUES($1, $2, $3, $4, $5, $6)
+      const insertLocation = client.query(
+        `
+          INSERT INTO users_location(id, user_id, shared_by_user_at, lat, lng)
+          VALUES($1, $2, $3, $4, $5)
           `,
-          [uuid(), id, createdAt, lat, lng, city],
-        );
+        [uuid(), id, createdAt, lat, lng],
+      );
 
-        saveUserAttributes.push(...[insertTag1, insertTag2, insertLocation]);
-      }
+      saveUserAttributes.push(...[insertTag1, insertTag2, insertLocation]);
     }
 
     await Promise.all(saveUserAttributes);

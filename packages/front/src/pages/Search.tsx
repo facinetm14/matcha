@@ -80,23 +80,7 @@ export default function Search() {
   const { isPending, data, error } = useQuery({
     queryKey: [QUERY_KEYS.FILTER_USERS],
     queryFn: async () => {
-      const filterDto: FilterUsersDto = {};
-      if (filtersEnabled.age) {
-        filterDto.age = {
-          from: ageRange[0],
-          to: ageRange[1],
-        };
-      }
-      if (filtersEnabled.fame) {
-        filterDto.fameRating = {
-          from: fameRange[0],
-          to: fameRange[1],
-        };
-      }
-      if (filtersEnabled.tags && appliedTags.length) {
-        filterDto.tags = appliedTags;
-      }
-      const res = await userApi.filterUsers(filterDto);
+      const res = await userApi.browseUsers();
       if (!res.ok) {
         throw new Error('Failed to browse users');
       }
@@ -115,10 +99,6 @@ export default function Search() {
     setCurrentPage(1);
     setAppliedDistanceRange(distanceRange);
     setAppliedTags(selectedTags);
-    queryClient.invalidateQueries({
-      queryKey: [QUERY_KEYS.FILTER_USERS],
-      exact: true,
-    });
   };
 
   useEffect(() => {

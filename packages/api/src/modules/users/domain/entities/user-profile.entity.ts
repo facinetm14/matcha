@@ -23,6 +23,7 @@ export type UserProfile = Omit<User, 'sexualOrientation'> & {
   matched: string[];
   notifications: Notification[];
   blocked: string[];
+  swiped: string[];
   reported: boolean;
   age?: number;
   sexualOrientation: Gender[];

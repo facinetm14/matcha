@@ -144,7 +144,7 @@ export class UserRepositoryDb implements UserRepository {
               LEFT JOIN user_interests as ui ON u.id = ui.user_id
               LEFT JOIN users_location as uloc ON u.id = uloc.user_id
               LEFT JOIN user_profile_interactions as upi ON (
-                (upi.author = u.id AND upi.category = $3)
+                (upi.author = u.id AND upi.category = ANY($3))
                   OR
                 (upi.recipient = u.id)
               )
@@ -156,7 +156,7 @@ export class UserRepositoryDb implements UserRepository {
               WHERE u.id = $1
               ORDER BY interaction_created_at DESC
             `,
-      values: [id, 'match', 'block'],
+      values: [id, 'match', ['swipe', 'block']],
     };
 
     const connexion = await pgClient.connect();
@@ -174,7 +174,7 @@ export class UserRepositoryDb implements UserRepository {
       userProfileRawListWithOnlineStatus.push({ ...user, isOnline, lastSeen });
     }
 
-    const userProfiles = buildUserProfileFromUserAggregate(
+    const userProfiles = await buildUserProfileFromUserAggregate(
       userProfileRawListWithOnlineStatus,
     );
     return userProfiles[0];
@@ -196,7 +196,7 @@ export class UserRepositoryDb implements UserRepository {
               LEFT JOIN user_interests as ui ON u.id = ui.user_id
               LEFT JOIN users_location as uloc ON u.id = uloc.user_id
               LEFT JOIN user_profile_interactions as upi ON (
-                (upi.author = u.id AND upi.category = $3)
+                (upi.author = u.id AND upi.category = ANY($3))
                   OR
                 (upi.recipient = u.id)
               )
@@ -208,7 +208,7 @@ export class UserRepositoryDb implements UserRepository {
               WHERE u.id = ANY($1)
               ORDER BY interaction_created_at DESC
             `,
-      values: [idList, 'match', 'block'],
+      values: [idList, 'match', ['swipe', 'block']],
     };
 
     const connexion = await pgClient.connect();
@@ -226,7 +226,7 @@ export class UserRepositoryDb implements UserRepository {
       userProfileRawListWithOnlineStatus.push({ ...user, isOnline, lastSeen });
     }
 
-    const userProfiles = buildUserProfileFromUserAggregate(
+    const userProfiles = await buildUserProfileFromUserAggregate(
       userProfileRawListWithOnlineStatus,
     );
     return userProfiles;
@@ -328,7 +328,7 @@ export class UserRepositoryDb implements UserRepository {
               LEFT JOIN user_interests as ui ON u.id = ui.user_id
               LEFT JOIN users_location as uloc ON u.id = uloc.user_id
               LEFT JOIN user_profile_interactions as upi ON (
-                (upi.author = u.id AND upi.category = $2)
+                (upi.author = u.id AND upi.category = ANY($2))
                   OR
                 (upi.recipient = u.id)
               )
@@ -340,7 +340,7 @@ export class UserRepositoryDb implements UserRepository {
               WHERE u.id != $3
               ORDER BY interaction_created_at DESC
             `,
-      values: ['match', 'block', userId],
+      values: ['match', ['block', 'swipe'], userId],
     };
 
     const connexion = await pgClient.connect();
@@ -358,7 +358,7 @@ export class UserRepositoryDb implements UserRepository {
       userProfileRawListWithOnlineStatus.push({ ...user, isOnline, lastSeen });
     }
 
-    const userProfiles = buildUserProfileFromUserAggregate(
+    const userProfiles = await buildUserProfileFromUserAggregate(
       userProfileRawListWithOnlineStatus,
     );
     return userProfiles;
