@@ -14,6 +14,11 @@ export class UserRepositoryInMemory implements UserRepository {
   constructor() {
     this.users = [];
   }
+
+  async findAllUsers(userId: string): Promise<UserProfile[]> {
+    return [];
+  }
+
   findUserProfileByIdList(_userId: string[]): Promise<UserProfile[]> {
     return Promise.resolve([]);
   }
@@ -84,6 +89,7 @@ export class UserRepositoryInMemory implements UserRepository {
       viewedBy: [],
       notifications: [],
       matched: [],
+      sexualOrientation: [],
     });
   }
 

@@ -14,7 +14,7 @@ export type User = {
   status: UserStatus;
   isFirstLogin: string | null;
   gender?: Gender;
-  sexualOrientation?: Gender[];
+  sexualOrientation: Gender[];
   bio?: string;
   tags?: string[];
   photos?: UserImage[];
@@ -79,7 +79,6 @@ export type Channel = {
   createdAt: Date;
   updatedAt: Date;
 };
-
 
 interface Range<T> {
   from: T;

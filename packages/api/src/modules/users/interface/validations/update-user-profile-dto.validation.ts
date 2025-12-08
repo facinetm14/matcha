@@ -26,4 +26,13 @@ export const UpdateUserProfileDtoSchema = z.object({
     )
     .max(5, { message: 'You can upload up to 5 photos only.' })
     .optional(),
+
+  location: z
+    .object({
+      isEnabledByUser: z.boolean(),
+      city: z.string().trim().min(3).optional(),
+      lat: z.number(),
+      lng: z.number(),
+    })
+    .optional(),
 });

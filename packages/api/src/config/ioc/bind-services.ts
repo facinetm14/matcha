@@ -13,10 +13,16 @@ import { Logger } from '@/modules/shared/ports/logger.service';
 import { Container } from 'inversify';
 import { SocketIoListener } from '../event-subscribers/socket-io.listener';
 import { TYPE } from './inversify-type';
+import { GeocodeService } from '@/modules/users/application/ports/services/geo-code-service';
+import { GeocodeOpenStreetMap } from '@/modules/users/infrastructure/adapters/services/geocode-openstreetmap';
 
 export function bindServices(container: Container) {
   container.bind(SocketIoListener).toSelf().inSingletonScope();
   container.bind<Logger>(TYPE.Logger).to(LoggerStd).inSingletonScope();
+  container
+    .bind<GeocodeService>(TYPE.GeocodeService)
+    .to(GeocodeOpenStreetMap)
+    .inSingletonScope();
   container.bind<EventBus>(TYPE.EventBus).to(NodeEventBus).inSingletonScope();
   container
     .bind<NotificationService>(TYPE.NotificationService)

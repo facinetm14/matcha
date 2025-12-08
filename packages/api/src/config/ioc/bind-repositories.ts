@@ -14,6 +14,8 @@ import { MessageRepositoryDb } from '@/modules/notifications/infrastructure/adap
 import { UserTokenRepository } from '@/modules/auth/application/ports/repositories/user-token.repository';
 import { UserRepository } from '@/modules/users/application/ports/repositories/user.repository';
 import { UserRepositoryDb } from '@/modules/users/infrastructure/adapters/repositories/user-repository-db';
+import { UserLocationRepositoryDb } from '@/modules/users/infrastructure/adapters/repositories/user-location-repository-db';
+import { UserLocationRepository } from '@/modules/users/application/ports/repositories/user-location.repository';
 
 export function bindRepositories(container: Container) {
   container
@@ -49,5 +51,10 @@ export function bindRepositories(container: Container) {
   container
     .bind<MessageRepository>(TYPE.MessageRepository)
     .to(MessageRepositoryDb)
+    .inSingletonScope();
+
+  container
+    .bind<UserLocationRepository>(TYPE.UserLocationRepository)
+    .to(UserLocationRepositoryDb)
     .inSingletonScope();
 }
