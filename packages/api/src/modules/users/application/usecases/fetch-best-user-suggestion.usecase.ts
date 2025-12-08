@@ -9,6 +9,7 @@ import {
   calculateDistanceKm,
   MAX_SUGGESTED_DISTANCE_KM,
 } from '@shared/distance';
+import { buildCity } from '../../infrastructure/mappers/user-model-to-entity';
 
 @injectable()
 export class FetchBestUserSuggestion {
@@ -30,8 +31,13 @@ export class FetchBestUserSuggestion {
     const suggestedUsers: UserProfile[] = [];
 
     const sexPref = connectedUser?.sexualOrientation ?? [];
+    let i = 0;
 
     for (const user of userList) {
+      if (i > 10) {
+        continue;
+      }
+      i++;
       let matched = false;
 
       if (

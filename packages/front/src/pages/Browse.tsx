@@ -80,7 +80,7 @@ export default function Browse() {
     data: userList,
     error,
   } = useQuery({
-    queryKey: [QUERY_KEYS.BROWSE_USERS, appliedFilters],
+    queryKey: [QUERY_KEYS.BROWSE_USERS],
     queryFn: async () => {
       const res = await userApi.browseUsers();
       if (!res.ok) {
@@ -115,7 +115,7 @@ export default function Browse() {
         toast.success(`${message}`);
       }
       queryClient.invalidateQueries({
-        queryKey: [QUERY_KEYS.BROWSE_USERS, appliedFilters],
+        queryKey: [QUERY_KEYS.BROWSE_USERS],
         exact: true,
       });
       queryClient.invalidateQueries({
@@ -218,7 +218,7 @@ export default function Browse() {
       return;
     }
 
-    const referenceLocation = connectedUser.location;
+    const referenceLocation = connectedUser?.location;
 
     let processedUsers = userList.map((user, index) =>
       withMockedLocation(user, index),
