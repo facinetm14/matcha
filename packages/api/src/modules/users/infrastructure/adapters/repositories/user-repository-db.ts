@@ -361,6 +361,7 @@ export class UserRepositoryDb implements UserRepository {
     const userProfiles = await buildUserProfileFromUserAggregate(
       userProfileRawListWithOnlineStatus,
     );
+    
     return userProfiles;
   }
 }
