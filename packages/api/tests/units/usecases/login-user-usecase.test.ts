@@ -10,6 +10,8 @@ import { CreateUserDto } from '../../../src/modules/auth/application/dto/create-
 import { UserStatus } from '../../../src/modules/users/application/consts/user-status.enum';
 import { UserTokenRepository } from '../../../src/modules/auth/application/ports/repositories/user-token.repository';
 import { AccessTokenService } from '@/modules/auth/application/ports/services/access-token.service';
+import { IpLocation } from '@/modules/auth/application/ports/services/ip-location-service';
+import { UserLocationRepository } from '@/modules/users/application/ports/repositories/user-location.repository';
 
 describe('Login user usecase', () => {
   let loginUserUseCase: LoginUserUseCase;
@@ -17,6 +19,8 @@ describe('Login user usecase', () => {
   let userTokenRepository: UserTokenRepository;
   let createUserDto: CreateUserDto;
   let accessTokenService: AccessTokenService;
+  let ipLocation: IpLocation;
+  let userLocationRepository: UserLocationRepository;
 
   const ipAddr = '';
   const device = '';
@@ -25,6 +29,8 @@ describe('Login user usecase', () => {
     userRepository = factoryUserRepositoryInMemory();
     userTokenRepository = factoryUserTokenRepositoryInMemory();
     accessTokenService = {} as AccessTokenService;
+    ipLocation = {} as IpLocation;
+    userLocationRepository = {} as UserLocationRepository;
 
     createUserDto = factoryCreateUserDto({
       username: 'user-blabla',
@@ -34,7 +40,9 @@ describe('Login user usecase', () => {
     loginUserUseCase = new LoginUserUseCase(
       userRepository,
       userTokenRepository,
-      accessTokenService
+      accessTokenService,
+      ipLocation,
+      userLocationRepository,
     );
   });
 
@@ -48,7 +56,9 @@ describe('Login user usecase', () => {
       ipAddr,
     );
 
-    accessTokenService.createAccessToken = jest.fn().mockReturnValue(factoryUserToken({}))
+    accessTokenService.createAccessToken = jest
+      .fn()
+      .mockReturnValue(factoryUserToken({}));
 
     expect(loginResult).toMatchObject({
       isErr: true,
