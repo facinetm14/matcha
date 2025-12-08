@@ -265,7 +265,11 @@ export default function ProfileView() {
                     </h1>
                     <div className="flex items-center gap-2 text-muted-foreground mb-2">
                       <MapPin className="w-4 h-4" />
-                      <span>{selectedUser.location?.city ?? 'unknown'}</span>
+                      <span>
+                        {(selectedUser.location?.isEnabledByUser &&
+                          selectedUser.location?.city) ??
+                          'unknown'}
+                      </span>
                     </div>
                     {!selectedUser.isOnline && selectedUser.lastSeen && (
                       <p className="text-sm text-muted-foreground">

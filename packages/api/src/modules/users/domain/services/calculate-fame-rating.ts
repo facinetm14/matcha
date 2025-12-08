@@ -1,7 +1,7 @@
 import { UserProfile } from '@/modules/users/domain/entities/user-profile.entity';
 
-const LIKE_WEIGHT = 5;
-const VIEW_WEIGHT = 10;
+const LIKE_WEIGHT = 10;
+const VIEW_WEIGHT = 5;
 const DEFAULT_RATE = 1;
 const MAX_RATE = 1000;
 
@@ -9,6 +9,7 @@ export function calculateFameRating(user: UserProfile): number {
   const fameRating = Math.floor(
     user.likedBy.length / LIKE_WEIGHT + user.viewedBy.length / VIEW_WEIGHT,
   );
+
   if (fameRating < DEFAULT_RATE) {
     return 1;
   }

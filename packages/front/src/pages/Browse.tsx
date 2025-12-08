@@ -218,11 +218,7 @@ export default function Browse() {
       return;
     }
 
-    const referenceLocation =
-      typeof connectedUser?.location?.lat === 'number' &&
-      typeof connectedUser?.location?.lng === 'number'
-        ? connectedUser.location
-        : getMockLocation();
+    const referenceLocation = connectedUser.location;
 
     let processedUsers = userList.map((user, index) =>
       withMockedLocation(user, index),

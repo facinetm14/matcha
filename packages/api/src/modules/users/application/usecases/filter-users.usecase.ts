@@ -11,7 +11,10 @@ export class FilterUsersUseCase {
     private readonly userRepository: UserRepository,
   ) {}
 
-  async execute(filter: FilterUsersDto, userId: string): Promise<UserProfile[]> {
+  async execute(
+    filter: FilterUsersDto,
+    userId: string,
+  ): Promise<UserProfile[]> {
     return this.userRepository.findUsersByFilter(filter, userId);
   }
 }
