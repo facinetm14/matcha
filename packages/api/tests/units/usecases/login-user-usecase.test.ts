@@ -28,9 +28,22 @@ describe('Login user usecase', () => {
   beforeAll(() => {
     userRepository = factoryUserRepositoryInMemory();
     userTokenRepository = factoryUserTokenRepositoryInMemory();
-    accessTokenService = {} as AccessTokenService;
-    ipLocation = {} as IpLocation;
-    userLocationRepository = {} as UserLocationRepository;
+    accessTokenService = {
+      createAccessToken: jest.fn().mockResolvedValue('token'),
+    } as unknown as AccessTokenService;
+    ipLocation = {
+      getLocation: jest.fn().mockResolvedValue({
+        lat: 0,
+        lng: 0,
+        city: 'Paris',
+        isEnabledByUser: false,
+      }),
+    } as unknown as IpLocation;
+    userLocationRepository = {
+      findByUserId: jest.fn().mockResolvedValue(null),
+      create: jest.fn(),
+      update: jest.fn(),
+    } as unknown as UserLocationRepository;
 
     createUserDto = factoryCreateUserDto({
       username: 'user-blabla',
