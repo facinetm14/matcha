@@ -1,4 +1,3 @@
-
 import { inject, injectable } from 'inversify';
 import { UserRepository } from '../../../users/application/ports/repositories/user.repository';
 import { Err, Ok, Result } from '../../../shared/utils/result';
@@ -14,6 +13,9 @@ import { factoryUserToken } from '@/modules/shared/utils/factory';
 import { AccessTokenService } from '../ports/services/access-token.service';
 import { TYPE } from '@/config/ioc/inversify-type';
 import { LoginUserDto } from '../dto/login-user.dto';
+import { IpLocation } from '../ports/services/ip-location-service';
+import { UserLocationRepository } from '@/modules/users/application/ports/repositories/user-location.repository';
+import { uuid } from '@shared/uuid';
 
 @injectable()
 export class LoginUserUseCase {
@@ -24,6 +26,10 @@ export class LoginUserUseCase {
     private readonly userTokenRepository: UserTokenRepository,
     @inject(TYPE.AccessTokenService)
     private readonly accessTokenService: AccessTokenService,
+    @inject(TYPE.IpLocation)
+    private readonly iplocation: IpLocation,
+    @inject(TYPE.UserLocationRepository)
+    private readonly userLocationRepository: UserLocationRepository,
   ) {}
 
   async execute(
@@ -71,6 +77,18 @@ export class LoginUserUseCase {
     });
 
     await this.userTokenRepository.create(userToken);
+    const existingLocation = await this.userLocationRepository.findByUserId(
+      existingUser.id,
+    );
+
+    if (!existingLocation) {
+      const location = await this.iplocation.getLocation(ipAddr);
+      await this.userLocationRepository.create({
+        ...location,
+        userId: existingUser.id,
+        id: uuid(),
+      });
+    }
 
     const refresh = userToken.id;
     const token = await this.accessTokenService.createAccessToken(

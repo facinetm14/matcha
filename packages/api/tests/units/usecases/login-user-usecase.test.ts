@@ -10,6 +10,8 @@ import { CreateUserDto } from '../../../src/modules/auth/application/dto/create-
 import { UserStatus } from '../../../src/modules/users/application/consts/user-status.enum';
 import { UserTokenRepository } from '../../../src/modules/auth/application/ports/repositories/user-token.repository';
 import { AccessTokenService } from '@/modules/auth/application/ports/services/access-token.service';
+import { IpLocation } from '@/modules/auth/application/ports/services/ip-location-service';
+import { UserLocationRepository } from '@/modules/users/application/ports/repositories/user-location.repository';
 
 describe('Login user usecase', () => {
   let loginUserUseCase: LoginUserUseCase;
@@ -17,6 +19,8 @@ describe('Login user usecase', () => {
   let userTokenRepository: UserTokenRepository;
   let createUserDto: CreateUserDto;
   let accessTokenService: AccessTokenService;
+  let ipLocation: IpLocation;
+  let userLocationRepository: UserLocationRepository;
 
   const ipAddr = '';
   const device = '';
@@ -24,7 +28,22 @@ describe('Login user usecase', () => {
   beforeAll(() => {
     userRepository = factoryUserRepositoryInMemory();
     userTokenRepository = factoryUserTokenRepositoryInMemory();
-    accessTokenService = {} as AccessTokenService;
+    accessTokenService = {
+      createAccessToken: jest.fn().mockResolvedValue('token'),
+    } as unknown as AccessTokenService;
+    ipLocation = {
+      getLocation: jest.fn().mockResolvedValue({
+        lat: 0,
+        lng: 0,
+        city: 'Paris',
+        isEnabledByUser: false,
+      }),
+    } as unknown as IpLocation;
+    userLocationRepository = {
+      findByUserId: jest.fn().mockResolvedValue(null),
+      create: jest.fn(),
+      update: jest.fn(),
+    } as unknown as UserLocationRepository;
 
     createUserDto = factoryCreateUserDto({
       username: 'user-blabla',
@@ -34,7 +53,9 @@ describe('Login user usecase', () => {
     loginUserUseCase = new LoginUserUseCase(
       userRepository,
       userTokenRepository,
-      accessTokenService
+      accessTokenService,
+      ipLocation,
+      userLocationRepository,
     );
   });
 
@@ -48,7 +69,9 @@ describe('Login user usecase', () => {
       ipAddr,
     );
 
-    accessTokenService.createAccessToken = jest.fn().mockReturnValue(factoryUserToken({}))
+    accessTokenService.createAccessToken = jest
+      .fn()
+      .mockReturnValue(factoryUserToken({}));
 
     expect(loginResult).toMatchObject({
       isErr: true,

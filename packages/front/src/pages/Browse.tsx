@@ -303,6 +303,29 @@ export default function Browse() {
         <div className="flex items-center justify-center h-[calc(100vh-10rem)]">
           <p className="text-muted-foreground">No more profiles to show</p>
         </div>
+        <AdvancedSearchCard
+          ageRange={ageRange}
+          setAgeRange={setAgeRange}
+          fameRange={fameRange}
+          setFameRange={setFameRange}
+          sortBy={sortBy}
+          setSortBy={setSortBy}
+          distanceRange={distanceRange}
+          setDistanceRange={setDistanceRange}
+          tags={tags}
+          setTags={setTags}
+          onSubmit={handleAdvancedSearch}
+          ageFilterEnabled={filtersEnabled.age}
+          onToggleAgeFilter={handleFilterToggle('age')}
+          fameFilterEnabled={filtersEnabled.fame}
+          onToggleFameFilter={handleFilterToggle('fame')}
+          distanceFilterEnabled={filtersEnabled.distance}
+          onToggleDistanceFilter={handleFilterToggle('distance')}
+          sortFilterEnabled={filtersEnabled.sort}
+          onToggleSortFilter={handleFilterToggle('sort')}
+          tagsFilterEnabled={filtersEnabled.tags}
+          onToggleTagsFilter={handleFilterToggle('tags')}
+        />
       </div>
     );
   }

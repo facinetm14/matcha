@@ -1,9 +1,5 @@
 import { Location } from '@/types/user';
-
-export const defaultLocation = {
-  lat: 48.8566,
-  lng: 2.3522,
-};
+import { defaultLocation } from '../../../shared/distance';
 
 export const getUserCurrentPosition = async (): Promise<Location> => {
   return new Promise((resolve) => {

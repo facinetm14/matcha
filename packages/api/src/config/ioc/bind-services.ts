@@ -15,6 +15,8 @@ import { SocketIoListener } from '../event-subscribers/socket-io.listener';
 import { TYPE } from './inversify-type';
 import { GeocodeService } from '@/modules/users/application/ports/services/geo-code-service';
 import { GeocodeOpenStreetMap } from '@/modules/users/infrastructure/adapters/services/geocode-openstreetmap';
+import { IpLocation } from '@/modules/auth/application/ports/services/ip-location-service';
+import { IpLocationIpApi } from '@/modules/auth/infrastructure/adapters/services/ip-location.IpApi';
 
 export function bindServices(container: Container) {
   container.bind(SocketIoListener).toSelf().inSingletonScope();
@@ -39,5 +41,10 @@ export function bindServices(container: Container) {
   container
     .bind<AccessTokenService>(TYPE.AccessTokenService)
     .to(AccessTokenManager)
+    .inSingletonScope();
+
+  container
+    .bind<IpLocation>(TYPE.IpLocation)
+    .to(IpLocationIpApi)
     .inSingletonScope();
 }
