@@ -1,13 +1,13 @@
-.PHONY: up down clean run api-setup docker-clean npm-clean
+.PHONY: up down populate-db docker-clean npm-clean clean 
 
 up:
 	docker compose up --build
 
-populate-db:
-	cd packages/api && npm i && npm run migrate:up && npm run seed
-
 down:
 	docker compose down
+
+populate-db:
+	cd packages/api && npm i && npm run migrate:up && npm run seed
 
 docker-clean:
 	docker compose down -v
