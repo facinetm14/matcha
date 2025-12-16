@@ -71,6 +71,8 @@ export default function Browse() {
   };
   const {
     distance: isDistanceFilterEnabled,
+    age: isAgeFilterEnabled,
+    fame: isFameFilterEnabled,
     tags: isTagsFilterEnabled,
     sort: isSortFilterEnabled,
   } = filtersEnabled;
@@ -224,6 +226,30 @@ export default function Browse() {
       withMockedLocation(user, index),
     );
 
+    if (isAgeFilterEnabled && appliedFilters.age) {
+      const { from, to } = appliedFilters.age;
+      const minAge = from ?? 0;
+      const maxAge = to ?? Number.POSITIVE_INFINITY;
+
+      processedUsers = processedUsers.filter((user) => {
+        if (typeof user.age !== 'number') {
+          return false;
+        }
+        return user.age >= minAge && user.age <= maxAge;
+      });
+    }
+
+    if (isFameFilterEnabled && appliedFilters.fameRating) {
+      const { from, to } = appliedFilters.fameRating;
+      const minFame = from ?? 0;
+      const maxFame =
+        typeof to === 'number' ? to : Number.POSITIVE_INFINITY;
+
+      processedUsers = processedUsers.filter(
+        (user) => user.fameRating >= minFame && user.fameRating <= maxFame,
+      );
+    }
+
     if (isDistanceFilterEnabled) {
       processedUsers = processedUsers.filter((user) => {
         const distanceKm = calculateDistanceKm(
@@ -276,9 +302,12 @@ export default function Browse() {
     appliedDistanceRange,
     appliedSort,
     appliedTags,
+    appliedFilters,
     getTagMatchScore,
     matchesSelectedTags,
     isDistanceFilterEnabled,
+    isAgeFilterEnabled,
+    isFameFilterEnabled,
     isTagsFilterEnabled,
     isSortFilterEnabled,
   ]);
