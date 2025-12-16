@@ -89,6 +89,10 @@ export default function ProfileView() {
         queryKey: [QUERY_KEYS.BROWSE_USERS],
         exact: true,
       });
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.ME],
+        exact: true,
+      });
     },
     onError: (error) => {
       toast.error(error.message);
@@ -153,7 +157,7 @@ export default function ProfileView() {
   const hasMatched = hasAlreadyLikedSelectedUser && hasSelectedAlreadyLiked;
 
   const hasAlreadyBlocked = (currentUserId: string): boolean => {
-    return false;
+    return connectedUser.blocked.includes(currentUserId);
   };
 
   const handleUnlike = () => {
@@ -265,7 +269,11 @@ export default function ProfileView() {
                     </h1>
                     <div className="flex items-center gap-2 text-muted-foreground mb-2">
                       <MapPin className="w-4 h-4" />
-                      <span>{selectedUser.location?.city ?? 'unknown'}</span>
+                      <span>
+                        {(selectedUser.location?.isEnabledByUser &&
+                          selectedUser.location?.city) ??
+                          'unknown'}
+                      </span>
                     </div>
                     {!selectedUser.isOnline && selectedUser.lastSeen && (
                       <p className="text-sm text-muted-foreground">
@@ -383,7 +391,7 @@ export default function ProfileView() {
                     <Flag className="w-4 h-4 mr-2" />
                     Report
                   </Button>
-                  {hasAlreadyBlocked(connectedUser?.id) ? (
+                  {hasAlreadyBlocked(selectedUser?.id) ? (
                     <Button
                       variant="outline"
                       size="sm"

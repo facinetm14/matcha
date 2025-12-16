@@ -1,4 +1,7 @@
-import { UserProfile } from '@/modules/users/domain/entities/user-profile.entity';
+import {
+  Gender,
+  UserProfile,
+} from '@/modules/users/domain/entities/user-profile.entity';
 import { UserRepository } from '@/modules/users/application/ports/repositories/user.repository';
 import { inject, injectable } from 'inversify';
 import { TYPE } from '@/config/ioc/inversify-type';
@@ -30,7 +33,30 @@ export class FetchBestUserSuggestion {
 
     for (const user of userList) {
       let matched = false;
-      if (!sexPref.length && user.gender === connectedUser?.gender) {
+
+      if (
+        [
+          ...connectedUser.blocked,
+          ...connectedUser.swiped,
+          ...connectedUser.matched,
+        ].includes(user.id)
+      ) {
+        continue;
+      }
+
+      if (
+        [...user.blocked, ...user.swiped, user.likedBy].includes(
+          connectedUser.id,
+        )
+      ) {
+        continue;
+      }
+
+      if (
+        sexPref.length &&
+        user.gender &&
+        !sexPref.includes(user.gender as Gender)
+      ) {
         continue;
       }
 
@@ -54,9 +80,7 @@ export class FetchBestUserSuggestion {
         sharedTagsWithConnectedUser.set(user.id, sharedTag);
       }
 
-      if (matched) {
-        suggestedUsers.push(user);
-      }
+      suggestedUsers.push(user);
     }
 
     return suggestedUsers.sort((a, b) =>

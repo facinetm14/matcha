@@ -8,6 +8,10 @@ import { InteractionCategory } from '@/modules/users/domain/entities/user-profil
 import { skipUnecessaryNotification } from '@/modules/notifications/application/utils/notification-utils';
 import { calculateFameRating } from '../../domain/services/calculate-fame-rating';
 import { calculateAge } from '../../domain/services/calculate-age';
+import {
+  extractCityFromGeocode,
+  GeocodeAddressType,
+} from '@shared/extract-city-from-geocode';
 
 export function mapUserModelToEntity(userModel: UserModel): User {
   return {
@@ -63,9 +67,28 @@ export type UserAggregate = UserModel & {
   location_shared_by_user_at: Date | null;
 };
 
-export function buildUserProfileFromUserAggregate(
+async function buildCity(lat: number, lng: number): Promise<string | null> {
+  const result = await fetch(
+    `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`,
+    {
+      headers: {
+        'User-Agent': 'matcha-app',
+      },
+    },
+  );
+
+  if (!result.ok) {
+    return null;
+  }
+
+  const data = await result.json();
+
+  return extractCityFromGeocode(data.address as GeocodeAddressType);
+}
+
+export async function buildUserProfileFromUserAggregate(
   userAggregate: UserAggregate[],
-): UserProfile[] {
+): Promise<UserProfile[]> {
   const userProfilesMap: Map<string, UserProfile> = new Map();
   const interactors: Set<string> = new Set();
   const visitedTags: Set<string> = new Set();
@@ -98,6 +121,7 @@ export function buildUserProfileFromUserAggregate(
         likedBy: [],
         viewedBy: [],
         blocked: [],
+        swiped: [],
         matched: user.notif_category === 'match' ? [user.notif_id] : [],
         notifications: user.notif_author ? [notification] : [],
         reported: false,
@@ -113,15 +137,19 @@ export function buildUserProfileFromUserAggregate(
             ]
           : [],
         age: user.birth_date ? calculateAge(user.birth_date, now) : undefined,
-        sexualOrientation: (user.sexual_orientation?.split(' ') ??
-          []) as Gender[],
+        sexualOrientation: (user.sexual_orientation?.split(' ') ?? [
+          'male',
+          'female',
+        ]) as Gender[],
 
         ...(user.location_id && {
           location: {
             isEnabledByUser: user.location_shared_by_user_at ? true : false,
             lat: +user.location_lat,
             lng: +user.location_lng,
-            city: user.location_city,
+            city:
+              user.location_city ?? ''
+              //(await buildCity(+user.location_lat, +user.location_lng)),
           },
         }),
       };
@@ -146,6 +174,14 @@ export function buildUserProfileFromUserAggregate(
         user.author === user.id
       ) {
         currentUserProfile.blocked.push(user.interaction_recipient);
+        interactors.add(interactionKey);
+      }
+
+      if (
+        isCorrectCategory('swipe', user.interaction_recipient, user.category) &&
+        user.author === user.id
+      ) {
+        currentUserProfile.swiped.push(user.interaction_recipient);
         interactors.add(interactionKey);
       }
 
@@ -201,12 +237,22 @@ export function buildUserProfileFromUserAggregate(
       interactors.add(interactionKey);
     }
 
+    if (
+      isCorrectCategory('swipe', user.interaction_recipient, user.category) &&
+      user.author === existingProfile.id
+    ) {
+      existingProfile.swiped.push(user.interaction_recipient);
+      interactors.add(interactionKey);
+    }
+
     if (!existingProfile.location && user.location_id) {
       existingProfile.location = {
         isEnabledByUser: user.location_shared_by_user_at ? true : false,
         lat: +user.location_lat,
         lng: +user.location_lng,
-        city: user.location_city,
+        city:
+          user.location_city ??
+          (await buildCity(+user.location_lat, +user.location_lng)),
       };
     }
   }

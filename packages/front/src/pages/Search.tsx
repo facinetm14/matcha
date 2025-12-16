@@ -3,13 +3,13 @@ import { Navigation } from '@/components/Navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { MapPin, Star, Heart, Info, LucideChevronLast } from 'lucide-react';
+import { MapPin, Star, Heart, Info, LucideChevronLast, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useGetProfile } from '@/hooks/useGetProfile';
 import { FilterUsersDto, UserProfile } from '@/types/user';
 import { Loadder } from '@/components/ui/Loadder';
 import { QUERY_KEYS } from '@/utils/utils';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { userApi } from '@/api/user.api';
 import { logout } from '@/utils/auth';
 import { getInitials } from '@/utils/get-initials';
@@ -29,6 +29,8 @@ import {
   getMockLocation,
   withMockedLocation,
 } from '@/utils/mock-user-location';
+import { CreateInteractionDto } from '@/types/dto/create-interaction.dto';
+import { toast } from 'sonner';
 
 const USERS_PER_PAGE = 9;
 const MAX_VISIBLE_PAGES = 5;
@@ -78,30 +80,52 @@ export default function Search() {
   } = filtersEnabled;
 
   const { isPending, data, error } = useQuery({
-    queryKey: [QUERY_KEYS.FILTER_USERS],
+    queryKey: [QUERY_KEYS.BROWSE_USERS],
     queryFn: async () => {
-      const filterDto: FilterUsersDto = {};
-      if (filtersEnabled.age) {
-        filterDto.age = {
-          from: ageRange[0],
-          to: ageRange[1],
-        };
-      }
-      if (filtersEnabled.fame) {
-        filterDto.fameRating = {
-          from: fameRange[0],
-          to: fameRange[1],
-        };
-      }
-      if (filtersEnabled.tags && appliedTags.length) {
-        filterDto.tags = appliedTags;
-      }
-      const res = await userApi.filterUsers(filterDto);
+      const res = await userApi.browseUsers();
       if (!res.ok) {
         throw new Error('Failed to browse users');
       }
       const users = await res.json();
       return users;
+    },
+  });
+
+  const userInteractionMutation = useMutation({
+    mutationFn: async ({
+      query,
+      message,
+    }: {
+      query: CreateInteractionDto;
+      message: string;
+    }) => {
+      const actionResult = await userApi.interactWithUser(query);
+      if (actionResult.status !== 201) {
+        console.log("DEBUG", actionResult)
+        throw new Error(`Failed to ${query.category} user. Please try again.`);
+      }
+      const currentUserResp = await userApi.getMe();
+      if (!currentUserResp.ok) {
+        throw new Error('Failled to retrieve user infos');
+      }
+      return message;
+    },
+
+    onSuccess: (message: string) => {
+      if (message.length) {
+        toast.success(`${message}`);
+      }
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.BROWSE_USERS],
+        exact: true,
+      });
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.ME],
+        exact: true,
+      });
+    },
+    onError: (error) => {
+      toast.error(error.message);
     },
   });
 
@@ -115,10 +139,26 @@ export default function Search() {
     setCurrentPage(1);
     setAppliedDistanceRange(distanceRange);
     setAppliedTags(selectedTags);
-    queryClient.invalidateQueries({
-      queryKey: [QUERY_KEYS.FILTER_USERS],
-      exact: true,
-    });
+  };
+
+  const handleLike = (user) => {
+    const message = `You liked ${user.firstName}! 💕`;
+    const query: CreateInteractionDto = {
+      recipient: user.id,
+      category: 'like',
+    };
+
+    userInteractionMutation.mutate({ query, message });
+  };
+
+  const handleUnlike = (user) => {
+    const message = `You unliked ${user.firstName}!`;
+    const query: CreateInteractionDto = {
+      recipient: user.id,
+      category: 'unlike',
+    };
+
+    userInteractionMutation.mutate({ query, message });
   };
 
   useEffect(() => {
@@ -154,6 +194,7 @@ export default function Search() {
 
   useEffect(() => {
     if (!data) {
+      console.log("DEBUG: data null")
       return;
     }
 
@@ -375,13 +416,32 @@ export default function Search() {
                     <Info className="w-4 h-4 mr-2" />
                     View
                   </Button>
-                  <Button
-                    variant="outline"
-                    className="flex-1 bg-gradient-romantic hover:bg-primary"
-                  >
-                    <Heart className="w-4 h-4 mr-2" />
-                    Like
-                  </Button>
+                  { !!connectedUser?.photos.length && (
+                    <>
+                      {
+                        user.likedBy.includes(connectedUser.id)
+                        ? (
+                          <Button
+                            variant="outline"
+                            className="flex-1 bg-gradient-romantic hover:bg-primary"
+                            onClick={() => handleUnlike(user)}
+                          >
+                              <X className="w-4 h-4 mr-2" />
+                            Unlike
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="outline"
+                            className="flex-1 bg-gradient-romantic hover:bg-primary"
+                            onClick={() => handleLike(user)}
+                          >
+                            <Heart className="w-4 h-4 mr-2" />
+                            Like
+                          </Button>
+                        )
+                      }
+                    </>
+                  )}
                 </div>
               </CardContent>
             </Card>

@@ -83,7 +83,11 @@ export function ProfileHeaderCard({
                 </h1>
                 <div className="flex items-center justify-center md:justify-start gap-2 text-muted-foreground mb-2">
                   <MapPin className="w-4 h-4" />
-                  <span>{profile.location?.city ?? 'not defined'}</span>
+                  <span>
+                    {(profile.location?.isEnabledByUser &&
+                      profile.location?.city) ??
+                      'not defined'}
+                  </span>
                 </div>
                 <div className="flex items-center justify-center md:justify-start gap-2">
                   <Star className="w-4 h-4 fill-primary text-primary" />
