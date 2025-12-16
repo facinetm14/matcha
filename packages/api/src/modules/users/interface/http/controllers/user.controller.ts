@@ -32,6 +32,7 @@ import { CreateInteractionDtoSchema } from '../../validations/create-user-intera
 import { UpdateUserProfileDto } from '@/modules/users/application/dto/update-user-profile.dto';
 import { FilterUsersDtoSchema } from '../../validations/filter-users-dto.validation';
 import { FilterUsersUseCase } from '@/modules/users/application/usecases/filter-users.usecase';
+import { VerifyTokenError } from '@/modules/auth/application/errors/verify-token.error';
 
 @injectable()
 export class UserController {
@@ -141,6 +142,13 @@ export class UserController {
     );
 
     if (getCurrentUserResult.isErr) {
+      const error = getCurrentUserResult.error;
+
+      if (error === VerifyTokenError.FORBIDDEN) {
+        resp.status(403).send('Forbidden');
+        return;
+      }
+
       resp.status(404).send('User not found');
       return;
     }

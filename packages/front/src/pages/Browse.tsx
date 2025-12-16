@@ -16,10 +16,6 @@ import { QUERY_KEYS } from '@/utils/utils';
 import { FilterUsersDto, UserProfile } from '@/types/user';
 import { AdvancedSearchCard } from '@/components/AdvancedSearchCard';
 import { calculateDistanceKm } from '../../../shared//distance';
-import {
-  getMockLocation,
-  withMockedLocation,
-} from '@/utils/mock-user-location';
 import { CreateInteractionDto } from '@/types/dto/create-interaction.dto';
 
 const DEFAULT_DISTANCE_RANGE: [number, number] = [0, 600];
@@ -195,6 +191,7 @@ export default function Browse() {
         to: fameRange[1],
       };
     }
+
     if (filtersEnabled.tags && tags.length) {
       filterDto.tags = tags;
     }
@@ -203,10 +200,6 @@ export default function Browse() {
     setAppliedSort(sortBy);
     setAppliedDistanceRange(distanceRange);
     setAppliedTags(tags);
-
-    queryClient.invalidateQueries({
-      queryKey: [QUERY_KEYS.BROWSE_USERS],
-    });
   };
 
   useEffect(() => {
@@ -222,9 +215,7 @@ export default function Browse() {
 
     const referenceLocation = connectedUser?.location;
 
-    let processedUsers = userList.map((user, index) =>
-      withMockedLocation(user, index),
-    );
+    let processedUsers = userList;
 
     if (isAgeFilterEnabled && appliedFilters.age) {
       const { from, to } = appliedFilters.age;
@@ -242,8 +233,7 @@ export default function Browse() {
     if (isFameFilterEnabled && appliedFilters.fameRating) {
       const { from, to } = appliedFilters.fameRating;
       const minFame = from ?? 0;
-      const maxFame =
-        typeof to === 'number' ? to : Number.POSITIVE_INFINITY;
+      const maxFame = typeof to === 'number' ? to : Number.POSITIVE_INFINITY;
 
       processedUsers = processedUsers.filter(
         (user) => user.fameRating >= minFame && user.fameRating <= maxFame,

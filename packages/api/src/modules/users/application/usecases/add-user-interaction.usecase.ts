@@ -65,6 +65,17 @@ export class AddUserInteractionUseCase {
     };
 
     if (this.isRevokingCategory(createInteractionDto.category)) {
+      if (createInteractionDto.category === 'block') {
+        console.log('delete like please');
+        await this.userInteractionRepository.delete(
+          {
+            ...createInteractionDto,
+            category: 'like',
+          },
+          userId,
+        );
+      }
+
       await this.userInteractionRepository.delete(
         {
           ...createInteractionDto,

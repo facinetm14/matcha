@@ -67,7 +67,10 @@ export type UserAggregate = UserModel & {
   location_shared_by_user_at: Date | null;
 };
 
-export async function buildCity(lat: number, lng: number): Promise<string | undefined> {
+export async function buildCity(
+  lat: number,
+  lng: number,
+): Promise<string | undefined> {
   const result = await fetch(
     `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`,
     {
@@ -258,6 +261,7 @@ export async function buildUserProfileFromUserAggregate(
     fameRating: calculateFameRating(profile),
     photos: profile.photos.sort((a, b) => a.position - b.position),
     notifications: skipUnecessaryNotification(
+      profile.blocked,
       profile.notifications.sort((a, b) =>
         new Date(a.createdAt) > new Date(b.createdAt) ? -1 : 1,
       ),
