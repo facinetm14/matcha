@@ -4,6 +4,11 @@ export const MAX_SUGGESTED_DISTANCE_KM = 200;
 
 const toRadians = (value: number) => (value * Math.PI) / 180;
 
+export const defaultLocation = {
+  lat: 48.8566,
+  lng: 2.3522,
+};
+
 export const calculateDistanceKm = (from?: Location, to?: Location): number => {
   const hasFromCoords =
     typeof from?.lat === 'number' && typeof from?.lng === 'number';

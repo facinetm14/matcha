@@ -67,7 +67,7 @@ export type UserAggregate = UserModel & {
   location_shared_by_user_at: Date | null;
 };
 
-async function buildCity(lat: number, lng: number): Promise<string | null> {
+export async function buildCity(lat: number, lng: number): Promise<string | undefined> {
   const result = await fetch(
     `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`,
     {
@@ -78,7 +78,7 @@ async function buildCity(lat: number, lng: number): Promise<string | null> {
   );
 
   if (!result.ok) {
-    return null;
+    return undefined;
   }
 
   const data = await result.json();
@@ -147,9 +147,7 @@ export async function buildUserProfileFromUserAggregate(
             isEnabledByUser: user.location_shared_by_user_at ? true : false,
             lat: +user.location_lat,
             lng: +user.location_lng,
-            city:
-              user.location_city ?? ''
-              //(await buildCity(+user.location_lat, +user.location_lng)),
+            city: user.location_city,
           },
         }),
       };
@@ -250,9 +248,7 @@ export async function buildUserProfileFromUserAggregate(
         isEnabledByUser: user.location_shared_by_user_at ? true : false,
         lat: +user.location_lat,
         lng: +user.location_lng,
-        city:
-          user.location_city ??
-          (await buildCity(+user.location_lat, +user.location_lng)),
+        city: user.location_city,
       };
     }
   }
