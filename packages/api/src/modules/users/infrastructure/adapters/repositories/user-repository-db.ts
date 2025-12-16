@@ -263,27 +263,26 @@ export class UserRepositoryDb implements UserRepository {
     userId: string,
   ): Promise<UserProfile[]> {
     const values = [];
+    const now = new Date();
 
     let clauseWhere = ' WHERE id != $1';
     values.push(userId);
     let valuesIndex = 2;
 
-    if (filter.age?.from) {
-      const now = new Date();
-      const startDate = new Date(
-        `${now.getFullYear() - filter.age.from}-01-01`,
-      );
+    if (filter.age?.from !== undefined) {
+      const minBirthDate = new Date(now);
+      minBirthDate.setFullYear(minBirthDate.getFullYear() - filter.age.from);
 
       clauseWhere += ` AND (birth_date <= $${valuesIndex})`;
-      values.push(startDate);
+      values.push(minBirthDate);
       valuesIndex += 1;
     }
 
-    if (filter.age?.to) {
-      const now = new Date();
-      const endDate = new Date(`${now.getFullYear() - filter.age.to}-12-31`);
+    if (filter.age?.to !== undefined) {
+      const maxBirthDate = new Date(now);
+      maxBirthDate.setFullYear(maxBirthDate.getFullYear() - filter.age.to);
       clauseWhere += ` AND (birth_date >= $${valuesIndex})`;
-      values.push(endDate);
+      values.push(maxBirthDate);
       valuesIndex += 1;
     }
 
