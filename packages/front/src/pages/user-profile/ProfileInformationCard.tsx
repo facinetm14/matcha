@@ -21,7 +21,8 @@ import { Gender, Location, UserProfile } from '@/types/user';
 import { UpdateUserDto } from '@/types/dto/update-user.dto';
 import { getGenderLabel } from '@/utils/get-gender-label';
 import { Info, MapPin } from 'lucide-react';
-import { defaultLocation, getUserCurrentPosition } from '@/utils/location';
+import { getUserCurrentPosition } from '@/utils/location';
+import { defaultLocation } from '../../../../shared/distance';
 import { useMutation } from '@tanstack/react-query';
 import { Loadder } from '@/components/ui/Loadder';
 
