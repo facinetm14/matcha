@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Navigation } from '@/components/Navigation';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -35,6 +35,8 @@ export default function Chat() {
 
   const [messageText, setMessageText] = useState<string>('');
   const [messages, setMessages] = useState([]);
+  const messagesContainerRef = useRef<HTMLDivElement | null>(null);
+  const [shouldStickToBottom, setShouldStickToBottom] = useState(true);
 
   const { isPending: isPendingChannelList, data: channelList } = useQuery({
     queryKey: [QUERY_KEYS.GET_CHANNELS],
@@ -94,6 +96,15 @@ export default function Chat() {
 
   const selectedMatch = channelList?.find((ch) => ch.id === selectedMatchId);
 
+  const scrollToBottom = () => {
+    const container = messagesContainerRef.current;
+    if (!container) {
+      return;
+    }
+
+    container.scrollTop = container.scrollHeight;
+  };
+
   const handleSelectChannel = (channelId: string) => {
     queryClient.invalidateQueries({
       queryKey: [QUERY_KEYS.GET_CHANNELS],
@@ -101,6 +112,7 @@ export default function Chat() {
     });
 
     setSelectedMatchId(channelId);
+    setShouldStickToBottom(true);
   };
 
   useEffect(() => {
@@ -117,6 +129,29 @@ export default function Chat() {
       logout(navigate);
     }
   }, [connectedUser, error, navigate]);
+
+  useEffect(() => {
+    if (selectedMatchId) {
+      scrollToBottom();
+    }
+  }, [selectedMatchId]);
+
+  useEffect(() => {
+    if (shouldStickToBottom) {
+      scrollToBottom();
+    }
+  }, [chatMessages?.length, shouldStickToBottom]);
+
+  const handleScroll = () => {
+    const container = messagesContainerRef.current;
+    if (!container) {
+      return;
+    }
+
+    const distanceFromBottom =
+      container.scrollHeight - container.scrollTop - container.clientHeight;
+    setShouldStickToBottom(distanceFromBottom < 40);
+  };
 
   useEffect(() => {
     if (isThereUnReadMessageNotification()) {
@@ -243,7 +278,11 @@ export default function Chat() {
                 </div>
 
                 {/* Messages */}
-                <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                <div
+                  ref={messagesContainerRef}
+                  onScroll={handleScroll}
+                  className="flex-1 overflow-y-auto p-4 space-y-4"
+                >
                   {chatMessages?.map((message) => (
                     <div
                       key={message.id}
