@@ -1,7 +1,7 @@
 import { UserProfile } from '@/modules/users/domain/entities/user-profile.entity';
 
-const LIKE_WEIGHT = 10;
-const VIEW_WEIGHT = 5;
+const LIKE_WEIGHT = 2;
+const VIEW_WEIGHT = 1;
 const DEFAULT_RATE = 1;
 const MAX_RATE = 1000;
 
