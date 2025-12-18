@@ -14,6 +14,7 @@ import { Heart, Sparkles, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import { authApi } from '@/api/auth.api';
 import { useMutation } from '@tanstack/react-query';
+import { isValidEmail } from '../../../shared/input-validation/is-valid-email';
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
@@ -21,18 +22,8 @@ export default function ForgotPassword() {
 
   const sendResetPasswordLinkMutation = useMutation({
     mutationFn: async (email: string) => {
-      const response = await authApi.sendResetPasswordRequest(email);
-      if (response.status === 200) {
-        return true;
-      }
-      throw new Error('Failed to send reset password link. Please try again.');
-    },
-    onSuccess: () => {
-      toast.success('Password reset link sent to your email!');
+      await authApi.sendResetPasswordRequest(email);
       setSubmitted(true);
-    },
-    onError: (error) => {
-      toast.error(error.message);
     },
   });
 
@@ -41,6 +32,11 @@ export default function ForgotPassword() {
 
     if (!email) {
       toast.error('Please enter your email address');
+      return;
+    }
+    const validateEmailResult = isValidEmail(email);
+    if (!validateEmailResult.valid) {
+      toast.error(validateEmailResult.error || 'Email is invalid');
       return;
     }
     sendResetPasswordLinkMutation.mutate(email);
@@ -56,7 +52,7 @@ export default function ForgotPassword() {
             </div>
             <CardTitle className="text-2xl">Check Your Email</CardTitle>
             <CardDescription>
-              We've sent a password reset link to <strong>{email}</strong>
+              If an account exists with this email, you should receive a reset link !
             </CardDescription>
           </CardHeader>
           <CardContent>
