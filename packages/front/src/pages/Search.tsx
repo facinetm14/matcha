@@ -23,12 +23,8 @@ import {
   PaginationPrevious,
 } from '@/components/ui/pagination';
 import { AdvancedSearchCard } from '@/components/AdvancedSearchCard';
-import { calculateDistanceKm } from '../../../shared/distance';
+import { calculateDistanceKm, defaultLocation } from '../../../shared/distance';
 
-import {
-  getMockLocation,
-  withMockedLocation,
-} from '@/utils/mock-user-location';
 import { CreateInteractionDto } from '@/types/dto/create-interaction.dto';
 import { toast } from 'sonner';
 
@@ -56,8 +52,10 @@ export default function Search() {
   const [appliedDistanceRange, setAppliedDistanceRange] = useState<
     [number, number]
   >(DEFAULT_DISTANCE_RANGE);
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [appliedFilters, setAppliedFilters] = useState<FilterUsersDto>({});
+  const [tags, setTags] = useState<string[]>([]);
   const [appliedTags, setAppliedTags] = useState<string[]>([]);
+  const [appliedSort, setAppliedSort] = useState('distance');
   const [filteredUsers, setFilteredUsers] = useState<UserProfile[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -75,6 +73,8 @@ export default function Search() {
   };
   const {
     distance: isDistanceFilterEnabled,
+    age: isAgeFilterEnabled,
+    fame: isFameFilterEnabled,
     tags: isTagsFilterEnabled,
     sort: isSortFilterEnabled,
   } = filtersEnabled;
@@ -86,7 +86,7 @@ export default function Search() {
       if (!res.ok) {
         throw new Error('Failed to browse users');
       }
-      const users = await res.json();
+      const users: UserProfile[] = await res.json();
       return users;
     },
   });
@@ -101,7 +101,7 @@ export default function Search() {
     }) => {
       const actionResult = await userApi.interactWithUser(query);
       if (actionResult.status !== 201) {
-        console.log("DEBUG", actionResult)
+        console.log('DEBUG', actionResult);
         throw new Error(`Failed to ${query.category} user. Please try again.`);
       }
       const currentUserResp = await userApi.getMe();
@@ -137,8 +137,28 @@ export default function Search() {
 
   const handleSearch = () => {
     setCurrentPage(1);
+    const filterDto: FilterUsersDto = {};
+    if (filtersEnabled.age) {
+      filterDto.age = {
+        from: ageRange[0],
+        to: ageRange[1],
+      };
+    }
+    if (filtersEnabled.fame) {
+      filterDto.fameRating = {
+        from: fameRange[0],
+        to: fameRange[1],
+      };
+    }
+
+    if (filtersEnabled.tags && tags.length) {
+      filterDto.tags = tags;
+    }
+
+    setAppliedFilters(filterDto);
+    setAppliedSort(sortBy);
     setAppliedDistanceRange(distanceRange);
-    setAppliedTags(selectedTags);
+    setAppliedTags(tags);
   };
 
   const handleLike = (user) => {
@@ -194,19 +214,34 @@ export default function Search() {
 
   useEffect(() => {
     if (!data) {
-      console.log("DEBUG: data null")
       return;
     }
 
-    const referenceLocation =
-      typeof connectedUser?.location?.lat === 'number' &&
-      typeof connectedUser?.location?.lng === 'number'
-        ? connectedUser.location
-        : getMockLocation();
+    const referenceLocation = connectedUser?.location;
 
-    let processedUsers = data.map((user, index) =>
-      withMockedLocation(user, index),
-    );
+    let processedUsers = data;
+    if (isAgeFilterEnabled && appliedFilters.age) {
+      const { from, to } = appliedFilters.age;
+      const minAge = from ?? 0;
+      const maxAge = to ?? Number.POSITIVE_INFINITY;
+
+      processedUsers = processedUsers.filter((user) => {
+        if (typeof user.age !== 'number') {
+          return false;
+        }
+        return user.age >= minAge && user.age <= maxAge;
+      });
+    }
+
+    if (isFameFilterEnabled && appliedFilters.fameRating) {
+      const { from, to } = appliedFilters.fameRating;
+      const minFame = from ?? 0;
+      const maxFame = typeof to === 'number' ? to : Number.POSITIVE_INFINITY;
+
+      processedUsers = processedUsers.filter(
+        (user) => user.fameRating >= minFame && user.fameRating <= maxFame,
+      );
+    }
 
     if (isDistanceFilterEnabled) {
       processedUsers = processedUsers.filter((user) => {
@@ -230,7 +265,7 @@ export default function Search() {
 
     if (isSortFilterEnabled) {
       processedUsers.sort((a, b) => {
-        switch (sortBy) {
+        switch (appliedSort) {
           case 'age':
             return (a.age ?? 0) - (b.age ?? 0);
           case 'fame':
@@ -256,15 +291,18 @@ export default function Search() {
     setFilteredUsers(processedUsers);
   }, [
     data,
-    appliedDistanceRange,
-    sortBy,
-    appliedTags,
     connectedUser,
-    isDistanceFilterEnabled,
-    isTagsFilterEnabled,
-    isSortFilterEnabled,
+    appliedDistanceRange,
+    appliedSort,
+    appliedTags,
+    appliedFilters,
     getTagMatchScore,
     matchesSelectedTags,
+    isDistanceFilterEnabled,
+    isAgeFilterEnabled,
+    isFameFilterEnabled,
+    isTagsFilterEnabled,
+    isSortFilterEnabled,
   ]);
 
   if (isPendingProfile || isPending) {
@@ -330,8 +368,8 @@ export default function Search() {
           setSortBy={setSortBy}
           distanceRange={distanceRange}
           setDistanceRange={setDistanceRange}
-          tags={selectedTags}
-          setTags={setSelectedTags}
+          tags={tags}
+          setTags={setTags}
           onSubmit={handleSearch}
           ageFilterEnabled={filtersEnabled.age}
           onToggleAgeFilter={handleFilterToggle('age')}
@@ -416,30 +454,27 @@ export default function Search() {
                     <Info className="w-4 h-4 mr-2" />
                     View
                   </Button>
-                  { !!connectedUser?.photos.length && (
+                  {!!connectedUser?.photos.length && (
                     <>
-                      {
-                        user.likedBy.includes(connectedUser.id)
-                        ? (
-                          <Button
-                            variant="outline"
-                            className="flex-1 bg-gradient-romantic hover:bg-primary"
-                            onClick={() => handleUnlike(user)}
-                          >
-                              <X className="w-4 h-4 mr-2" />
-                            Unlike
-                          </Button>
-                        ) : (
-                          <Button
-                            variant="outline"
-                            className="flex-1 bg-gradient-romantic hover:bg-primary"
-                            onClick={() => handleLike(user)}
-                          >
-                            <Heart className="w-4 h-4 mr-2" />
-                            Like
-                          </Button>
-                        )
-                      }
+                      {user.likedBy.includes(connectedUser.id) ? (
+                        <Button
+                          variant="outline"
+                          className="flex-1 bg-gradient-romantic hover:bg-primary"
+                          onClick={() => handleUnlike(user)}
+                        >
+                          <X className="w-4 h-4 mr-2" />
+                          Unlike
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="outline"
+                          className="flex-1 bg-gradient-romantic hover:bg-primary"
+                          onClick={() => handleLike(user)}
+                        >
+                          <Heart className="w-4 h-4 mr-2" />
+                          Like
+                        </Button>
+                      )}
                     </>
                   )}
                 </div>
