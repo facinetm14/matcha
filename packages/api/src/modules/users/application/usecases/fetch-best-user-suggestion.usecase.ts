@@ -31,13 +31,8 @@ export class FetchBestUserSuggestion {
     const suggestedUsers: UserProfile[] = [];
 
     const sexPref = connectedUser?.sexualOrientation ?? [];
-    let i = 0;
 
     for (const user of userList) {
-      if (i > 10) {
-        continue;
-      }
-      i++;
       let matched = false;
 
       if (
@@ -50,11 +45,7 @@ export class FetchBestUserSuggestion {
         continue;
       }
 
-      if (
-        [...user.blocked, ...user.swiped, user.likedBy].includes(
-          connectedUser.id,
-        )
-      ) {
+      if ([...user.blocked, ...user.swiped].includes(connectedUser.id)) {
         continue;
       }
 
@@ -102,7 +93,7 @@ export class FetchBestUserSuggestion {
           fameRating: b.fameRating,
         },
       ),
-    );
+    )
   }
 
   private smartSort(
