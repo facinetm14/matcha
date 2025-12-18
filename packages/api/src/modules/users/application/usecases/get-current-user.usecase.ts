@@ -26,6 +26,14 @@ export class GetCurrentUserUseCase {
       targetUserId ?? userId,
     );
 
+    if (targetUserId && targetUserId !== userId) {
+      const currentUser = await this.userRepository.findUserProfileById(userId);
+
+      if (currentUser?.blocked.includes(targetUserId)) {
+        return Err(VerifyTokenError.FORBIDDEN);
+      }
+    }
+
     if (!userProfile) {
       return Err(VerifyTokenError.USER_NOT_FOUND);
     }

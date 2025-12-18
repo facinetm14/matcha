@@ -11,9 +11,10 @@ export class CheckUserIdentifierAvailabilityUseCase {
   ) {}
 
   async execute(field: UserUniqKeys, value: string): Promise<boolean> {
+    const sanitizedValue = field === UserUniqKeys.EMAIL ? value.toLowerCase() : value;
     const existingUser = await this.userRepository.findUserByUniqKey(
       field,
-      value,
+      sanitizedValue,
     );
     return !existingUser;
   }
