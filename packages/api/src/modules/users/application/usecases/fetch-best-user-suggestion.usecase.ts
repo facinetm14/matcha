@@ -45,7 +45,7 @@ export class FetchBestUserSuggestion {
         continue;
       }
 
-      if ([...user.blocked, ...user.swiped].includes(connectedUser.id)) {
+      if ([...user.blocked, ...user.swiped, ...user.likedBy].includes(connectedUser.id)) {
         continue;
       }
 
