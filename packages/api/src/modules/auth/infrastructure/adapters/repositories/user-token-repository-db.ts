@@ -1,9 +1,10 @@
-import { UserToken } from '../../../../../core/domain/entities/user-token.entity';
+import { UserToken } from '@/modules/auth/domain/entities/user-token.entity';
 import { UserTokenRepository } from '../../../application/ports/repositories/user-token.repository';
 import { inject, injectable } from 'inversify';
 import { pgClient } from '../../../../../config/db/data-source';
 import { Logger } from '../../../../shared/ports/logger.service';
-import { TYPE } from '../../../../../config/inversify-type';
+import { TYPE } from '@/config/ioc/inversify-type';
+
 import { mapUserTokenModelToEntity } from '../../mappers/user-token-model-to-entity';
 import { mapEnityOrDtoToModel } from '../../../../shared/utils/map-entity-or-dto-to-model';
 import { UserTokenModel } from '../../models/user-token.model';
