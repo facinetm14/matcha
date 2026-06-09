@@ -1,0 +1,22 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.TYPE = void 0;
+exports.TYPE = {
+    SocketIoServer: Symbol.for('SocketIoServer'),
+    GeocodeService: Symbol.for('GeocodeService'),
+    Logger: Symbol.for('Logger'),
+    UserRepository: Symbol.for('UserRepository'),
+    UserTokenRepository: Symbol.for('UserTokenRepository'),
+    EventBus: Symbol.for('EventBus'),
+    NotificationService: Symbol.for('NotificationService'),
+    EmailService: Symbol.for('EmailService'),
+    CacheService: Symbol.for('CacheService'),
+    AccessTokenService: Symbol.for('AccessTokenService'),
+    UserInterestRepository: Symbol.for('UserInterestRepository'),
+    UserInteractionRepository: Symbol.for('UserInteractionRepository'),
+    UserNotificationRepository: Symbol.for('UserNotificationRepository'),
+    UserImageRepository: Symbol.for('UserImageRepository'),
+    MessageRepository: Symbol.for('MessageRepository'),
+    UserLocationRepository: Symbol.for('UserLocationRepository'),
+    IpLocation: Symbol.for('IpLocation'),
+};

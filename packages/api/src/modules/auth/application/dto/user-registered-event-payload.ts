@@ -1,4 +1,4 @@
-import { UserToken } from "../../domain/entities/user-token.entity";
+import { UserToken } from '@/modules/auth/domain/entities/user-token.entity';
 
 export type UserRegisteredEventPayload = {
   username: string;

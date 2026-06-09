@@ -137,7 +137,7 @@ export class UserController {
 
     const getCurrentUserResult = await this.getCurrentUserUseCase.execute(
       connectedUserResult.data,
-      id,
+      id as string,
       isViewing,
     );
 
@@ -339,7 +339,7 @@ export class UserController {
       return;
     }
 
-    const path = join(process.cwd(), UPLOAD_DEST, filename);
+    const path = join(process.cwd(), UPLOAD_DEST, filename as string);
     if (!existsSync(path)) {
       resp.status(404).send('image not found');
       return;
@@ -457,9 +457,10 @@ export class UserController {
 
   async geoGode(req: Request, resp: Response) {
     const { lat, lng } = req.query as { lat?: string; lng?: string };
+    const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`;
 
     const result = await fetch(
-      `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`,
+      url,
       {
         headers: {
           'User-Agent': 'matcha-app',
