@@ -8,7 +8,7 @@ COPY packages/shared ./packages/shared
 COPY packages/front ./packages/front
 
 RUN npm install
-RUN npm run build:front
+RUN npm run build --workspace front
 
 FROM nginx:alpine
 
