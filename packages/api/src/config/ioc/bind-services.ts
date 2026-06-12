@@ -1,7 +1,7 @@
 import { AccessTokenService } from '@/modules/auth/application/ports/services/access-token.service';
 import { AccessTokenManager } from '@/modules/auth/infrastructure/adapters/services/access-token-manager';
 import { NotificationService } from '@/modules/notifications/application/ports/services/notification.service';
-import { EmailApiBrevo } from '@/modules/shared/adapters/email-api-brevo';
+import { EmailApiResend } from '@/modules/shared/adapters/email-api-resend';
 import { LoggerStd } from '@/modules/shared/adapters/logger-std';
 import { NodeEventBus } from '@/modules/shared/adapters/node-event-bus';
 import { NotificationManager } from '@/modules/shared/adapters/notification-manager';
@@ -32,7 +32,7 @@ export function bindServices(container: Container) {
     .inSingletonScope();
   container
     .bind<EmailService>(TYPE.EmailService)
-    .to(EmailApiBrevo)
+    .to(EmailApiResend)
     .inSingletonScope();
   container
     .bind<CacheService>(TYPE.CacheService)
