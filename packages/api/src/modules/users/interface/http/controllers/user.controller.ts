@@ -32,6 +32,7 @@ import { CreateInteractionDtoSchema } from '../../validations/create-user-intera
 import { UpdateUserProfileDto } from '@/modules/users/application/dto/update-user-profile.dto';
 import { FilterUsersDtoSchema } from '../../validations/filter-users-dto.validation';
 import { FilterUsersUseCase } from '@/modules/users/application/usecases/filter-users.usecase';
+import { ReverseGeocodeCoordinatesUseCase } from '@/modules/users/application/usecases/reverse-geocode-coordinates.usecase';
 import { VerifyTokenError } from '@/modules/auth/application/errors/verify-token.error';
 
 @injectable()
@@ -59,6 +60,8 @@ export class UserController {
     private readonly getUserListFromIdListUseCase: GetUserListFromIdListUseCase,
     @inject(FilterUsersUseCase)
     private readonly filterUsersUseCase: FilterUsersUseCase,
+    @inject(ReverseGeocodeCoordinatesUseCase)
+    private readonly reverseGeocodeCoordinatesUseCase: ReverseGeocodeCoordinatesUseCase,
   ) {}
 
   async getMe(req: Request, resp: Response) {
@@ -458,22 +461,16 @@ export class UserController {
   async geoGode(req: Request, resp: Response) {
     const { lat, lng } = req.query as { lat?: string; lng?: string };
 
-    const result = await fetch(
-      `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`,
-      {
-        headers: {
-          'User-Agent': 'matcha-app',
-        },
-      },
+    const geocode = await this.reverseGeocodeCoordinatesUseCase.execute(
+      Number(lat),
+      Number(lng),
     );
 
-    if (!result.ok) {
+    if (!geocode) {
       resp.status(500).send('Reverse geocoding failed');
       return;
     }
 
-    const data = await result.json();
-
-    resp.status(200).send(data);
+    resp.status(200).send(geocode);
   }
 }
