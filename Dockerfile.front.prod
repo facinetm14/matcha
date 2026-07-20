@@ -1,0 +1,19 @@
+FROM node:20-alpine AS builder
+
+WORKDIR /usr/src/app
+
+COPY package*.json ./
+COPY packages/front/package*.json ./packages/front/
+COPY packages/shared ./packages/shared
+COPY packages/front ./packages/front
+
+RUN npm install
+RUN npm run build --workspace front
+
+FROM nginx:alpine
+
+COPY --from=builder /usr/src/app/packages/front/dist /usr/share/nginx/html
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]

@@ -104,7 +104,7 @@ export class AuthController {
     }
 
     const activateUserAccountResult =
-      await this.verifyUserUseCase.execute(validationToken);
+      await this.verifyUserUseCase.execute(validationToken as string);
 
     if (activateUserAccountResult.isErr) {
       resp.status(401).send('invalid token');
@@ -226,7 +226,7 @@ export class AuthController {
 
     const confrimResetPasswordResult =
       await this.confirmResetPasswordUseCase.execute(
-        validationToken,
+        validationToken as string,
         ipAddr,
         device,
       );
