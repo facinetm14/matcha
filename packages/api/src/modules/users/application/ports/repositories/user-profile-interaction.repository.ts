@@ -1,5 +1,5 @@
-import { CreateInteractionDto } from '@/modules/users/application/dto/create-user-interaction.dto';
 import { UserProfileInteraction } from '@/modules/users/domain/entities/user-profile-interaction.entity';
+import { CreateInteractionDto } from '@/modules/users/application/dto/create-user-interaction.dto';
 
 export interface UserInteractionRepository {
   create(

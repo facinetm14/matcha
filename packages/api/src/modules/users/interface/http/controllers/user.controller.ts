@@ -140,7 +140,7 @@ export class UserController {
 
     const getCurrentUserResult = await this.getCurrentUserUseCase.execute(
       connectedUserResult.data,
-      id,
+      id as string,
       isViewing,
     );
 
