@@ -4,6 +4,8 @@ import { AccessTokenService } from './application/ports/services/access-token.se
 import { AccessTokenManager } from './infrastructure/adapters/services/access-token-manager';
 import { IpLocation } from './application/ports/services/ip-location-service';
 import { IpLocationIpApi } from './infrastructure/adapters/services/ip-location.IpApi';
+import { PasswordHasher } from './application/ports/services/password-hasher';
+import { Argon2PasswordHasher } from './infrastructure/adapters/services/argon2-password-hasher';
 import { UserTokenRepository } from './application/ports/repositories/user-token.repository';
 import { UserTokenRepositoryInCache } from './infrastructure/adapters/repositories/user-token-repository-cache';
 import { AuthController } from './interface/http/controllers/auth.controller';
@@ -46,5 +48,10 @@ export function bindAuthModule(container: Container) {
   container
     .bind<IpLocation>(TYPE.IpLocation)
     .to(IpLocationIpApi)
+    .inSingletonScope();
+
+  container
+    .bind<PasswordHasher>(TYPE.PasswordHasher)
+    .to(Argon2PasswordHasher)
     .inSingletonScope();
 }

@@ -5,10 +5,8 @@ import { uuid } from '@shared/uuid';
 import { RegisterUserError } from '../../../application/errors/register-user.error';
 import { Logger } from '@/modules/shared/application/ports/services/logger.service';
 import { VerifyUserUseCase } from '../../../application/usecases/verify-user.usecase';
-import { UserTokenCateory } from '../../../domain/consts/user-token-category';
 import { LoginUserUseCase } from '../../../application/usecases/login-user.usecase';
 import { LoginUserError } from '../../../application/errors/login-user.error';
-import { factoryUserToken } from '@/modules/shared/application/utils/factory';
 import { RefreshAccessTokenUseCase } from '@/modules/auth/application/usecases/refresh-token.usecase';
 import { VerifyTokenError } from '@/modules/auth/application/errors/verify-token.error';
 import { ResetPasswordUseCase } from '@/modules/auth/application/usecases/reset-password.usecase';
@@ -66,21 +64,10 @@ export class AuthController {
     const device = `${JSON.stringify(req.headers['user-agent'])}`;
     const ipAddr = `${req.ip}`;
 
-    const now = new Date();
-
-    const userToken = factoryUserToken({
-      userId: createUserDto.id,
-      category: UserTokenCateory.ONE_TIME,
-      expireAt: null,
-      ipAddr,
-      device,
-      createdAt: now,
-      updatedAt: now,
-    });
-
     const registerUserResult = await this.registerUserUseCase.execute(
       createUserDto,
-      userToken,
+      ipAddr,
+      device,
     );
 
     if (registerUserResult.isErr) {

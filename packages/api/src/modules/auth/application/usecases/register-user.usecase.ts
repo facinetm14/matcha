@@ -8,7 +8,7 @@ import {
   isPasswordStrong,
   PASSWORD_MIN_LENGTH,
 } from '@shared/input-validation/is-valid-password';
-import { hashPassword } from '../../infrastructure/utils/password';
+import { PasswordHasher } from '../ports/services/password-hasher';
 
 import { isValidEmail } from '@shared/input-validation/is-valid-email';
 import { Logger } from '@/modules/shared/application/ports/services/logger.service';
@@ -18,7 +18,8 @@ import { UserRegisteredEventPayload } from '../dto/user-registered-event-payload
 import { UserStatus } from '../../../users/domain/consts/user-status.enum';
 import { DEFAULT_SEXUAL_ORIENTATION } from '@/modules/users/application/consts/default-sexual-orientation';
 import { TYPE } from '@/config/ioc/inversify-type';
-import { UserToken } from '../../domain/entities/user-token.entity';
+import { UserTokenCateory } from '../../domain/consts/user-token-category';
+import { factoryUserToken } from '@/modules/shared/application/utils/factory';
 
 @injectable()
 export class RegisterUserUseCase {
@@ -27,10 +28,13 @@ export class RegisterUserUseCase {
     private readonly userRepository: UserRepository,
     @inject(TYPE.Logger) private readonly logger: Logger,
     @inject(TYPE.EventBus) private readonly eventBus: EventBus,
+    @inject(TYPE.PasswordHasher)
+    private readonly passwordHasher: PasswordHasher,
   ) {}
   async execute(
     createUserDto: CreateUserDto,
-    userToken: UserToken,
+    ipAddr: string,
+    device: string,
   ): Promise<Result<string, RegisterUserError>> {
     const lastName = createUserDto.lastName.trim();
     if (!lastName) {
@@ -83,7 +87,7 @@ export class RegisterUserUseCase {
       return Err(RegisterUserError.EMAIL_ALREADY_EXISTS);
     }
 
-    const hashedPasswd = await hashPassword(createUserDto.passwd);
+    const hashedPasswd = await this.passwordHasher.hash(createUserDto.passwd);
     const now = new Date();
 
     const newUserId = await this.userRepository.create({
@@ -96,6 +100,16 @@ export class RegisterUserUseCase {
     });
 
     if (newUserId) {
+      const userToken = factoryUserToken({
+        userId: createUserDto.id,
+        category: UserTokenCateory.ONE_TIME,
+        expireAt: null,
+        ipAddr,
+        device,
+        createdAt: now,
+        updatedAt: now,
+      });
+
       const UserRegisteredEventPayload: UserRegisteredEventPayload = {
         username,
         email,
