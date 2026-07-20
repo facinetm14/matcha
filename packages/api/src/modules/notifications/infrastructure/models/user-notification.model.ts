@@ -1,4 +1,4 @@
-export interface NotificationModel {
+export interface UserNotificationModel {
   id: string;
   author: string;
   from_user: string;

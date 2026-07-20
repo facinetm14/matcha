@@ -1,0 +1,18 @@
+[agent]
+persistent_facts = [
+  # Architecture & Backend
+  "For APIs, modular backends, or service design work, apply .agents/skills/hexagonal-architecture/SKILL.md",
+  "For backend implementation, use typed boundaries, explicit async error handling, and clear service/repository separation.",
+  "You can addionaly apply .agents/skills/nodejs/SKILL.md
+
+  # Data
+  "When queries, schema, migrations, or data-access are involved, apply .agents/skills/postsgres-best-practices/SKILL.md",
+
+  # Frontend
+  "When building or modifying UI components, apply .agents/skills/shadcn/SKILL.md",
+  "For frontend design tasks, produce intentional, polished UI outcomes respecting the existing design system. You can addionaly apply .agents/skills/frontend-design/SKILL.md ",
+
+  # Testing
+  "Apply strict TDD (red → green → refactor) by default for implementation and bug fixes, reffer to .agents/skills/common-tdd/SKILL.md",
+  "For Vue testing, use Vitest + Vue Test Utils with focused component behavior tests and pragmatic mocking, apply .agents/skills/vue-testing-best-practices/SKILL.md",
+]

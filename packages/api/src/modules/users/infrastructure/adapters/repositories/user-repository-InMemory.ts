@@ -2,7 +2,7 @@ import { CreateUserDto } from '../../../../auth/application/dto/create-user.dto'
 import { User } from '../../../domain/entities/user.entity';
 import { UserUniqKeys } from '../../../application/consts/user-uniq-keys.enum';
 import { UserRepository } from '../../../application/ports/repositories/user.repository';
-import { factoryUser } from '@/modules/shared/utils/factory';
+import { factoryUser } from '@/modules/shared/application/utils/factory';
 import { hashPassword } from '../../../../auth/infrastructure/utils/password';
 import { UserProfile } from '@/modules/users/domain/entities/user-profile.entity';
 import { UpdateUserDto } from '@/modules/users/application/dto/update-user.dto';

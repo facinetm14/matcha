@@ -1,11 +1,11 @@
-import { EventType } from '@/modules/shared/consts/event-type';
+import { EventType } from '@/modules/shared/application/consts/event-type';
 import { UserImageRepository } from '@/modules/users/application/ports/repositories/user-image.repository';
-import { EventBus } from '@/modules/shared/ports/event-bus';
+import { EventBus } from '@/modules/shared/application/ports/services/event-bus';
 import { inject, injectable } from 'inversify';
 import { TYPE } from '@/config/ioc/inversify-type';
 
 @injectable()
-export class DeleteUserImageUsceCase {
+export class DeleteUserImageUseCase {
   constructor(
     @inject(TYPE.UserImageRepository)
     private readonly userImageRepository: UserImageRepository,
