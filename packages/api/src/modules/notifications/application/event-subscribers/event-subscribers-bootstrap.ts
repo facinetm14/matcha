@@ -4,7 +4,7 @@ import { EventBus } from '@/modules/shared/application/ports/services/event-bus'
 import { Logger } from '@/modules/shared/application/ports/services/logger.service';
 import { NotificationService } from '../ports/services/notification.service';
 import { Notification } from '@/modules/notifications/domain/entities/notification.entity';
-import { Server as SocketIoServer } from 'socket.io';
+import { RealtimeNotificationService } from '../ports/services/realtime-notification.service';
 import { UserInteractionRepository } from '@/modules/users/application/ports/repositories/user-profile-interaction.repository';
 import { UserProfileInteraction } from '@/modules/users/domain/entities/user-profile-interaction.entity';
 import { uuid } from '@shared/uuid';
@@ -27,7 +27,9 @@ const shouldPreventViewSpam = (
 export function registerNotificationsEventSubscribers(): void {
   const eventBus = container.get<EventBus>(TYPE.EventBus);
   const logger = container.get<Logger>(TYPE.Logger);
-  const socketIoServer = container.get<SocketIoServer>(TYPE.SocketIoServer);
+  const realtimeNotificationService = container.get<RealtimeNotificationService>(
+    TYPE.RealtimeNotificationService,
+  );
   const notificationService = container.get<NotificationService>(
     TYPE.NotificationService,
   );
@@ -107,9 +109,11 @@ export function registerNotificationsEventSubscribers(): void {
 
       logger.info(`creating notification for ${notification.author}`);
 
-      socketIoServer
-        .to(notification.author)
-        .emit(SocketEvents.USER_INTERACTION_ADDED, notification);
+      realtimeNotificationService.emitToUser(
+        notification.author,
+        SocketEvents.USER_INTERACTION_ADDED,
+        notification,
+      );
     },
   );
 }
