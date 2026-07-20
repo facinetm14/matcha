@@ -1,13 +1,13 @@
 import { CreateUserDto } from '@/modules/auth/application/dto/create-user.dto';
-import { UserStatus } from '@/modules/users/domain/consts/user-status.enum';
+import { UserStatus } from '@/modules/users/application/consts/user-status.enum';
 import { UserRepository } from '@/modules/users/application/ports/repositories/user.repository';
-import { EventBus } from '@/modules/shared/application/ports/services/event-bus';
+import { EventBus } from '@/modules/shared/ports/event-bus';
 import { GetCurrentUserUseCase } from '@/modules/users/application/usecases/get-current-user.usecase';
 
 import {
   factoryCreateUserDto,
   factoryUserRepositoryInMemory,
-} from '../../support/factory';
+} from '@/modules/shared/utils/factory';
 
 describe('Get current user usecase', () => {
   let getCurrentUserUseCase: GetCurrentUserUseCase;

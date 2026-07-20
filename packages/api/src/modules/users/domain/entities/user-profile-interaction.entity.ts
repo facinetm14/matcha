@@ -1,6 +1,13 @@
-import { InteractionCategory as SharedInteractionCategory } from '@/modules/shared/domain/interaction-category';
-
-export type InteractionCategory = SharedInteractionCategory;
+export type InteractionCategory =
+  | 'like'
+  | 'unlike'
+  | 'swipe'
+  | 'block'
+  | 'unblock'
+  | 'view'
+  | 'report'
+  | 'match'
+  | 'message';
 
 export interface UserProfileInteraction {
   id: string;

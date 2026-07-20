@@ -19,6 +19,7 @@ import { ProfileHeaderCard } from '@/pages/user-profile/ProfileHeaderCard';
 import { ProfileInformationCard } from '@/pages/user-profile/ProfileInformationCard';
 import { SettingsModal } from '@/pages/user-profile/SettingsModal';
 
+const PHOTOS_KEY = 'photos';
 const BIRTH_DATE_KEY = 'birthDate';
 import { isValidFirstname } from '../../../../shared/input-validation/is-valid-firstname';
 import { isValidLastname } from '../../../../shared/input-validation/is-valid-lastname';
@@ -123,24 +124,6 @@ export default function Profile() {
     });
 
   const [blockedUsersList, setBlockedUsersList] = useState<UserProfile[]>([]);
-
-  const uploadUserImagesMutation = useMutation({
-    mutationFn: async (pendingPhotos: { file: File; position: number }[]) => {
-      const response = await userApi.uploadUserImages(pendingPhotos);
-      if (response.status === 201) {
-        return true;
-      }
-
-      const error = await response.text();
-      throw new Error(error);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.ME], exact: true });
-    },
-    onError: (error) => {
-      toast.error(error.message);
-    },
-  });
 
   const updateProfileMutation = useMutation({
     mutationFn: async (updateUserDto: UpdateUserDto) => {
@@ -255,6 +238,7 @@ export default function Profile() {
       gender: profile.gender as Gender,
       sexualOrientation: profile.sexualOrientation,
       bio: profile.bio,
+      photos: [],
       location: profile.location as Location,
     });
     setErrors({});
@@ -291,24 +275,18 @@ export default function Profile() {
     }
 
     const updatedKeys = Object.keys(toUpdate);
-    const pendingPhotos = photos.filter(
-      (photo): photo is typeof photo & { file: File } => !!photo.file,
-    );
 
-    if (
-      !pendingPhotos.length &&
-      !photos.length &&
-      profile.photos.length === 0
-    ) {
+    const isOnlyEmptyPhotos =
+      updatedKeys.length === 1 &&
+      updatedKeys[0] === PHOTOS_KEY &&
+      toUpdate[PHOTOS_KEY].length === 0;
+
+    if (isOnlyEmptyPhotos && profile.photos.length === 0) {
       toast.info('Set a profile picture to be able to like other profiles!');
     }
 
-    if (updatedKeys.length) {
+    if (updatedKeys.length && !isOnlyEmptyPhotos) {
       updateProfileMutation.mutate(toUpdate);
-    }
-
-    if (pendingPhotos.length) {
-      uploadUserImagesMutation.mutate(pendingPhotos);
     }
 
     if (imagesPositionToUpdate.length) {

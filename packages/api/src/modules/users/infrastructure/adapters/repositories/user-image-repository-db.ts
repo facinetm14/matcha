@@ -1,5 +1,5 @@
 import { UserImageRepository } from '@/modules/users/application/ports/repositories/user-image.repository';
-import { Logger } from '@/modules/shared/application/ports/services/logger.service';
+import { Logger } from '@/modules/shared/ports/logger.service';
 import { pgClient } from '@/config/db/data-source';
 import { uuid } from '@shared/uuid';
 import { inject, injectable } from 'inversify';

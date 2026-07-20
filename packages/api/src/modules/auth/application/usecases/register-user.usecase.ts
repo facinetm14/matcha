@@ -2,24 +2,23 @@ import { inject, injectable } from 'inversify';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { UserRepository } from '../../../users/application/ports/repositories/user.repository';
 import { RegisterUserError } from '../errors/register-user.error';
-import { Err, Ok, Result } from '@/modules/shared/application/utils/result';
+import { Err, Ok, Result } from '../../../shared/utils/result';
 import { UserUniqKeys } from '../../../users/application/consts/user-uniq-keys.enum';
 import {
   isPasswordStrong,
   PASSWORD_MIN_LENGTH,
-} from '@shared/input-validation/is-valid-password';
-import { PasswordHasher } from '../ports/services/password-hasher';
+} from '../../../../../../shared/input-validation/is-valid-password';
+import { hashPassword } from '../../infrastructure/utils/password';
 
-import { isValidEmail } from '@shared/input-validation/is-valid-email';
-import { Logger } from '@/modules/shared/application/ports/services/logger.service';
-import { EventBus } from '@/modules/shared/application/ports/services/event-bus';
-import { EventType } from '@/modules/shared/application/consts/event-type';
+import { isValidEmail } from '../../../../../../shared/input-validation/is-valid-email';
+import { Logger } from '../../../shared/ports/logger.service';
+import { EventBus } from '../../../shared/ports/event-bus';
+import { EventType } from '../../../shared/consts/event-type';
 import { UserRegisteredEventPayload } from '../dto/user-registered-event-payload';
-import { UserStatus } from '../../../users/domain/consts/user-status.enum';
+import { UserStatus } from '../../../users/application/consts/user-status.enum';
 import { DEFAULT_SEXUAL_ORIENTATION } from '@/modules/users/application/consts/default-sexual-orientation';
 import { TYPE } from '@/config/ioc/inversify-type';
-import { UserTokenCateory } from '../../domain/consts/user-token-category';
-import { factoryUserToken } from '@/modules/shared/application/utils/factory';
+import { UserToken } from '../../domain/entities/user-token.entity';
 
 @injectable()
 export class RegisterUserUseCase {
@@ -28,13 +27,10 @@ export class RegisterUserUseCase {
     private readonly userRepository: UserRepository,
     @inject(TYPE.Logger) private readonly logger: Logger,
     @inject(TYPE.EventBus) private readonly eventBus: EventBus,
-    @inject(TYPE.PasswordHasher)
-    private readonly passwordHasher: PasswordHasher,
   ) {}
   async execute(
     createUserDto: CreateUserDto,
-    ipAddr: string,
-    device: string,
+    userToken: UserToken,
   ): Promise<Result<string, RegisterUserError>> {
     const lastName = createUserDto.lastName.trim();
     if (!lastName) {
@@ -87,7 +83,7 @@ export class RegisterUserUseCase {
       return Err(RegisterUserError.EMAIL_ALREADY_EXISTS);
     }
 
-    const hashedPasswd = await this.passwordHasher.hash(createUserDto.passwd);
+    const hashedPasswd = await hashPassword(createUserDto.passwd);
     const now = new Date();
 
     const newUserId = await this.userRepository.create({
@@ -100,16 +96,6 @@ export class RegisterUserUseCase {
     });
 
     if (newUserId) {
-      const userToken = factoryUserToken({
-        userId: createUserDto.id,
-        category: UserTokenCateory.ONE_TIME,
-        expireAt: null,
-        ipAddr,
-        device,
-        createdAt: now,
-        updatedAt: now,
-      });
-
       const UserRegisteredEventPayload: UserRegisteredEventPayload = {
         username,
         email,

@@ -6,11 +6,11 @@ import { Message } from '../../domain/entities/message.entity';
 import { uuid } from '@shared/uuid';
 import { UserNotificationRepository } from '../ports/repositories/user-notification.repository';
 import { Notification } from '../../domain/entities/notification.entity';
-import { EventBus } from '@/modules/shared/application/ports/services/event-bus';
-import { EventType } from '@/modules/shared/application/consts/event-type';
+import { EventBus } from '@/modules/shared/ports/event-bus';
+import { EventType } from '@/modules/shared/consts/event-type';
 
 @injectable()
-export class SendMessageUseCase {
+export class SendMessageUsceCase {
   constructor(
     @inject(TYPE.MessageRepository)
     private readonly messageRepository: MessageRepository,
