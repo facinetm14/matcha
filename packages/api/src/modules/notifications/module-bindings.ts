@@ -9,6 +9,8 @@ import { UserNotificationRepository } from './application/ports/repositories/use
 import { UserNotificationRepositoryDb } from './infrastructure/adapters/repositories/user-notification-repository-db';
 import { NotificationService } from './application/ports/services/notification.service';
 import { NotificationManager } from './infrastructure/adapters/notification-manager';
+import { RealtimeNotificationService } from './application/ports/services/realtime-notification.service';
+import { SocketIoRealtimeNotificationService } from './infrastructure/adapters/socket-io-realtime-notification.service';
 
 export function bindNotificationsModule(container: Container) {
   container.bind(ChatController).toSelf().inSingletonScope();
@@ -29,5 +31,10 @@ export function bindNotificationsModule(container: Container) {
   container
     .bind<NotificationService>(TYPE.NotificationService)
     .to(NotificationManager)
+    .inSingletonScope();
+
+  container
+    .bind<RealtimeNotificationService>(TYPE.RealtimeNotificationService)
+    .to(SocketIoRealtimeNotificationService)
     .inSingletonScope();
 }
