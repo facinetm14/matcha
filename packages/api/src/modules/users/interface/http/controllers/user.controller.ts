@@ -16,8 +16,6 @@ import {
   AddUserInteractionUseCase,
 } from '@/modules/users/application/usecases/add-user-interaction.usecase';
 
-import { AcceptedMimeType } from '@/modules/users/application/consts/accepted-mimetype';
-import { extractFileExtension } from '@shared/extract-file-extension';
 import { DeleteUserImageUseCase } from '@/modules/users/application/usecases/delete-user-image.usecase';
 import { ReorderUserImageUseCase } from '@/modules/users/application/usecases/reorder-user-image-usecase';
 import { GetAllTagsUseCase } from '@/modules/users/application/usecases/get-all-tags.usecase';
@@ -36,6 +34,9 @@ import { FilterUsersUseCase } from '@/modules/users/application/usecases/filter-
 import { ReverseGeocodeCoordinatesUseCase } from '@/modules/users/application/usecases/reverse-geocode-coordinates.usecase';
 import { GetUserImageUseCase } from '@/modules/users/application/usecases/get-user-image.usecase';
 import { VerifyTokenError } from '@/modules/auth/application/errors/verify-token.error';
+import { UploadUserImagesUseCase } from '@/modules/users/application/usecases/upload-user-images.usecase';
+import { UploadUserImagesError } from '@/modules/users/application/errors/upload-user-images.error';
+import { UploadUserImagesPositionsSchema } from '../../validations/upload-user-images-dto.validation';
 
 @injectable()
 export class UserController {
@@ -66,6 +67,8 @@ export class UserController {
     private readonly reverseGeocodeCoordinatesUseCase: ReverseGeocodeCoordinatesUseCase,
     @inject(GetUserImageUseCase)
     private readonly getUserImageUseCase: GetUserImageUseCase,
+    @inject(UploadUserImagesUseCase)
+    private readonly uploadUserImagesUseCase: UploadUserImagesUseCase,
   ) {}
 
   async getMe(req: Request, resp: Response) {
@@ -323,33 +326,93 @@ export class UserController {
       return;
     }
 
-    const { filename } = req.params;
+    const { key } = req.params;
 
-    if (!filename) {
+    if (!key) {
       resp.status(400).send('bad request');
       return;
     }
 
-    const image = this.getUserImageUseCase.execute(`${filename}`);
+    const image = await this.getUserImageUseCase.execute(`${key}`);
     if (!image) {
       resp.status(404).send('image not found');
       return;
     }
 
-    const type = AcceptedMimeType.get(extractFileExtension(`${filename}`));
-
-    if (!type) {
-      resp.status(400).send('wrong extension');
-      return;
-    }
-
     resp.writeHead(200, {
-      'Content-Type': `image/${type}`,
+      'Content-Type': image.contentType,
       'Content-Length': image.size,
       'Cross-Origin-Resource-Policy': 'same-site | same-origin | cross-origin',
     });
 
     image.stream.pipe(resp);
+  }
+
+  async uploadImages(req: Request, resp: Response) {
+    const connectedUserResult = await getConnectedUserId(
+      this.accessTokenService,
+      req,
+      resp,
+    );
+
+    if (connectedUserResult.isErr) {
+      resp.status(401).send('Invalid token');
+      return;
+    }
+
+    const files = (req.files as Express.Multer.File[] | undefined) ?? [];
+
+    if (!files.length) {
+      resp.status(400).send('No images provided');
+      return;
+    }
+
+    let positions: number[];
+    try {
+      positions = UploadUserImagesPositionsSchema.parse(
+        JSON.parse(req.body.positions ?? '[]'),
+      );
+    } catch {
+      resp.status(400).send('Bad request');
+      return;
+    }
+
+    if (positions.length !== files.length) {
+      resp.status(400).send('Bad request');
+      return;
+    }
+
+    const userId = connectedUserResult.data;
+    const uploads = files.map((file, index) => ({
+      buffer: file.buffer,
+      position: positions[index],
+    }));
+
+    const uploadResult = await this.uploadUserImagesUseCase.execute(
+      userId,
+      uploads,
+    );
+
+    if (uploadResult.isErr) {
+      this.handleUploadUserImagesError(uploadResult.error, resp);
+      return;
+    }
+
+    resp.status(201).json(uploadResult.data);
+  }
+
+  private handleUploadUserImagesError(
+    error: UploadUserImagesError,
+    resp: Response,
+  ): Response {
+    switch (error) {
+      case UploadUserImagesError.NO_VALID_IMAGES:
+        return resp.status(422).send('No valid images to upload');
+      default:
+        return resp
+          .status(500)
+          .send('server internal error, please retry later');
+    }
   }
 
   async deleteImages(req: Request, resp: Response) {

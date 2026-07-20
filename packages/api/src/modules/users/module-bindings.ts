@@ -12,6 +12,7 @@ import { GetUserListFromIdListUseCase } from './application/usecases/get-user-li
 import { FilterUsersUseCase } from './application/usecases/filter-users.usecase';
 import { ReverseGeocodeCoordinatesUseCase } from './application/usecases/reverse-geocode-coordinates.usecase';
 import { GetUserImageUseCase } from './application/usecases/get-user-image.usecase';
+import { UploadUserImagesUseCase } from './application/usecases/upload-user-images.usecase';
 import { UserRepository } from './application/ports/repositories/user.repository';
 import { UserRepositoryDb } from './infrastructure/adapters/repositories/user-repository-db';
 import { UserInterestRepository } from './application/ports/repositories/user-interest.repository';
@@ -25,7 +26,9 @@ import { UserLocationRepositoryDb } from './infrastructure/adapters/repositories
 import { GeocodeService } from './application/ports/services/geo-code-service';
 import { GeocodeOpenStreetMap } from './infrastructure/adapters/services/geocode-openstreetmap';
 import { ImageStorageService } from './application/ports/services/image-storage.service';
-import { LocalDiskImageStorage } from './infrastructure/adapters/services/local-disk-image-storage';
+import { S3ImageStorage } from './infrastructure/adapters/services/s3-image-storage';
+import { ImageProcessor } from './application/ports/services/image-processor.service';
+import { SharpImageProcessor } from './infrastructure/adapters/services/sharp-image-processor';
 
 export function bindUsersModule(container: Container) {
   container.bind(UserController).toSelf().inSingletonScope();
@@ -41,6 +44,7 @@ export function bindUsersModule(container: Container) {
   container.bind(FilterUsersUseCase).toSelf().inSingletonScope();
   container.bind(ReverseGeocodeCoordinatesUseCase).toSelf().inSingletonScope();
   container.bind(GetUserImageUseCase).toSelf().inSingletonScope();
+  container.bind(UploadUserImagesUseCase).toSelf().inSingletonScope();
 
   container
     .bind<UserRepository>(TYPE.UserRepository)
@@ -74,6 +78,11 @@ export function bindUsersModule(container: Container) {
 
   container
     .bind<ImageStorageService>(TYPE.ImageStorageService)
-    .to(LocalDiskImageStorage)
+    .to(S3ImageStorage)
+    .inSingletonScope();
+
+  container
+    .bind<ImageProcessor>(TYPE.ImageProcessor)
+    .to(SharpImageProcessor)
     .inSingletonScope();
 }

@@ -1,7 +1,11 @@
+export interface StoredImage {
+  stream: NodeJS.ReadableStream;
+  size: number;
+  contentType: string;
+}
+
 export interface ImageStorageService {
-  exists(filename: string): boolean;
-  getSize(filename: string): number;
-  createReadStream(filename: string): NodeJS.ReadableStream;
-  save(filename: string, data: Buffer): Promise<void>;
-  delete(filename: string): Promise<void>;
+  getObject(key: string): Promise<StoredImage | null>;
+  save(key: string, data: Buffer, contentType: string): Promise<void>;
+  delete(key: string): Promise<void>;
 }

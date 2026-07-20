@@ -17,15 +17,6 @@ export const UpdateUserProfileDtoSchema = z.object({
     .optional(),
   bio: z.string().trim().optional(),
   tags: z.array(z.string()).optional(),
-  photos: z
-    .array(
-      z.object({
-        dataInBase64: z.string(),
-        position: z.number(),
-      }),
-    )
-    .max(5, { message: 'You can upload up to 5 photos only.' })
-    .optional(),
 
   location: z
     .object({
