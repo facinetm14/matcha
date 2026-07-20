@@ -12,6 +12,7 @@ import { UserTokenRepository } from '../../../src/modules/auth/application/ports
 import { AccessTokenService } from '@/modules/auth/application/ports/services/access-token.service';
 import { IpLocation } from '@/modules/auth/application/ports/services/ip-location-service';
 import { UserLocationRepository } from '@/modules/users/application/ports/repositories/user-location.repository';
+import { Argon2PasswordHasher } from '@/modules/auth/infrastructure/adapters/services/argon2-password-hasher';
 
 describe('Login user usecase', () => {
   let loginUserUseCase: LoginUserUseCase;
@@ -56,6 +57,7 @@ describe('Login user usecase', () => {
       accessTokenService,
       ipLocation,
       userLocationRepository,
+      new Argon2PasswordHasher(),
     );
   });
 

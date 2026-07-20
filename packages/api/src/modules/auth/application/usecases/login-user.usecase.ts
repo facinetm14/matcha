@@ -3,7 +3,7 @@ import { UserRepository } from '../../../users/application/ports/repositories/us
 import { Err, Ok, Result } from '@/modules/shared/application/utils/result';
 import { LoginUserError } from '../errors/login-user.error';
 import { UserUniqKeys } from '../../../users/application/consts/user-uniq-keys.enum';
-import { verifyPassword } from '../../infrastructure/utils/password';
+import { PasswordHasher } from '../ports/services/password-hasher';
 import { UserStatus } from '../../../users/domain/consts/user-status.enum';
 import { UserTokenRepository } from '../ports/repositories/user-token.repository';
 import { UserTokenCateory } from '../../domain/consts/user-token-category';
@@ -30,6 +30,8 @@ export class LoginUserUseCase {
     private readonly iplocation: IpLocation,
     @inject(TYPE.UserLocationRepository)
     private readonly userLocationRepository: UserLocationRepository,
+    @inject(TYPE.PasswordHasher)
+    private readonly passwordHasher: PasswordHasher,
   ) {}
 
   async execute(
@@ -54,7 +56,7 @@ export class LoginUserUseCase {
       return Err(LoginUserError.USER_UNVERIFIED);
     }
 
-    const matchPasswd = await verifyPassword(
+    const matchPasswd = await this.passwordHasher.verify(
       existingUser.passwd,
       loginUserDto.passwd,
     );
