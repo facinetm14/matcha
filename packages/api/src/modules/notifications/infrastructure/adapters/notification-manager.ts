@@ -1,14 +1,20 @@
 import { inject, injectable } from 'inversify';
-import { UserRegisteredEventPayload } from '../../auth/application/dto/user-registered-event-payload';
-import { NotificationService } from '../../notifications/application/ports/services/notification.service';
-import { EmailPayload, EmailService } from '../ports/email.service';
+import { UserRegisteredEventPayload } from '@/modules/auth/application/dto/user-registered-event-payload';
+import { NotificationService } from '@/modules/notifications/application/ports/services/notification.service';
+import {
+  EmailPayload,
+  EmailService,
+} from '@/modules/shared/application/ports/services/email.service';
 
 import { UserNotificationRepository } from '@/modules/notifications/application/ports/repositories/user-notification.repository';
 import { Notification } from '@/modules/notifications/domain/entities/notification.entity';
-import { EmailSubject } from '@/modules/shared/consts/email-subject';
+import { EmailSubject } from '@/modules/shared/application/consts/email-subject';
 import { ResetPasswordDto } from '@/modules/auth/application/dto/reset-password.dto';
 import { TYPE } from '@/config/ioc/inversify-type';
-import { buildResetPasswordEmailTemplate, buildUserRegisteredEmailTemplate } from '../utils/user.mail-template';
+import {
+  buildResetPasswordEmailTemplate,
+  buildUserRegisteredEmailTemplate,
+} from '../utils/user-mail-template';
 
 const clientHost = `${process.env.CLIENT_HOST}`;
 @injectable()

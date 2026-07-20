@@ -2,7 +2,7 @@ import { inject, injectable } from 'inversify';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { UserRepository } from '../../../users/application/ports/repositories/user.repository';
 import { RegisterUserError } from '../errors/register-user.error';
-import { Err, Ok, Result } from '../../../shared/utils/result';
+import { Err, Ok, Result } from '@/modules/shared/application/utils/result';
 import { UserUniqKeys } from '../../../users/application/consts/user-uniq-keys.enum';
 import {
   isPasswordStrong,
@@ -11,9 +11,9 @@ import {
 import { hashPassword } from '../../infrastructure/utils/password';
 
 import { isValidEmail } from '@shared/input-validation/is-valid-email';
-import { Logger } from '../../../shared/ports/logger.service';
-import { EventBus } from '../../../shared/ports/event-bus';
-import { EventType } from '../../../shared/consts/event-type';
+import { Logger } from '@/modules/shared/application/ports/services/logger.service';
+import { EventBus } from '@/modules/shared/application/ports/services/event-bus';
+import { EventType } from '@/modules/shared/application/consts/event-type';
 import { UserRegisteredEventPayload } from '../dto/user-registered-event-payload';
 import { UserStatus } from '../../../users/domain/consts/user-status.enum';
 import { DEFAULT_SEXUAL_ORIENTATION } from '@/modules/users/application/consts/default-sexual-orientation';

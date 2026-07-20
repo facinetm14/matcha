@@ -5,7 +5,7 @@ import {
 import { AccessToken } from '@/modules/auth/domain/entities/access-token.entity';
 import { injectable, inject } from 'inversify';
 import { UserTokenRepository } from '@/modules/auth/application/ports/repositories/user-token.repository';
-import { factoryUserToken } from '@/modules/shared/utils/factory';
+import { factoryUserToken } from '@/modules/shared/application/utils/factory';
 import { UserTokenCateory } from '@/modules/auth/domain/consts/user-token-category';
 import {
   ACCESS_TOKEN_TTL_IN_MIN,
@@ -13,7 +13,7 @@ import {
 } from '@/modules/auth/application/consts/access-token-ttl';
 import { SignJWT, jwtVerify } from 'jose';
 import { VerifyTokenError } from '@/modules/auth/application/errors/verify-token.error';
-import { Err, Ok, Result } from '@/modules/shared/utils/result';
+import { Err, Ok, Result } from '@/modules/shared/application/utils/result';
 import { TYPE } from '@/config/ioc/inversify-type';
 import { UserToken } from '@/modules/auth/domain/entities/user-token.entity';
 

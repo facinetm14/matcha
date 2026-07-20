@@ -1,5 +1,5 @@
 import { injectable } from 'inversify';
-import { Logger } from '../ports/logger.service';
+import { Logger } from '../../application/ports/services/logger.service';
 
 @injectable()
 export class LoggerStd implements Logger {

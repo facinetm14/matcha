@@ -1,7 +1,7 @@
-import { EventType } from '../../../shared/consts/event-type';
+import { EventType } from '@/modules/shared/application/consts/event-type';
 import { SocketEvents } from '@shared/socket-events';
-import { EventBus } from '../../../shared/ports/event-bus';
-import { Logger } from '../../../shared/ports/logger.service';
+import { EventBus } from '@/modules/shared/application/ports/services/event-bus';
+import { Logger } from '@/modules/shared/application/ports/services/logger.service';
 import { NotificationService } from '../ports/services/notification.service';
 import { Notification } from '@/modules/notifications/domain/entities/notification.entity';
 import { Server as SocketIoServer } from 'socket.io';

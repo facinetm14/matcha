@@ -17,7 +17,7 @@ import { join } from 'node:path';
 import { UPLOAD_DEST } from '@/modules/users/application/consts/upload-dest';
 import { AcceptedMimeType } from '@/modules/users/application/consts/accepted-mimetype';
 import { extractFileExtension } from '@shared/extract-file-extension';
-import { DeleteUserImageUsceCase } from '@/modules/users/application/usecases/delete-user-image.usecase';
+import { DeleteUserImageUseCase } from '@/modules/users/application/usecases/delete-user-image.usecase';
 import { ReorderUserImageUseCase } from '@/modules/users/application/usecases/reorder-user-image-usecase';
 import { GetAllTagsUseCase } from '@/modules/users/application/usecases/get-all-tags.usecase';
 import { FetchBestUserSuggestion } from '@/modules/users/application/usecases/fetch-best-user-suggestion.usecase';
@@ -47,8 +47,8 @@ export class UserController {
     private readonly updateUserProfileUseCase: UpdateUserProfileUseCase,
     @inject(AddUserInteractionUseCase)
     private readonly addUserInteractionUseCase: AddUserInteractionUseCase,
-    @inject(DeleteUserImageUsceCase)
-    private readonly deleteImageUseCase: DeleteUserImageUsceCase,
+    @inject(DeleteUserImageUseCase)
+    private readonly deleteImageUseCase: DeleteUserImageUseCase,
     @inject(ReorderUserImageUseCase)
     private readonly reorderUserImageUseCase: ReorderUserImageUseCase,
     @inject(GetAllTagsUseCase)

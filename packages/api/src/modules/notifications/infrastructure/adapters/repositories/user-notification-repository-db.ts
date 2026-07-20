@@ -1,5 +1,5 @@
 import { UserNotificationRepository } from '@/modules/notifications/application/ports/repositories/user-notification.repository';
-import { Logger } from '@/modules/shared/ports/logger.service';
+import { Logger } from '@/modules/shared/application/ports/services/logger.service';
 import { pgClient } from '@/config/db/data-source';
 import { injectable, inject } from 'inversify';
 import { Notification } from '@/modules/notifications/domain/entities/notification.entity';

@@ -1,8 +1,8 @@
 import { createClient, RedisClientType } from 'redis';
-import { Logger } from '../ports/logger.service';
+import { Logger } from '../../application/ports/services/logger.service';
 import { inject, injectable } from 'inversify';
 
-import { CacheService } from '../ports/cache.service';
+import { CacheService } from '../../application/ports/services/cache.service';
 import { TYPE } from '@/config/ioc/inversify-type';
 @injectable()
 export class RedisCacheApi implements CacheService {

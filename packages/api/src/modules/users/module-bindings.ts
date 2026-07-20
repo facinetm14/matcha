@@ -4,7 +4,7 @@ import { UserController } from './interface/http/controllers/user.controller';
 import { GetCurrentUserUseCase } from './application/usecases/get-current-user.usecase';
 import { UpdateUserProfileUseCase } from './application/usecases/update-user-profile.usecase';
 import { AddUserInteractionUseCase } from './application/usecases/add-user-interaction.usecase';
-import { DeleteUserImageUsceCase } from './application/usecases/delete-user-image.usecase';
+import { DeleteUserImageUseCase } from './application/usecases/delete-user-image.usecase';
 import { ReorderUserImageUseCase } from './application/usecases/reorder-user-image-usecase';
 import { GetAllTagsUseCase } from './application/usecases/get-all-tags.usecase';
 import { FetchBestUserSuggestion } from './application/usecases/fetch-best-user-suggestion.usecase';
@@ -29,7 +29,7 @@ export function bindUsersModule(container: Container) {
   container.bind(GetCurrentUserUseCase).toSelf().inSingletonScope();
   container.bind(UpdateUserProfileUseCase).toSelf().inSingletonScope();
   container.bind(AddUserInteractionUseCase).toSelf().inSingletonScope();
-  container.bind(DeleteUserImageUsceCase).toSelf().inSingletonScope();
+  container.bind(DeleteUserImageUseCase).toSelf().inSingletonScope();
   container.bind(ReorderUserImageUseCase).toSelf().inSingletonScope();
   container.bind(GetAllTagsUseCase).toSelf().inSingletonScope();
   container.bind(FetchBestUserSuggestion).toSelf().inSingletonScope();

@@ -1,11 +1,11 @@
 import { UserProfile } from '@/modules/users/domain/entities/user-profile.entity';
-import { EventType } from '@/modules/shared/consts/event-type';
+import { EventType } from '@/modules/shared/application/consts/event-type';
 import { UserUniqKeys } from '@/modules/users/application/consts/user-uniq-keys.enum';
 import { UpdateUserProfileError } from '@/modules/users/application/errors/update-user-profile.error';
-import { Err, Ok, Result } from '@/modules/shared/utils/result';
+import { Err, Ok, Result } from '@/modules/shared/application/utils/result';
 import { UserInterestRepository } from '@/modules/users/application/ports/repositories/user-interest.repository';
 import { UserRepository } from '@/modules/users/application/ports/repositories/user.repository';
-import { EventBus } from '@/modules/shared/ports/event-bus';
+import { EventBus } from '@/modules/shared/application/ports/services/event-bus';
 import { injectable, inject } from 'inversify';
 import { TYPE } from '@/config/ioc/inversify-type';
 import { UpdateUserProfileDto } from '../dto/update-user-profile.dto';

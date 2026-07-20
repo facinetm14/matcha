@@ -1,4 +1,4 @@
-import { Err, Ok, Result } from '@/modules/shared/utils/result';
+import { Err, Ok, Result } from '@/modules/shared/application/utils/result';
 import { inject, injectable } from 'inversify';
 import { VerifyTokenError } from '@/modules/auth/application/errors/verify-token.error';
 import { AccessToken } from '@/modules/auth/domain/entities/access-token.entity';

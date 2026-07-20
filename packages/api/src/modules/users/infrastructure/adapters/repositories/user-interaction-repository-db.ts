@@ -1,6 +1,6 @@
 import { UserProfileInteraction } from '@/modules/users/domain/entities/user-profile-interaction.entity';
 import { UserInteractionRepository } from '@/modules/users/application/ports/repositories/user-profile-interaction.repository';
-import { Logger } from '@/modules/shared/ports/logger.service';
+import { Logger } from '@/modules/shared/application/ports/services/logger.service';
 import { pgClient } from '@/config/db/data-source';
 import { UserInteractionModel } from '@/modules/users/infrastructure/models/user-interaction.model';
 import { uuid } from '@shared/uuid';
