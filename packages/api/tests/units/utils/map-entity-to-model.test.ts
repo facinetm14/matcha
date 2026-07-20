@@ -1,11 +1,11 @@
 import { describe, expect, test } from '@jest/globals';
-import { mapEnityOrDtoToModel } from '@/modules/shared/infrastructure/utils/map-entity-or-dto-to-model';
+import { mapEnityOrDtoToModel } from '../../../src/modules/shared/utils/map-entity-or-dto-to-model';
 import { User } from '../../../src/modules/users/domain/entities/user.entity';
 import { UserModel } from '../../../src/modules/users/infrastructure/models/user.model';
 import {
   factoryUser,
   factoryUserToken,
-} from '@/modules/shared/application/utils/factory';
+} from '../../../src/modules/shared/utils/factory';
 import { UserTokenModel } from '../../../src/modules/auth/infrastructure/models/user-token.model';
 import { UserToken } from '@/modules/auth/domain/entities/user-token.entity';
 

@@ -11,7 +11,6 @@ import { useGetProfile } from '@/hooks/useGetProfile';
 import { Loadder } from '@/components/ui/Loadder';
 import { Channel } from '../types/user';
 import { getInitials } from '@/utils/get-initials';
-import { resolveUserImageUrl } from '@/utils/resolve-user-image-url';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { userApi } from '@/api/user.api';
 import { connectSocket } from '@/api/socket.api';
@@ -204,11 +203,7 @@ export default function Chat() {
                 >
                   <div className="relative">
                     <Avatar className="w-12 h-12">
-                    <AvatarImage
-                      src={resolveUserImageUrl(
-                        match.interlocutor.photos[0]?.preview,
-                      )}
-                    />
+                    <AvatarImage src={match.interlocutor.photos[0]?.preview} />
                       <AvatarFallback>
                         {getInitials(
                           match.interlocutor.firstName,
@@ -254,9 +249,7 @@ export default function Chat() {
                 <div className="p-4 border-b flex items-center gap-3">
                   <Avatar className="w-10 h-10">
                     <AvatarImage
-                      src={resolveUserImageUrl(
-                        selectedMatch.interlocutor.photos[0]?.preview,
-                      )}
+                      src={selectedMatch.interlocutor.photos[0]?.preview}
                     />
                     <AvatarFallback>
                       {getInitials(

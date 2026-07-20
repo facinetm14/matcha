@@ -1,13 +1,13 @@
 import { Container } from 'inversify';
-import { bindSharedModule } from '@/modules/shared/module-bindings';
-import { bindAuthModule } from '@/modules/auth/module-bindings';
-import { bindUsersModule } from '@/modules/users/module-bindings';
-import { bindNotificationsModule } from '@/modules/notifications/module-bindings';
+import { bindControllers } from './bind-controllers';
+import { bindUseCases } from './bind-usecases';
+import { bindRepositories } from './bind-repositories';
+import { bindServices } from './bind-services';
 
 const container: Container = new Container();
-bindSharedModule(container);
-bindAuthModule(container);
-bindUsersModule(container);
-bindNotificationsModule(container);
+bindServices(container);
+bindControllers(container);
+bindUseCases(container);
+bindRepositories(container);
 
 export default container;

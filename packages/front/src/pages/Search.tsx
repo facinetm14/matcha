@@ -13,7 +13,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { userApi } from '@/api/user.api';
 import { logout } from '@/utils/auth';
 import { getInitials } from '@/utils/get-initials';
-import { resolveUserImageUrl } from '@/utils/resolve-user-image-url';
 import {
   Pagination,
   PaginationContent,
@@ -394,7 +393,7 @@ export default function Search() {
               <div className="relative h-64">
                 {user.photos.length ? (
                   <img
-                    src={resolveUserImageUrl(user.photos[0].preview)}
+                    src={user.photos[0].preview}
                     alt={user.firstName}
                     className="w-full h-full object-cover"
                   />

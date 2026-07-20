@@ -1,5 +1,5 @@
 import { UserToken } from '@/modules/auth/domain/entities/user-token.entity';
-import { factoryUserToken } from '@/modules/shared/application/utils/factory';
+import { factoryUserToken } from '../../../../shared/utils/factory';
 import { UserTokenRepository } from '../../../application/ports/repositories/user-token.repository';
 
 export class UserTokenRepositoryInMemory implements UserTokenRepository {

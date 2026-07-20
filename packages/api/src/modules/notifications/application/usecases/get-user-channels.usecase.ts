@@ -1,4 +1,4 @@
-import { ChannelWithInterlocutorDto } from '@/modules/notifications/application/dto/channel-with-interlocutor.dto';
+import { Channel } from '@/modules/notifications/domain/entities/channel.entity';
 import { MessageRepository } from '@/modules/notifications/application/ports/repositories/message.repository';
 import { UserNotificationRepository } from '@/modules/notifications/application/ports/repositories/user-notification.repository';
 import { UserRepository } from '@/modules/users/application/ports/repositories/user.repository';
@@ -19,7 +19,7 @@ export class GetUserChannelsUseCase {
     const matchList =
       await this.userNotificationRepository.findMatchByUserId(userId);
 
-    const channelMap = new Map<string, ChannelWithInterlocutorDto>();
+    const channelMap = new Map<string, Channel>();
     const channelIdList: string[] = [];
 
     for (const m of matchList) {
@@ -33,7 +33,7 @@ export class GetUserChannelsUseCase {
       const matchedUser =
         await this.userRepository.findUserProfileById(interlocutorId);
 
-      const newChannel: ChannelWithInterlocutorDto = {
+      const newChannel: Channel = {
         id: m.id,
         interlocutor: matchedUser!,
         createdAt: m.createdAt,
