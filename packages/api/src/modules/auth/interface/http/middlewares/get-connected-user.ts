@@ -1,7 +1,8 @@
 import { VerifyTokenError } from '@/modules/auth/application/errors/verify-token.error';
 import { Request, Response } from 'express';
-import { Result, Ok, Err } from '@/modules/shared/utils/result';
+import { Result, Ok, Err } from '@/modules/shared/application/utils/result';
 import { AccessTokenService } from '@/modules/auth/application/ports/services/access-token.service';
+import { RefreshAccessTokenUseCase } from '@/modules/auth/application/usecases/refresh-token.usecase';
 import { attachTokensToSecureCookies } from './attach-secure-cookies';
 import { Socket } from 'socket.io';
 
@@ -13,7 +14,8 @@ export async function getConnectedUserId(
   const accessToken = req.token;
 
   if (accessToken) {
-    const verifyAccessTokenResult = await accessTokenService.verifyAccessToken(accessToken);
+    const verifyAccessTokenResult =
+      await accessTokenService.verifyAccessToken(accessToken);
 
     if (!verifyAccessTokenResult.isErr) {
       return Ok(verifyAccessTokenResult.data);
@@ -25,22 +27,20 @@ export async function getConnectedUserId(
     return Err(VerifyTokenError.INVALID_TOKEN);
   }
 
-  const userToken = await accessTokenService.find(refreshToken);
-  if (!userToken) {
-    return Err(VerifyTokenError.INVALID_TOKEN);
+  const device = `${JSON.stringify(req.headers['user-agent'])}`;
+  const ipAddr = `${req.ip}`;
+
+  const refreshResult = await new RefreshAccessTokenUseCase(
+    accessTokenService,
+  ).execute(refreshToken, ipAddr, device);
+
+  if (refreshResult.isErr) {
+    return Err(refreshResult.error);
   }
 
-  const newAccessToken = await accessTokenService.issueNewAccessToken({
-    userId: userToken.userId,
-    issueAt: new Date(),
-    ipAddr: userToken.ipAddr,
-    device: userToken.device,
-  });
+  attachTokensToSecureCookies(resp, refreshResult.data);
 
-  await accessTokenService.revokeToken(refreshToken);
-  attachTokensToSecureCookies(resp, newAccessToken);
-
-  return Ok(userToken.userId);
+  return accessTokenService.verifyAccessToken(refreshResult.data.token);
 }
 
 export async function getConnectedUserIdFromSocket(
@@ -60,7 +60,8 @@ export async function getConnectedUserIdFromSocket(
     return Err(VerifyTokenError.INVALID_TOKEN);
   }
 
-  const verifyAccessTokenResult = await accessTokenService.verifyAccessToken(token);
+  const verifyAccessTokenResult =
+    await accessTokenService.verifyAccessToken(token);
   if (!verifyAccessTokenResult.isErr) {
     return Ok(verifyAccessTokenResult.data);
   }
@@ -71,12 +72,20 @@ export async function getConnectedUserIdFromSocket(
       return Err(VerifyTokenError.INVALID_TOKEN);
     }
 
+    if (userToken.expireAt && userToken.expireAt <= new Date()) {
+      return Err(VerifyTokenError.TOKEN_EXPIRED);
+    }
+
     return Ok(userToken.userId);
   }
 
   const userToken = await accessTokenService.find(token);
   if (!userToken) {
     return Err(VerifyTokenError.INVALID_TOKEN);
+  }
+
+  if (userToken.expireAt && userToken.expireAt <= new Date()) {
+    return Err(VerifyTokenError.TOKEN_EXPIRED);
   }
 
   return Ok(userToken.userId);

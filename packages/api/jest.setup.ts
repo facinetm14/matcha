@@ -1,6 +1,6 @@
 import 'dotenv/config';
 import { jest } from '@jest/globals';
-import { MOCK_CURRENT_USER_ID } from '@/modules/shared/utils/factory';
+import { MOCK_CURRENT_USER_ID } from './tests/support/factory';
 
 jest.mock('jose', () => ({
   SignJWT: jest.fn().mockImplementation(() => ({

@@ -1,7 +1,7 @@
 import { UserTokenRepository } from '../../../application/ports/repositories/user-token.repository';
 import { inject, injectable } from 'inversify';
-import { CacheService } from '../../../../shared/ports/cache.service';
-import { CacheResourceKeys } from '@/modules/shared/consts/cache-ressource-keys';
+import { CacheService } from '@/modules/shared/application/ports/services/cache.service';
+import { CacheResourceKeys } from '@/modules/shared/application/consts/cache-ressource-keys';
 import { TYPE } from '@/config/ioc/inversify-type';
 import { UserToken } from '@/modules/auth/domain/entities/user-token.entity';
 @injectable()

@@ -5,6 +5,7 @@ import { X, GripVertical, Star, Maximize2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { resolveUserImageUrl } from '@/utils/resolve-user-image-url';
 
 interface PhotoSlotProps {
   id: string;
@@ -47,7 +48,7 @@ export const PhotoSlot = ({
         onClick={() => setIsOpen(true)}
       >
         <img
-          src={preview}
+          src={resolveUserImageUrl(preview)}
           alt="Upload preview"
           className="w-full h-full object-cover"
         />
@@ -109,7 +110,7 @@ export const PhotoSlot = ({
         <DialogContent className="max-w-3xl p-2">
           <DialogTitle className="sr-only">Photo preview</DialogTitle>
           <img
-            src={preview}
+            src={resolveUserImageUrl(preview)}
             alt="Full size preview"
             className="w-full h-auto rounded-lg"
           />
