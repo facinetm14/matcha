@@ -1,5 +1,5 @@
 import { VerifyTokenError } from '../errors/verify-token.error';
-import { Ok, Result, Err } from '../../../shared/utils/result';
+import { Ok, Result, Err } from '@/modules/shared/application/utils/result';
 import { inject, injectable } from 'inversify';
 import { UserTokenRepository } from '../ports/repositories/user-token.repository';
 import { UserRepository } from '../../../users/application/ports/repositories/user.repository';

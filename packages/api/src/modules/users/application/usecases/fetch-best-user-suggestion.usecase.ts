@@ -9,7 +9,6 @@ import {
   calculateDistanceKm,
   MAX_SUGGESTED_DISTANCE_KM,
 } from '@shared/distance';
-import { buildCity } from '../../infrastructure/mappers/user-model-to-entity';
 
 @injectable()
 export class FetchBestUserSuggestion {

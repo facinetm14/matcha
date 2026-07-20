@@ -1,6 +1,6 @@
 import { pgClient } from '@/config/db/data-source';
 import { TYPE } from '@/config/ioc/inversify-type';
-import { Logger } from '@/modules/shared/ports/logger.service';
+import { Logger } from '@/modules/shared/application/ports/services/logger.service';
 import { CreateUserLocationDto } from '@/modules/users/application/dto/create-user-location-dto';
 import { UserLocationRepository } from '@/modules/users/application/ports/repositories/user-location.repository';
 import { GeocodeService } from '@/modules/users/application/ports/services/geo-code-service';

@@ -1,8 +1,8 @@
 import { UserTokenRepository } from '@/modules/auth/application/ports/repositories/user-token.repository';
 import { UserRegisteredEventPayload } from '../application/dto/user-registered-event-payload';
-import { EventType } from '../../shared/consts/event-type';
-import { EventBus } from '../../shared/ports/event-bus';
-import { Logger } from '../../shared/ports/logger.service';
+import { EventType } from '@/modules/shared/application/consts/event-type';
+import { EventBus } from '@/modules/shared/application/ports/services/event-bus';
+import { Logger } from '@/modules/shared/application/ports/services/logger.service';
 import { NotificationService } from '../../notifications/application/ports/services/notification.service';
 import { ResetPasswordDto } from '@/modules/auth/application/dto/reset-password.dto';
 import container from '@/config/ioc/inversify';

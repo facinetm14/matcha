@@ -1,6 +1,6 @@
 import { EventEmitter } from 'node:stream';
-import { EventBus } from '../ports/event-bus';
-import { EventType } from '../consts/event-type';
+import { EventBus } from '../../application/ports/services/event-bus';
+import { EventType } from '../../application/consts/event-type';
 import { injectable } from 'inversify';
 
 @injectable()

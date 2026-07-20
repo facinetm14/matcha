@@ -1,14 +1,14 @@
 import { describe, expect, test } from '@jest/globals';
 import { RegisterUserUseCase } from '../../../src/modules/auth/application/usecases/register-user.usecase';
 import { UserRepository } from '../../../src/modules/users/application/ports/repositories/user.repository';
-import { Logger } from '../../../src/modules/shared/ports/logger.service';
-import { EventBus } from '../../../src/modules/shared/ports/event-bus';
-import { UserTokenCateory } from '../../../src/modules/auth/application/consts/user-token-category';
+import { Logger } from '@/modules/shared/application/ports/services/logger.service';
+import { EventBus } from '@/modules/shared/application/ports/services/event-bus';
+import { UserTokenCateory } from '../../../src/modules/auth/domain/consts/user-token-category';
+import { factoryUserToken } from '@/modules/shared/application/utils/factory';
 import {
   factoryCreateUserDto,
   factoryUserRepositoryInMemory,
-  factoryUserToken,
-} from '../../../src/modules/shared/utils/factory';
+} from '../../support/factory';
 import container from '@/config/ioc/inversify';
 import { TYPE } from '@/config/ioc/inversify-type';
 import { UserToken } from '@/modules/auth/domain/entities/user-token.entity';

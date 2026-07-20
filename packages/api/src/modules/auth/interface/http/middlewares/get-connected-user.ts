@@ -1,6 +1,6 @@
 import { VerifyTokenError } from '@/modules/auth/application/errors/verify-token.error';
 import { Request, Response } from 'express';
-import { Result, Ok, Err } from '@/modules/shared/utils/result';
+import { Result, Ok, Err } from '@/modules/shared/application/utils/result';
 import { AccessTokenService } from '@/modules/auth/application/ports/services/access-token.service';
 import { attachTokensToSecureCookies } from './attach-secure-cookies';
 import { Socket } from 'socket.io';

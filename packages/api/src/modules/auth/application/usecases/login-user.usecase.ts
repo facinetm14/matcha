@@ -1,6 +1,6 @@
 import { inject, injectable } from 'inversify';
 import { UserRepository } from '../../../users/application/ports/repositories/user.repository';
-import { Err, Ok, Result } from '../../../shared/utils/result';
+import { Err, Ok, Result } from '@/modules/shared/application/utils/result';
 import { LoginUserError } from '../errors/login-user.error';
 import { UserUniqKeys } from '../../../users/application/consts/user-uniq-keys.enum';
 import { verifyPassword } from '../../infrastructure/utils/password';
@@ -9,7 +9,7 @@ import { UserTokenRepository } from '../ports/repositories/user-token.repository
 import { UserTokenCateory } from '../../domain/consts/user-token-category';
 import { REFRESH_ACESS_TOKEN_TTL_IN_MS } from '../consts/access-token-ttl';
 import { AccessToken } from '@/modules/auth/domain/entities/access-token.entity';
-import { factoryUserToken } from '@/modules/shared/utils/factory';
+import { factoryUserToken } from '@/modules/shared/application/utils/factory';
 import { AccessTokenService } from '../ports/services/access-token.service';
 import { TYPE } from '@/config/ioc/inversify-type';
 import { LoginUserDto } from '../dto/login-user.dto';

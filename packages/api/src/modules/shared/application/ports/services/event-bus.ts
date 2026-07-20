@@ -1,4 +1,4 @@
-import { EventType } from '../consts/event-type';
+import { EventType } from '../../consts/event-type';
 /**
  * @param payload is json stringfy
  */

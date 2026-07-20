@@ -1,13 +1,13 @@
 import { LoginUserUseCase } from '../../../src/modules/auth/application/usecases/login-user.usecase';
 import { UserRepository } from '../../../src/modules/users/application/ports/repositories/user.repository';
+import { factoryUserToken } from '@/modules/shared/application/utils/factory';
 import {
   factoryCreateUserDto,
   factoryUserRepositoryInMemory,
-  factoryUserToken,
   factoryUserTokenRepositoryInMemory,
-} from '../../../src/modules/shared/utils/factory';
+} from '../../support/factory';
 import { CreateUserDto } from '../../../src/modules/auth/application/dto/create-user.dto';
-import { UserStatus } from '../../../src/modules/users/application/consts/user-status.enum';
+import { UserStatus } from '../../../src/modules/users/domain/consts/user-status.enum';
 import { UserTokenRepository } from '../../../src/modules/auth/application/ports/repositories/user-token.repository';
 import { AccessTokenService } from '@/modules/auth/application/ports/services/access-token.service';
 import { IpLocation } from '@/modules/auth/application/ports/services/ip-location-service';

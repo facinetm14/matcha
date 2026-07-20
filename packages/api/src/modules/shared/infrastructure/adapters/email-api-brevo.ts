@@ -1,7 +1,10 @@
 import { inject, injectable } from 'inversify';
-import { EmailPayload, EmailService } from '../ports/email.service';
+import {
+  EmailPayload,
+  EmailService,
+} from '../../application/ports/services/email.service';
 
-import { Logger } from '../ports/logger.service';
+import { Logger } from '../../application/ports/services/logger.service';
 
 import {
   TransactionalEmailsApi,

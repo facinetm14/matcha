@@ -1,11 +1,11 @@
-import { EventType } from '@/modules/shared/consts/event-type';
+import { EventType } from '@/modules/shared/application/consts/event-type';
 import { UserTokenCateory } from '@/modules/auth/domain/consts/user-token-category';
 import { UserUniqKeys } from '@/modules/users/application/consts/user-uniq-keys.enum';
 import { ResetPasswordError } from '@/modules/auth/application/errors/reset-password.error';
-import { Err, Ok, Result } from '@/modules/shared/utils/result';
+import { Err, Ok, Result } from '@/modules/shared/application/utils/result';
 import { UserRepository } from '@/modules/users/application/ports/repositories/user.repository';
-import { EventBus } from '@/modules/shared/ports/event-bus';
-import { factoryUserToken } from '@/modules/shared/utils/factory';
+import { EventBus } from '@/modules/shared/application/ports/services/event-bus';
+import { factoryUserToken } from '@/modules/shared/application/utils/factory';
 import { injectable, inject } from 'inversify';
 import { TYPE } from '@/config/ioc/inversify-type';
 import { ResetPasswordDto } from '../dto/reset-password.dto';

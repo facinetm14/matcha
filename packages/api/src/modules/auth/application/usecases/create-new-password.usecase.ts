@@ -1,6 +1,6 @@
 import { CreateNewPasswordError } from '@/modules/auth/application/errors/create-new-password.error';
 import { inject, injectable } from 'inversify';
-import { Result, Err, Ok } from '@/modules/shared/utils/result';
+import { Result, Err, Ok } from '@/modules/shared/application/utils/result';
 import { hashPassword } from '@/modules/auth/infrastructure/utils/password';
 import { isPasswordStrong } from '@shared/input-validation/is-valid-password';
 import { UserRepository } from '@/modules/users/application/ports/repositories/user.repository';
