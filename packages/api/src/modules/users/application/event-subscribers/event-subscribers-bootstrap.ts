@@ -3,13 +3,9 @@ import { SocketEvents } from '@shared/socket-events';
 import { EventBus } from '@/modules/shared/application/ports/services/event-bus';
 import { Logger } from '@/modules/shared/application/ports/services/logger.service';
 import { UploadImageDto } from '@/modules/users/application/dto/upload-image.dto';
-import { writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
-import { UPLOAD_DEST } from '@/modules/users/application/consts/upload-dest';
 import { UserImageRepository } from '@/modules/users/application/ports/repositories/user-image.repository';
+import { ImageStorageService } from '@/modules/users/application/ports/services/image-storage.service';
 import { Server as SocketIoServer } from 'socket.io';
-import { existsSync, mkdirSync } from 'node:fs';
-import { unlink } from 'node:fs/promises';
 import container from '@/config/ioc/inversify';
 import { TYPE } from '@/config/ioc/inversify-type';
 
@@ -33,6 +29,9 @@ export function registerUsersEventSubscribers(): void {
   const logger = container.get<Logger>(TYPE.Logger);
   const userImageRepository = container.get<UserImageRepository>(
     TYPE.UserImageRepository,
+  );
+  const imageStorage = container.get<ImageStorageService>(
+    TYPE.ImageStorageService,
   );
   const socketIoServer = container.get<SocketIoServer>(TYPE.SocketIoServer);
 
@@ -63,13 +62,8 @@ export function registerUsersEventSubscribers(): void {
       const buffer = Buffer.from(data, 'base64');
 
       const filename = `${userImagePayload.author}-image-${Date.now()}-${Math.round(Math.random() * 1e9)}.${ext}`;
-      const uploadDirectory = join(process.cwd(), UPLOAD_DEST);
-      if (!existsSync(uploadDirectory)) {
-        mkdirSync(uploadDirectory, { recursive: true });
-      }
-      const path = join(uploadDirectory, filename);
       try {
-        await writeFile(path, buffer);
+        await imageStorage.save(filename, buffer);
         userImageList.push({ position: image.position, preview: filename });
       } catch (error) {
         logger.error(`Failed to save image. Reason: ${error}`);
@@ -101,10 +95,7 @@ export function registerUsersEventSubscribers(): void {
 
     const fileList = deleteImagePayload.images;
     for (const filename of fileList) {
-      const path = join(process.cwd(), UPLOAD_DEST, filename);
-      if (existsSync(path)) {
-        await unlink(path);
-      }
+      await imageStorage.delete(filename);
     }
 
     logger.info(
