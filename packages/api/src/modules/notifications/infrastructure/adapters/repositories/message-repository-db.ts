@@ -1,6 +1,6 @@
 import { Message } from '@/modules/notifications/domain/entities/message.entity';
 import { MessageRepository } from '@/modules/notifications/application/ports/repositories/message.repository';
-import { Logger } from '@/modules/shared/ports/logger.service';
+import { Logger } from '@/modules/shared/application/ports/services/logger.service';
 import { pgClient } from '@/config/db/data-source';
 import { injectable, inject } from 'inversify';
 import { TYPE } from '@/config/ioc/inversify-type';

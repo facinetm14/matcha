@@ -9,6 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { userApi } from '@/api/user.api';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { getInitials } from '@/utils/get-initials';
+import { resolveUserImageUrl } from '@/utils/resolve-user-image-url';
 import { logout } from '@/utils/auth';
 import { Loadder } from '@/components/ui/Loadder';
 import { useGetProfile } from '@/hooks/useGetProfile';
@@ -362,7 +363,7 @@ export default function Browse() {
           <div className="relative h-[500px] md:h-[600px]">
             {currentUser.photos.length ? (
               <img
-                src={currentUser.photos[0].preview}
+                src={resolveUserImageUrl(currentUser.photos[0].preview)}
                 alt={currentUser.firstName}
                 className="w-full h-full object-cover"
               />

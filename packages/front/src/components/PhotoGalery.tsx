@@ -17,9 +17,7 @@ import { Upload, Image as ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { PhotoSlot } from './PhotoSlot';
-import { UserImageDto } from '@/types/dto/user-image.dto';
 import { useProfileStore } from '@/store/profileStore';
-import { convertFIleToBase64t } from '@/utils/convert-file-to-base64';
 import { UserImage } from '@/types/user-image';
 import { uuid } from '../../../shared/uuid';
 import { ImagePosition } from '@/types/dto/update-image-position.dto';
@@ -32,11 +30,9 @@ export const PhotoGallery = ({ isEditing }: { isEditing: boolean }) => {
   const { data: user } = useGetProfile();
 
   const {
-    draft,
     photos,
     imagesToDelete,
     imagesPositionToUpdate,
-    updateUserDraft,
     updateUserPhotos,
     updateImagesToDelete,
     updateImagesPositionToUpdate,
@@ -51,14 +47,8 @@ export const PhotoGallery = ({ isEditing }: { isEditing: boolean }) => {
     }),
   );
 
-  const cleanPreview = (preview: string): string => {
-    return preview.slice(preview.lastIndexOf('/') + 1);
-  };
-
   const onDrop = (acceptedFiles: File[]) => {
-    const draftPhotos = draft.photos ?? [];
-
-    if (draftPhotos.length === MAX_PHOTOS) {
+    if (photos.length === MAX_PHOTOS) {
       toast({
         title: 'Maximum photos reached',
         description: `You can only upload up to ${MAX_PHOTOS} photos.`,
@@ -79,9 +69,9 @@ export const PhotoGallery = ({ isEditing }: { isEditing: boolean }) => {
       });
     }
 
-    const remainingSlots = MAX_PHOTOS - draftPhotos.length;
+    const remainingSlots = MAX_PHOTOS - photos.length;
     const filesToAdd = validFiles.slice(0, remainingSlots);
-    const lastImage = draftPhotos.at(-1) ?? user.photos?.at(-1);
+    const lastImage = photos.at(-1);
     const lastPosition = lastImage ? lastImage.position + 1 : 1;
 
     const newPhotos: UserImage[] = filesToAdd.map((file, i) => ({
@@ -93,7 +83,6 @@ export const PhotoGallery = ({ isEditing }: { isEditing: boolean }) => {
     }));
 
     updateUserPhotos([...photos, ...newPhotos]);
-    uploadPhotos(filesToAdd, lastPosition);
   };
 
   const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
@@ -106,25 +95,6 @@ export const PhotoGallery = ({ isEditing }: { isEditing: boolean }) => {
     noKeyboard: true,
   });
 
-  const uploadPhotos = async (files: File[], lastPosition: number) => {
-    const photoList: UserImageDto[] = [];
-
-    for (const f of files) {
-      const image: UserImageDto = {
-        dataInBase64: await convertFIleToBase64t(f),
-        position: lastPosition,
-      };
-
-      lastPosition += 1;
-      photoList.push(image);
-    }
-
-    updateUserDraft({
-      ...(draft ?? {}),
-      photos: [...(draft.photos ?? []), ...photoList],
-    });
-  };
-
   const switchPhotoPosition = async (idPhoto1: string, idPhoto2: string) => {
     const photo1 = photos
       .find((p) => p.id === idPhoto1)
@@ -136,13 +106,13 @@ export const PhotoGallery = ({ isEditing }: { isEditing: boolean }) => {
 
     orderedPhotos.push({ ...photo1, position: photo2.position });
     newImagePositions.push({
-      preview: cleanPreview(photo1.preview),
+      preview: photo1.preview,
       position: photo2.position,
     });
 
     orderedPhotos.push({ ...photo2, position: photo1.position });
     newImagePositions.push({
-      preview: cleanPreview(photo2.preview),
+      preview: photo2.preview,
       position: photo1.position,
     });
 
@@ -165,7 +135,7 @@ export const PhotoGallery = ({ isEditing }: { isEditing: boolean }) => {
     if (photo) {
       URL.revokeObjectURL(photo.preview);
     }
-    updateImagesToDelete([...imagesToDelete, cleanPreview(preview)]);
+    updateImagesToDelete([...imagesToDelete, preview]);
     updateUserPhotos(photos.filter((p) => p.preview !== preview));
   };
 

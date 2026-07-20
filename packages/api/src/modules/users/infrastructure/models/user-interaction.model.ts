@@ -1,4 +1,4 @@
-import { InteractionCategory } from '@/modules/users/domain/entities/user-profile-interaction.entity';
+import { InteractionCategory } from '@/modules/shared/domain/interaction-category';
 
 export interface UserInteractionModel {
   id: string;
