@@ -19,4 +19,5 @@ export const TYPE = {
   PasswordHasher: Symbol.for('PasswordHasher'),
   RealtimeNotificationService: Symbol.for('RealtimeNotificationService'),
   ImageStorageService: Symbol.for('ImageStorageService'),
+  ImageProcessor: Symbol.for('ImageProcessor'),
 };

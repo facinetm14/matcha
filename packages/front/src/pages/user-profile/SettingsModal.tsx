@@ -11,6 +11,7 @@ import { useTheme } from 'next-themes';
 import { Moon, SunMedium, LockKeyholeOpen } from 'lucide-react';
 import { UserProfile } from '@/types/user';
 import { getInitials } from '@/utils/get-initials';
+import { resolveUserImageUrl } from '@/utils/resolve-user-image-url';
 
 type SettingsModalProps = {
   open: boolean;
@@ -32,10 +33,10 @@ const getUserAvatar = (user: UserProfile) => {
   }
 
   if (typeof firstPhoto === 'string') {
-    return firstPhoto;
+    return resolveUserImageUrl(firstPhoto);
   }
 
-  return firstPhoto.preview;
+  return resolveUserImageUrl(firstPhoto.preview);
 };
 
 export function SettingsModal({

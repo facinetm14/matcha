@@ -1,11 +1,9 @@
 import { inject, injectable } from 'inversify';
 import { TYPE } from '@/config/ioc/inversify-type';
-import { ImageStorageService } from '../ports/services/image-storage.service';
-
-export type UserImageStream = {
-  stream: NodeJS.ReadableStream;
-  size: number;
-};
+import {
+  ImageStorageService,
+  StoredImage,
+} from '../ports/services/image-storage.service';
 
 @injectable()
 export class GetUserImageUseCase {
@@ -14,14 +12,7 @@ export class GetUserImageUseCase {
     private readonly imageStorage: ImageStorageService,
   ) {}
 
-  execute(filename: string): UserImageStream | null {
-    if (!this.imageStorage.exists(filename)) {
-      return null;
-    }
-
-    return {
-      stream: this.imageStorage.createReadStream(filename),
-      size: this.imageStorage.getSize(filename),
-    };
+  async execute(key: string): Promise<StoredImage | null> {
+    return this.imageStorage.getObject(key);
   }
 }
