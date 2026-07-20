@@ -1,11 +1,11 @@
 import { inject, injectable } from 'inversify';
 import { Request, Response } from 'express';
 import { RegisterUserUseCase } from '../../../application/usecases/register-user.usecase';
-import { uuid } from '../../../../../../../shared/uuid';
+import { uuid } from '@shared/uuid';
 import { RegisterUserError } from '../../../application/errors/register-user.error';
 import { Logger } from '../../../../shared/ports/logger.service';
 import { VerifyUserUseCase } from '../../../application/usecases/verify-user.usecase';
-import { UserTokenCateory } from '../../../application/consts/user-token-category';
+import { UserTokenCateory } from '../../../domain/consts/user-token-category';
 import { LoginUserUseCase } from '../../../application/usecases/login-user.usecase';
 import { LoginUserError } from '../../../application/errors/login-user.error';
 import { factoryUserToken } from '@/modules/shared/utils/factory';

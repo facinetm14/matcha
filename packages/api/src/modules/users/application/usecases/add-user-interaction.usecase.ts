@@ -1,5 +1,5 @@
 import { Notification } from '@/modules/notifications/domain/entities/notification.entity';
-import { InteractionCategory } from '@/modules/users/domain/entities/user-profile-interaction.entity';
+import { InteractionCategory } from '@/modules/shared/domain/interaction-category';
 import { EventType } from '@/modules/shared/consts/event-type';
 import { UserUniqKeys } from '@/modules/users/application/consts/user-uniq-keys.enum';
 import { Err, Ok, Result } from '@/modules/shared/utils/result';

@@ -3,7 +3,7 @@ import { Ok, Result, Err } from '../../../shared/utils/result';
 import { inject, injectable } from 'inversify';
 import { UserTokenRepository } from '../ports/repositories/user-token.repository';
 import { UserRepository } from '../../../users/application/ports/repositories/user.repository';
-import { UserStatus } from '../../../users/application/consts/user-status.enum';
+import { UserStatus } from '../../../users/domain/consts/user-status.enum';
 import { TYPE } from '@/config/ioc/inversify-type';
 
 @injectable()

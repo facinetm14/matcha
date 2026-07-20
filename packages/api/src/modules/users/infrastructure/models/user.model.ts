@@ -1,4 +1,4 @@
-import { UserStatus } from '../../application/consts/user-status.enum';
+import { UserStatus } from '../../domain/consts/user-status.enum';
 
 export type UserModel = {
   id: string;

@@ -1,5 +1,5 @@
 import { hashPassword } from '@/modules/auth/infrastructure/utils/password';
-import { UserStatus } from '@/modules/users/application/consts/user-status.enum';
+import { UserStatus } from '@/modules/users/domain/consts/user-status.enum';
 import { faker } from '@faker-js/faker';
 import { uuid } from '@shared/uuid';
 import { Pool } from 'pg';

@@ -4,7 +4,7 @@ import {
 } from '@/modules/users/domain/entities/user-profile.entity';
 import { User } from '../../domain/entities/user.entity';
 import { UserModel } from '../models/user.model';
-import { InteractionCategory } from '@/modules/users/domain/entities/user-profile-interaction.entity';
+import { InteractionCategory } from '@/modules/shared/domain/interaction-category';
 import { skipUnecessaryNotification } from '@/modules/notifications/application/utils/notification-utils';
 import { calculateFameRating } from '../../domain/services/calculate-fame-rating';
 import { calculateAge } from '../../domain/services/calculate-age';
