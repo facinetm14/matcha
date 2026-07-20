@@ -4,6 +4,10 @@ import { GetCurrentUserUseCase } from '@/modules/users/application/usecases/get-
 import { Request, Response } from 'express';
 import { inject, injectable } from 'inversify';
 import { getConnectedUserId } from '../../../../auth/interface/http/middlewares/get-connected-user';
+import {
+  toOwnUserProfileView,
+  toPublicUserProfileView,
+} from '../presenters/user-profile.presenter';
 import { AccessTokenService } from '@/modules/auth/application/ports/services/access-token.service';
 import { UpdateUserProfileUseCase } from '@/modules/users/application/usecases/update-user-profile.usecase';
 import { UpdateUserProfileError } from '@/modules/users/application/errors/update-user-profile.error';
@@ -85,9 +89,7 @@ export class UserController {
       return;
     }
 
-    const { passwd: _passwd, ...safeUser } = getCurrentUserResult.data;
-
-    resp.status(200).json(safeUser);
+    resp.status(200).json(toOwnUserProfileView(getCurrentUserResult.data));
   }
 
   async filterUsers(req: Request, resp: Response) {
@@ -112,12 +114,7 @@ export class UserController {
       connectedUserResult.data,
     );
 
-    const safeUserList = filteredUsers.map((user) => {
-      const { passwd: _passwd, email: _email, ...safeUser } = user;
-      return { ...safeUser, blocked: [] };
-    });
-
-    resp.status(200).send(safeUserList);
+    resp.status(200).send(filteredUsers.map(toPublicUserProfileView));
   }
 
   async viewUserProfile(
@@ -156,13 +153,9 @@ export class UserController {
       return;
     }
 
-    const {
-      passwd: _passwd,
-      email: _email,
-      ...safeUser
-    } = getCurrentUserResult.data;
-
-    resp.status(200).json(safeUser);
+    resp
+      .status(200)
+      .json(toPublicUserProfileView(getCurrentUserResult.data));
   }
 
   async viewUserProfileList(req: Request, resp: Response) {
@@ -189,12 +182,7 @@ export class UserController {
     const userList =
       await this.getUserListFromIdListUseCase.execute(userIdList);
 
-    const safeUserList = userList.map((user) => {
-      const { email: _email, ...safeUser } = user;
-      return { ...safeUser, blocked: [] };
-    });
-
-    resp.status(200).send(safeUserList);
+    resp.status(200).send(userList.map(toPublicUserProfileView));
   }
 
   async checkUserIdentifierAvailability(req: Request, resp: Response) {
