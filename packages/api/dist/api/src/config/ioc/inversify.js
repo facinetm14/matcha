@@ -1,0 +1,13 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const inversify_1 = require("inversify");
+const bind_controllers_1 = require("./bind-controllers");
+const bind_usecases_1 = require("./bind-usecases");
+const bind_repositories_1 = require("./bind-repositories");
+const bind_services_1 = require("./bind-services");
+const container = new inversify_1.Container();
+(0, bind_services_1.bindServices)(container);
+(0, bind_controllers_1.bindControllers)(container);
+(0, bind_usecases_1.bindUseCases)(container);
+(0, bind_repositories_1.bindRepositories)(container);
+exports.default = container;

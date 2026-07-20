@@ -1,4 +1,0 @@
-[agent]
-persistent_facts = [
-  "For API, microservice, or backend design work, apply .agents/skills/hexagonal-architecture/SKILL.md — scale the decomposition to the request size.",
-]

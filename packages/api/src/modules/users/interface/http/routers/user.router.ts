@@ -1,7 +1,6 @@
 import { Request, Response, Router } from 'express';
 import { UserController } from '../controllers/user.controller';
 import { injectAuthorizationToken } from '../../../../auth/interface/http/middlewares/inject-authorization-token';
-import { uploadUserImages } from '../middlewares/upload-user-images.middleware';
 import container from '@/config/ioc/inversify';
 const userController = container.get(UserController);
 
@@ -76,19 +75,10 @@ UserRouter.post(
 );
 
 UserRouter.get(
-  `/images/:key`,
+  `/images/:filename`,
   injectAuthorizationToken,
   (req: Request, resp: Response) => {
     userController.getImage(req, resp);
-  },
-);
-
-UserRouter.post(
-  `/images`,
-  injectAuthorizationToken,
-  uploadUserImages,
-  (req: Request, resp: Response) => {
-    userController.uploadImages(req, resp);
   },
 );
 

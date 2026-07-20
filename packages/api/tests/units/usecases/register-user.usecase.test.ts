@@ -1,35 +1,44 @@
 import { describe, expect, test } from '@jest/globals';
 import { RegisterUserUseCase } from '../../../src/modules/auth/application/usecases/register-user.usecase';
 import { UserRepository } from '../../../src/modules/users/application/ports/repositories/user.repository';
-import { Logger } from '@/modules/shared/application/ports/services/logger.service';
-import { EventBus } from '@/modules/shared/application/ports/services/event-bus';
-import { PasswordHasher } from '@/modules/auth/application/ports/services/password-hasher';
+import { Logger } from '../../../src/modules/shared/ports/logger.service';
+import { EventBus } from '../../../src/modules/shared/ports/event-bus';
+import { UserTokenCateory } from '../../../src/modules/auth/application/consts/user-token-category';
 import {
   factoryCreateUserDto,
   factoryUserRepositoryInMemory,
-} from '../../support/factory';
+  factoryUserToken,
+} from '../../../src/modules/shared/utils/factory';
 import container from '@/config/ioc/inversify';
 import { TYPE } from '@/config/ioc/inversify-type';
+import { UserToken } from '@/modules/auth/domain/entities/user-token.entity';
 
 describe('User Registration', () => {
   let userRepository: UserRepository;
   let registerUserUseCase: RegisterUserUseCase;
   let eventBus: EventBus;
-  const ipAddr = '';
-  const device = '';
+  let userToken: UserToken;
 
   beforeAll(() => {
     const logger = container.get<Logger>(TYPE.Logger);
     userRepository = factoryUserRepositoryInMemory();
 
     eventBus = container.get<EventBus>(TYPE.EventBus);
-    const passwordHasher = container.get<PasswordHasher>(TYPE.PasswordHasher);
+    const now = new Date();
+    userToken = factoryUserToken({
+      userId: '',
+      category: UserTokenCateory.ONE_TIME,
+      expireAt: null,
+      ipAddr: '',
+      device: '',
+      createdAt: now,
+      updatedAt: now,
+    });
 
     registerUserUseCase = new RegisterUserUseCase(
       userRepository,
       logger,
       eventBus,
-      passwordHasher,
     );
   });
 
@@ -45,8 +54,7 @@ describe('User Registration', () => {
 
     const userRegister = await registerUserUseCase.execute(
       createUserDto,
-      ipAddr,
-      device,
+      userToken,
     );
     const newUserId = userRegister.isErr ? null : userRegister.data;
 
@@ -65,8 +73,7 @@ describe('User Registration', () => {
 
     const userRegister = await registerUserUseCase.execute(
       createUserDto,
-      ipAddr,
-      device,
+      userToken,
     );
     const newUserId = userRegister.isErr ? null : userRegister.data;
 
@@ -85,8 +92,7 @@ describe('User Registration', () => {
 
     const userRegister = await registerUserUseCase.execute(
       createUserDto,
-      ipAddr,
-      device,
+      userToken,
     );
     const newUserId = userRegister.isErr ? null : userRegister.data;
 
@@ -107,8 +113,7 @@ describe('User Registration', () => {
 
     const userRegister = await registerUserUseCase.execute(
       createUserDto,
-      ipAddr,
-      device,
+      userToken,
     );
 
     const newUserId = userRegister.isErr ? null : userRegister.data;

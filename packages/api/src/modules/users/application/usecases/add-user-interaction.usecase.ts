@@ -1,11 +1,11 @@
 import { Notification } from '@/modules/notifications/domain/entities/notification.entity';
-import { InteractionCategory } from '@/modules/shared/domain/interaction-category';
-import { EventType } from '@/modules/shared/application/consts/event-type';
+import { InteractionCategory } from '@/modules/users/domain/entities/user-profile-interaction.entity';
+import { EventType } from '@/modules/shared/consts/event-type';
 import { UserUniqKeys } from '@/modules/users/application/consts/user-uniq-keys.enum';
-import { Err, Ok, Result } from '@/modules/shared/application/utils/result';
+import { Err, Ok, Result } from '@/modules/shared/utils/result';
 import { UserInteractionRepository } from '@/modules/users/application/ports/repositories/user-profile-interaction.repository';
 import { UserRepository } from '@/modules/users/application/ports/repositories/user.repository';
-import { EventBus } from '@/modules/shared/application/ports/services/event-bus';
+import { EventBus } from '@/modules/shared/ports/event-bus';
 import { uuid } from '@shared/uuid';
 import { inject, injectable } from 'inversify';
 import { CreateInteractionDto } from '../dto/create-user-interaction.dto';
@@ -66,6 +66,7 @@ export class AddUserInteractionUseCase {
 
     if (this.isRevokingCategory(createInteractionDto.category)) {
       if (createInteractionDto.category === 'block') {
+        console.log('delete like please');
         await this.userInteractionRepository.delete(
           {
             ...createInteractionDto,

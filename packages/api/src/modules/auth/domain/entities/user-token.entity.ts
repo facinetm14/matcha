@@ -1,4 +1,4 @@
-import { UserTokenCateory } from '../consts/user-token-category';
+import { UserTokenCateory } from "../../application/consts/user-token-category";
 
 export type UserToken = {
   id: string;

@@ -4,10 +4,6 @@ import { GetCurrentUserUseCase } from '@/modules/users/application/usecases/get-
 import { Request, Response } from 'express';
 import { inject, injectable } from 'inversify';
 import { getConnectedUserId } from '../../../../auth/interface/http/middlewares/get-connected-user';
-import {
-  toOwnUserProfileView,
-  toPublicUserProfileView,
-} from '../presenters/user-profile.presenter';
 import { AccessTokenService } from '@/modules/auth/application/ports/services/access-token.service';
 import { UpdateUserProfileUseCase } from '@/modules/users/application/usecases/update-user-profile.usecase';
 import { UpdateUserProfileError } from '@/modules/users/application/errors/update-user-profile.error';
@@ -16,7 +12,12 @@ import {
   AddUserInteractionUseCase,
 } from '@/modules/users/application/usecases/add-user-interaction.usecase';
 
-import { DeleteUserImageUseCase } from '@/modules/users/application/usecases/delete-user-image.usecase';
+import { createReadStream, existsSync, statSync } from 'node:fs';
+import { join } from 'node:path';
+import { UPLOAD_DEST } from '@/modules/users/application/consts/upload-dest';
+import { AcceptedMimeType } from '@/modules/users/application/consts/accepted-mimetype';
+import { extractFileExtension } from '@shared/extract-file-extension';
+import { DeleteUserImageUsceCase } from '@/modules/users/application/usecases/delete-user-image.usecase';
 import { ReorderUserImageUseCase } from '@/modules/users/application/usecases/reorder-user-image-usecase';
 import { GetAllTagsUseCase } from '@/modules/users/application/usecases/get-all-tags.usecase';
 import { FetchBestUserSuggestion } from '@/modules/users/application/usecases/fetch-best-user-suggestion.usecase';
@@ -31,12 +32,7 @@ import { CreateInteractionDtoSchema } from '../../validations/create-user-intera
 import { UpdateUserProfileDto } from '@/modules/users/application/dto/update-user-profile.dto';
 import { FilterUsersDtoSchema } from '../../validations/filter-users-dto.validation';
 import { FilterUsersUseCase } from '@/modules/users/application/usecases/filter-users.usecase';
-import { ReverseGeocodeCoordinatesUseCase } from '@/modules/users/application/usecases/reverse-geocode-coordinates.usecase';
-import { GetUserImageUseCase } from '@/modules/users/application/usecases/get-user-image.usecase';
 import { VerifyTokenError } from '@/modules/auth/application/errors/verify-token.error';
-import { UploadUserImagesUseCase } from '@/modules/users/application/usecases/upload-user-images.usecase';
-import { UploadUserImagesError } from '@/modules/users/application/errors/upload-user-images.error';
-import { UploadUserImagesPositionsSchema } from '../../validations/upload-user-images-dto.validation';
 
 @injectable()
 export class UserController {
@@ -51,8 +47,8 @@ export class UserController {
     private readonly updateUserProfileUseCase: UpdateUserProfileUseCase,
     @inject(AddUserInteractionUseCase)
     private readonly addUserInteractionUseCase: AddUserInteractionUseCase,
-    @inject(DeleteUserImageUseCase)
-    private readonly deleteImageUseCase: DeleteUserImageUseCase,
+    @inject(DeleteUserImageUsceCase)
+    private readonly deleteImageUseCase: DeleteUserImageUsceCase,
     @inject(ReorderUserImageUseCase)
     private readonly reorderUserImageUseCase: ReorderUserImageUseCase,
     @inject(GetAllTagsUseCase)
@@ -63,12 +59,6 @@ export class UserController {
     private readonly getUserListFromIdListUseCase: GetUserListFromIdListUseCase,
     @inject(FilterUsersUseCase)
     private readonly filterUsersUseCase: FilterUsersUseCase,
-    @inject(ReverseGeocodeCoordinatesUseCase)
-    private readonly reverseGeocodeCoordinatesUseCase: ReverseGeocodeCoordinatesUseCase,
-    @inject(GetUserImageUseCase)
-    private readonly getUserImageUseCase: GetUserImageUseCase,
-    @inject(UploadUserImagesUseCase)
-    private readonly uploadUserImagesUseCase: UploadUserImagesUseCase,
   ) {}
 
   async getMe(req: Request, resp: Response) {
@@ -92,7 +82,9 @@ export class UserController {
       return;
     }
 
-    resp.status(200).json(toOwnUserProfileView(getCurrentUserResult.data));
+    const { passwd: _passwd, ...safeUser } = getCurrentUserResult.data;
+
+    resp.status(200).json(safeUser);
   }
 
   async filterUsers(req: Request, resp: Response) {
@@ -117,7 +109,12 @@ export class UserController {
       connectedUserResult.data,
     );
 
-    resp.status(200).send(filteredUsers.map(toPublicUserProfileView));
+    const safeUserList = filteredUsers.map((user) => {
+      const { passwd: _passwd, email: _email, ...safeUser } = user;
+      return { ...safeUser, blocked: [] };
+    });
+
+    resp.status(200).send(safeUserList);
   }
 
   async viewUserProfile(
@@ -156,9 +153,13 @@ export class UserController {
       return;
     }
 
-    resp
-      .status(200)
-      .json(toPublicUserProfileView(getCurrentUserResult.data));
+    const {
+      passwd: _passwd,
+      email: _email,
+      ...safeUser
+    } = getCurrentUserResult.data;
+
+    resp.status(200).json(safeUser);
   }
 
   async viewUserProfileList(req: Request, resp: Response) {
@@ -185,7 +186,12 @@ export class UserController {
     const userList =
       await this.getUserListFromIdListUseCase.execute(userIdList);
 
-    resp.status(200).send(userList.map(toPublicUserProfileView));
+    const safeUserList = userList.map((user) => {
+      const { email: _email, ...safeUser } = user;
+      return { ...safeUser, blocked: [] };
+    });
+
+    resp.status(200).send(safeUserList);
   }
 
   async checkUserIdentifierAvailability(req: Request, resp: Response) {
@@ -326,93 +332,34 @@ export class UserController {
       return;
     }
 
-    const { key } = req.params;
+    const { filename } = req.params;
 
-    if (!key) {
+    if (!filename) {
       resp.status(400).send('bad request');
       return;
     }
 
-    const image = await this.getUserImageUseCase.execute(`${key}`);
-    if (!image) {
+    const path = join(process.cwd(), UPLOAD_DEST, filename as string);
+    if (!existsSync(path)) {
       resp.status(404).send('image not found');
       return;
     }
 
+    const fileStream = createReadStream(path);
+    const type = AcceptedMimeType.get(extractFileExtension(path));
+
+    if (!type) {
+      resp.status(400).send('wrong extension');
+      return;
+    }
+
     resp.writeHead(200, {
-      'Content-Type': image.contentType,
-      'Content-Length': image.size,
+      'Content-Type': `image/${type}`,
+      'Content-Length': statSync(path).size,
       'Cross-Origin-Resource-Policy': 'same-site | same-origin | cross-origin',
     });
 
-    image.stream.pipe(resp);
-  }
-
-  async uploadImages(req: Request, resp: Response) {
-    const connectedUserResult = await getConnectedUserId(
-      this.accessTokenService,
-      req,
-      resp,
-    );
-
-    if (connectedUserResult.isErr) {
-      resp.status(401).send('Invalid token');
-      return;
-    }
-
-    const files = (req.files as Express.Multer.File[] | undefined) ?? [];
-
-    if (!files.length) {
-      resp.status(400).send('No images provided');
-      return;
-    }
-
-    let positions: number[];
-    try {
-      positions = UploadUserImagesPositionsSchema.parse(
-        JSON.parse(req.body.positions ?? '[]'),
-      );
-    } catch {
-      resp.status(400).send('Bad request');
-      return;
-    }
-
-    if (positions.length !== files.length) {
-      resp.status(400).send('Bad request');
-      return;
-    }
-
-    const userId = connectedUserResult.data;
-    const uploads = files.map((file, index) => ({
-      buffer: file.buffer,
-      position: positions[index],
-    }));
-
-    const uploadResult = await this.uploadUserImagesUseCase.execute(
-      userId,
-      uploads,
-    );
-
-    if (uploadResult.isErr) {
-      this.handleUploadUserImagesError(uploadResult.error, resp);
-      return;
-    }
-
-    resp.status(201).json(uploadResult.data);
-  }
-
-  private handleUploadUserImagesError(
-    error: UploadUserImagesError,
-    resp: Response,
-  ): Response {
-    switch (error) {
-      case UploadUserImagesError.NO_VALID_IMAGES:
-        return resp.status(422).send('No valid images to upload');
-      default:
-        return resp
-          .status(500)
-          .send('server internal error, please retry later');
-    }
+    fileStream.pipe(resp);
   }
 
   async deleteImages(req: Request, resp: Response) {
@@ -510,17 +457,24 @@ export class UserController {
 
   async geoGode(req: Request, resp: Response) {
     const { lat, lng } = req.query as { lat?: string; lng?: string };
+    const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`;
 
-    const geocode = await this.reverseGeocodeCoordinatesUseCase.execute(
-      Number(lat),
-      Number(lng),
+    const result = await fetch(
+      url,
+      {
+        headers: {
+          'User-Agent': 'matcha-app',
+        },
+      },
     );
 
-    if (!geocode) {
+    if (!result.ok) {
       resp.status(500).send('Reverse geocoding failed');
       return;
     }
 
-    resp.status(200).send(geocode);
+    const data = await result.json();
+
+    resp.status(200).send(data);
   }
 }

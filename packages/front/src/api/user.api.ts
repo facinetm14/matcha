@@ -78,23 +78,6 @@ const updateUserProfile = async (updateUserDto: UpdateUserDto) => {
   });
 };
 
-const uploadUserImages = async (photos: { file: File; position: number }[]) => {
-  const formData = new FormData();
-  for (const photo of photos) {
-    formData.append('photos', photo.file);
-  }
-  formData.append(
-    'positions',
-    JSON.stringify(photos.map((photo) => photo.position)),
-  );
-
-  return fetch(`${API_BASE_ROUTE}/users/images`, {
-    method: 'POST',
-    body: formData,
-    credentials: 'include',
-  });
-};
-
 const deleteUserImage = async (deleteImageDto: DeleteUserImageDto) => {
   return fetch(`${API_BASE_ROUTE}/users/images/remove`, {
     headers: {
@@ -189,7 +172,6 @@ export const userApi = {
   getMe,
   checkUserIdentifierAvailability,
   updateUserProfile,
-  uploadUserImages,
   deleteUserImage,
   reorderImages,
   getAllTags,

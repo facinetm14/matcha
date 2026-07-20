@@ -14,7 +14,6 @@ import {
 import { UserProfile } from '@/types/user';
 import { UserImage } from '@/types/user-image';
 import { getInitials } from '@/utils/get-initials';
-import { resolveUserImageUrl } from '@/utils/resolve-user-image-url';
 
 type ProfileHeaderCardProps = {
   profile: UserProfile;
@@ -64,7 +63,7 @@ export function ProfileHeaderCard({
             <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-primary">
               {photos.length ? (
                 <img
-                  src={resolveUserImageUrl(photos[0].preview)}
+                  src={photos[0].preview}
                   alt={profile.firstName}
                   className="w-full h-full object-cover"
                 />

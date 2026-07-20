@@ -1,18 +1,18 @@
 import { inject } from 'inversify';
 import { Socket, Server as SocketIoServer } from 'socket.io';
-import { SocketEvents } from '@shared/socket-events';
+import { SocketEvents } from '../../../../shared/socket-events';
 import { AccessTokenService } from '@/modules/auth/application/ports/services/access-token.service';
 import { getConnectedUserIdFromSocket } from '@/modules/auth/interface/http/middlewares/get-connected-user';
-import { CacheService } from '@/modules/shared/application/ports/services/cache.service';
+import { CacheService } from '@/modules/shared/ports/cache.service';
 
 import { UserNotificationRepository } from '@/modules/notifications/application/ports/repositories/user-notification.repository';
 import { MessageRepository } from '@/modules/notifications/application/ports/repositories/message.repository';
-import { EventBus } from '@/modules/shared/application/ports/services/event-bus';
+import { EventBus } from '@/modules/shared/ports/event-bus';
 import { TYPE } from '@/config/ioc/inversify-type';
 import { CreateMessageDtoSchema } from '@/modules/notifications/interface/validations/create-message-dto.validation';
-import { CacheResourceKeys } from '@/modules/shared/application/consts/cache-ressource-keys';
+import { CacheResourceKeys } from '@/modules/shared/consts/cache-ressource-keys';
 import { OUTGOING_MESSAGE_TIMEOUT_MS } from '@shared/notification-time';
-import { SendMessageUseCase } from '@/modules/notifications/application/usecases/send-message.usecase';
+import { SendMessageUsceCase } from '@/modules/notifications/application/usecases/send-message.usecase';
 
 export class SocketIoListener {
   constructor(
@@ -25,8 +25,8 @@ export class SocketIoListener {
     @inject(TYPE.EventBus) private readonly eventBus: EventBus,
     @inject(TYPE.UserNotificationRepository)
     private readonly userNotificationRepository: UserNotificationRepository,
-    @inject(SendMessageUseCase)
-    private readonly sendMessageUseCase: SendMessageUseCase,
+    @inject(SendMessageUsceCase)
+    private readonly sendMessageUseCase: SendMessageUsceCase,
   ) {}
 
   async handleSocketEvents() {

@@ -3,7 +3,7 @@ import { REFRESH_ACESS_TOKEN_TTL_IN_MS } from '@/modules/auth/application/consts
 import { VerifyTokenError } from '@/modules/auth/application/errors/verify-token.error';
 import { AccessTokenService } from '@/modules/auth/application/ports/services/access-token.service';
 import { RefreshAccessTokenUseCase } from '@/modules/auth/application/usecases/refresh-token.usecase';
-import { factoryUserTokenRepositoryInMemory } from '../../support/factory';
+import { factoryUserTokenRepositoryInMemory } from '@/modules/shared/utils/factory';
 
 describe('Refresh Access Token Usecase', () => {
   let refreshAccessTokenUseCase: RefreshAccessTokenUseCase;

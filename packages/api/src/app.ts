@@ -1,4 +1,6 @@
 import express, { Express } from 'express';
+import AuthRouter from './modules/auth/interface/http/routers/auth.router';
+import UserRouter from './modules/users/interface/http/routers/user.router';
 
 import cors from 'cors';
 import helmet from 'helmet';
@@ -7,10 +9,11 @@ import { rateLimit } from 'express-rate-limit';
 import { AuthRateLimit } from './modules/auth/application/consts/auth-rate-limit';
 import { createServer, Server as NodeServer } from 'node:http';
 import { Server as SocketIoServer } from 'socket.io';
+import ChatRouter from './modules/notifications/interface/http/routers/chat.router';
 
 import container from './config/ioc/inversify';
 import { TYPE } from './config/ioc/inversify-type';
-import { apiModules } from './modules/module-registry';
+
 
 const apiBaseRoute = process.env.BASE_API ?? '/api/v1';
 
@@ -42,12 +45,10 @@ export const createApp = (): { server: NodeServer; app: Express } => {
     .bind<SocketIoServer>(TYPE.SocketIoServer)
     .toConstantValue(socketServer);
 
-  for (const module of apiModules) {
-    module.register(app, {
-      apiBaseRoute,
-      middlewares: { authRateLimiter: rateLimiter },
-    });
-  }
+  app.use(`${apiBaseRoute}/auth`, rateLimiter, AuthRouter);
+  app.use(`${apiBaseRoute}/users`, UserRouter);
+  app.use(`${apiBaseRoute}/chats`, ChatRouter);
 
   return { server, app };
 };
+

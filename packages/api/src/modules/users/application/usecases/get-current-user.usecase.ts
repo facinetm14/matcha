@@ -1,12 +1,12 @@
-import { Err, Ok, Result } from '@/modules/shared/application/utils/result';
+import { Err, Ok, Result } from '../../../shared/utils/result';
 import { VerifyTokenError } from '../../../auth/application/errors/verify-token.error';
 import { inject, injectable } from 'inversify';
 import { UserRepository } from '../ports/repositories/user.repository';
 import { UserProfile } from '@/modules/users/domain/entities/user-profile.entity';
-import { EventBus } from '@/modules/shared/application/ports/services/event-bus';
+import { EventBus } from '@/modules/shared/ports/event-bus';
 import { uuid } from '@shared/uuid';
 import { Notification } from '@/modules/notifications/domain/entities/notification.entity';
-import { EventType } from '@/modules/shared/application/consts/event-type';
+import { EventType } from '@/modules/shared/consts/event-type';
 import { TYPE } from '@/config/ioc/inversify-type';
 
 @injectable()

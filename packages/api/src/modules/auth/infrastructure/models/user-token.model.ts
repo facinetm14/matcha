@@ -1,4 +1,4 @@
-import { UserTokenCateory } from '../../domain/consts/user-token-category';
+import { UserTokenCateory } from '../../application/consts/user-token-category';
 
 export interface UserTokenModel {
   id: string;

@@ -1,7 +1,7 @@
 import { CreateNewPasswordError } from '@/modules/auth/application/errors/create-new-password.error';
 import { inject, injectable } from 'inversify';
-import { Result, Err, Ok } from '@/modules/shared/application/utils/result';
-import { PasswordHasher } from '@/modules/auth/application/ports/services/password-hasher';
+import { Result, Err, Ok } from '@/modules/shared/utils/result';
+import { hashPassword } from '@/modules/auth/infrastructure/utils/password';
 import { isPasswordStrong } from '@shared/input-validation/is-valid-password';
 import { UserRepository } from '@/modules/users/application/ports/repositories/user.repository';
 import { UserUniqKeys } from '@/modules/users/application/consts/user-uniq-keys.enum';
@@ -13,8 +13,6 @@ export class CreateNewPasswordUseCase {
   constructor(
     @inject(TYPE.UserRepository)
     private readonly userRepository: UserRepository,
-    @inject(TYPE.PasswordHasher)
-    private readonly passwordHasher: PasswordHasher,
   ) {}
 
   async execute(
@@ -37,7 +35,7 @@ export class CreateNewPasswordUseCase {
       return Err(CreateNewPasswordError.MIS_MATCH_PASSWORD);
     }
 
-    const passwd = await this.passwordHasher.hash(createNewPasswordDto.passwd);
+    const passwd = await hashPassword(createNewPasswordDto.passwd);
     const userWithNewPassword = {
       passwd,
     };

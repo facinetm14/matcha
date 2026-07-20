@@ -1,6 +1,6 @@
 import { AccessToken } from '@/modules/auth/domain/entities/access-token.entity';
 import { VerifyTokenError } from '@/modules/auth/application/errors/verify-token.error';
-import { Err, Ok, Result } from '@/modules/shared/application/utils/result';
+import { Err, Ok, Result } from '@/modules/shared/utils/result';
 import { AccessTokenService } from '@/modules/auth/application/ports/services/access-token.service';
 import { injectable, inject } from 'inversify';
 import { TYPE } from '@/config/ioc/inversify-type';

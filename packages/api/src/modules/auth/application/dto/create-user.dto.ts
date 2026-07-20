@@ -1,4 +1,4 @@
-import { UserStatus } from '@/modules/users/domain/consts/user-status.enum';
+import { UserStatus } from '@/modules/users/application/consts/user-status.enum';
 
 export type CreateUserDto = {
   id: string;

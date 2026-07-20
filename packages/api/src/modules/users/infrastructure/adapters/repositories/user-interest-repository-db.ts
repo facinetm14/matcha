@@ -1,7 +1,7 @@
 import { UserInterest } from '@/modules/users/domain/entities/user-interest.entity';
 import { UserInterestColumns } from '@/modules/users/application/consts/user-interest-columns.enum';
 import { UserInterestRepository } from '@/modules/users/application/ports/repositories/user-interest.repository';
-import { Logger } from '@/modules/shared/application/ports/services/logger.service';
+import { Logger } from '@/modules/shared/ports/logger.service';
 import { pgClient } from '@/config/db/data-source';
 import { injectable, inject } from 'inversify';
 import { mapUserInterestModelToEntity } from '../../mappers/map-user-interest-model-to-entity';
