@@ -8,10 +8,6 @@ import { InteractionCategory } from '@/modules/shared/domain/interaction-categor
 import { skipUnecessaryNotification } from '@/modules/notifications/application/utils/notification-utils';
 import { calculateFameRating } from '../../domain/services/calculate-fame-rating';
 import { calculateAge } from '../../domain/services/calculate-age';
-import {
-  extractCityFromGeocode,
-  GeocodeAddressType,
-} from '@shared/extract-city-from-geocode';
 
 export function mapUserModelToEntity(userModel: UserModel): User {
   return {
@@ -66,28 +62,6 @@ export type UserAggregate = UserModel & {
   location_lng: string;
   location_shared_by_user_at: Date | null;
 };
-
-export async function buildCity(
-  lat: number,
-  lng: number,
-): Promise<string | undefined> {
-  const result = await fetch(
-    `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`,
-    {
-      headers: {
-        'User-Agent': 'matcha-app',
-      },
-    },
-  );
-
-  if (!result.ok) {
-    return undefined;
-  }
-
-  const data = await result.json();
-
-  return extractCityFromGeocode(data.address as GeocodeAddressType);
-}
 
 export async function buildUserProfileFromUserAggregate(
   userAggregate: UserAggregate[],

@@ -10,6 +10,7 @@ import { GetAllTagsUseCase } from './application/usecases/get-all-tags.usecase';
 import { FetchBestUserSuggestion } from './application/usecases/fetch-best-user-suggestion.usecase';
 import { GetUserListFromIdListUseCase } from './application/usecases/get-user-list-from-id.usecase';
 import { FilterUsersUseCase } from './application/usecases/filter-users.usecase';
+import { ReverseGeocodeCoordinatesUseCase } from './application/usecases/reverse-geocode-coordinates.usecase';
 import { UserRepository } from './application/ports/repositories/user.repository';
 import { UserRepositoryDb } from './infrastructure/adapters/repositories/user-repository-db';
 import { UserInterestRepository } from './application/ports/repositories/user-interest.repository';
@@ -35,6 +36,7 @@ export function bindUsersModule(container: Container) {
   container.bind(FetchBestUserSuggestion).toSelf().inSingletonScope();
   container.bind(GetUserListFromIdListUseCase).toSelf().inSingletonScope();
   container.bind(FilterUsersUseCase).toSelf().inSingletonScope();
+  container.bind(ReverseGeocodeCoordinatesUseCase).toSelf().inSingletonScope();
 
   container
     .bind<UserRepository>(TYPE.UserRepository)
