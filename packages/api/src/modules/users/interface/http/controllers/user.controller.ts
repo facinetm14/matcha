@@ -12,9 +12,6 @@ import {
   AddUserInteractionUseCase,
 } from '@/modules/users/application/usecases/add-user-interaction.usecase';
 
-import { createReadStream, existsSync, statSync } from 'node:fs';
-import { join } from 'node:path';
-import { UPLOAD_DEST } from '@/modules/users/application/consts/upload-dest';
 import { AcceptedMimeType } from '@/modules/users/application/consts/accepted-mimetype';
 import { extractFileExtension } from '@shared/extract-file-extension';
 import { DeleteUserImageUseCase } from '@/modules/users/application/usecases/delete-user-image.usecase';
@@ -33,6 +30,7 @@ import { UpdateUserProfileDto } from '@/modules/users/application/dto/update-use
 import { FilterUsersDtoSchema } from '../../validations/filter-users-dto.validation';
 import { FilterUsersUseCase } from '@/modules/users/application/usecases/filter-users.usecase';
 import { ReverseGeocodeCoordinatesUseCase } from '@/modules/users/application/usecases/reverse-geocode-coordinates.usecase';
+import { GetUserImageUseCase } from '@/modules/users/application/usecases/get-user-image.usecase';
 import { VerifyTokenError } from '@/modules/auth/application/errors/verify-token.error';
 
 @injectable()
@@ -62,6 +60,8 @@ export class UserController {
     private readonly filterUsersUseCase: FilterUsersUseCase,
     @inject(ReverseGeocodeCoordinatesUseCase)
     private readonly reverseGeocodeCoordinatesUseCase: ReverseGeocodeCoordinatesUseCase,
+    @inject(GetUserImageUseCase)
+    private readonly getUserImageUseCase: GetUserImageUseCase,
   ) {}
 
   async getMe(req: Request, resp: Response) {
@@ -342,14 +342,13 @@ export class UserController {
       return;
     }
 
-    const path = join(process.cwd(), UPLOAD_DEST, filename);
-    if (!existsSync(path)) {
+    const image = this.getUserImageUseCase.execute(`${filename}`);
+    if (!image) {
       resp.status(404).send('image not found');
       return;
     }
 
-    const fileStream = createReadStream(path);
-    const type = AcceptedMimeType.get(extractFileExtension(path));
+    const type = AcceptedMimeType.get(extractFileExtension(`${filename}`));
 
     if (!type) {
       resp.status(400).send('wrong extension');
@@ -358,11 +357,11 @@ export class UserController {
 
     resp.writeHead(200, {
       'Content-Type': `image/${type}`,
-      'Content-Length': statSync(path).size,
+      'Content-Length': image.size,
       'Cross-Origin-Resource-Policy': 'same-site | same-origin | cross-origin',
     });
 
-    fileStream.pipe(resp);
+    image.stream.pipe(resp);
   }
 
   async deleteImages(req: Request, resp: Response) {
