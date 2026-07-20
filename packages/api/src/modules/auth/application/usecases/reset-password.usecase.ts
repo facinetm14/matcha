@@ -1,5 +1,5 @@
 import { EventType } from '@/modules/shared/consts/event-type';
-import { UserTokenCateory } from '@/modules/auth/application/consts/user-token-category';
+import { UserTokenCateory } from '@/modules/auth/domain/consts/user-token-category';
 import { UserUniqKeys } from '@/modules/users/application/consts/user-uniq-keys.enum';
 import { ResetPasswordError } from '@/modules/auth/application/errors/reset-password.error';
 import { Err, Ok, Result } from '@/modules/shared/utils/result';

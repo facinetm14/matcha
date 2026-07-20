@@ -1,6 +1,6 @@
 import { inject } from 'inversify';
 import { Socket, Server as SocketIoServer } from 'socket.io';
-import { SocketEvents } from '../../../../shared/socket-events';
+import { SocketEvents } from '@shared/socket-events';
 import { AccessTokenService } from '@/modules/auth/application/ports/services/access-token.service';
 import { getConnectedUserIdFromSocket } from '@/modules/auth/interface/http/middlewares/get-connected-user';
 import { CacheService } from '@/modules/shared/ports/cache.service';

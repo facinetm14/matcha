@@ -6,7 +6,7 @@ import { AccessToken } from '@/modules/auth/domain/entities/access-token.entity'
 import { injectable, inject } from 'inversify';
 import { UserTokenRepository } from '@/modules/auth/application/ports/repositories/user-token.repository';
 import { factoryUserToken } from '@/modules/shared/utils/factory';
-import { UserTokenCateory } from '@/modules/auth/application/consts/user-token-category';
+import { UserTokenCateory } from '@/modules/auth/domain/consts/user-token-category';
 import {
   ACCESS_TOKEN_TTL_IN_MIN,
   REFRESH_ACESS_TOKEN_TTL_IN_MS,

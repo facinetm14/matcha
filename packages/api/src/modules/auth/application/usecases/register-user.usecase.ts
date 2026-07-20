@@ -7,15 +7,15 @@ import { UserUniqKeys } from '../../../users/application/consts/user-uniq-keys.e
 import {
   isPasswordStrong,
   PASSWORD_MIN_LENGTH,
-} from '../../../../../../shared/input-validation/is-valid-password';
+} from '@shared/input-validation/is-valid-password';
 import { hashPassword } from '../../infrastructure/utils/password';
 
-import { isValidEmail } from '../../../../../../shared/input-validation/is-valid-email';
+import { isValidEmail } from '@shared/input-validation/is-valid-email';
 import { Logger } from '../../../shared/ports/logger.service';
 import { EventBus } from '../../../shared/ports/event-bus';
 import { EventType } from '../../../shared/consts/event-type';
 import { UserRegisteredEventPayload } from '../dto/user-registered-event-payload';
-import { UserStatus } from '../../../users/application/consts/user-status.enum';
+import { UserStatus } from '../../../users/domain/consts/user-status.enum';
 import { DEFAULT_SEXUAL_ORIENTATION } from '@/modules/users/application/consts/default-sexual-orientation';
 import { TYPE } from '@/config/ioc/inversify-type';
 import { UserToken } from '../../domain/entities/user-token.entity';

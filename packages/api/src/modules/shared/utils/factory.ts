@@ -1,7 +1,7 @@
 import { User } from '../../users/domain/entities/user.entity';
-import { UserStatus } from '../../users/application/consts/user-status.enum';
-import { uuid } from '../../../../../shared/uuid';
-import { UserTokenCateory } from '../../auth/application/consts/user-token-category';
+import { UserStatus } from '../../users/domain/consts/user-status.enum';
+import { uuid } from '@shared/uuid';
+import { UserTokenCateory } from '../../auth/domain/consts/user-token-category';
 import { UserRepositoryInMemory } from '../../users/infrastructure/adapters/repositories/user-repository-InMemory';
 import { CreateUserDto } from '../../auth/application/dto/create-user.dto';
 import { UserTokenRepositoryInMemory } from '../../auth/infrastructure/adapters/repositories/user-token-repository-inMemory';
