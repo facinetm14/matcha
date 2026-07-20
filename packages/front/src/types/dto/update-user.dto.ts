@@ -1,5 +1,4 @@
 import { Gender, Location } from '../user';
-import { UserImageDto } from './user-image.dto';
 
 export type UpdateUserDto =  {
   email?: string;
@@ -10,7 +9,6 @@ export type UpdateUserDto =  {
   sexualOrientation?: Gender[];
   bio?: string;
   tags?: string[];
-  photos?: UserImageDto[];
   location?: Location;
   passwd?: string;
   confirmPasswd?: string;

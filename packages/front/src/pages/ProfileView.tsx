@@ -17,6 +17,7 @@ import {
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
 import { getInitials } from '@/utils/get-initials';
+import { resolveUserImageUrl } from '@/utils/resolve-user-image-url';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { userApi } from '@/api/user.api';
 import { useEffect, useState } from 'react';
@@ -222,7 +223,7 @@ export default function ProfileView() {
               <div className="relative h-96">
                 {selectedUser.photos.length ? (
                   <img
-                    src={selectedUser.photos[0].preview}
+                    src={resolveUserImageUrl(selectedUser.photos[0].preview)}
                     alt={selectedUser.firstName}
                     className="w-full h-full object-cover"
                   />
@@ -247,7 +248,7 @@ export default function ProfileView() {
                 <Card key={index} className="overflow-hidden shadow-card">
                   <div className="aspect-square">
                     <img
-                      src={photo.preview}
+                      src={resolveUserImageUrl(photo.preview)}
                       alt={`${selectedUser.firstName} ${index + 2}`}
                       className="w-full h-full object-cover"
                     />

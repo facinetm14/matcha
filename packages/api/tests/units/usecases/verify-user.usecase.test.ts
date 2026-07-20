@@ -2,11 +2,11 @@ import { describe } from 'node:test';
 import { uuid } from '../../../../shared/uuid';
 import { VerifyUserUseCase } from '../../../src/modules/auth/application/usecases/verify-user.usecase';
 import { VerifyTokenError } from '../../../src/modules/auth/application/errors/verify-token.error';
+import { factoryUserToken } from '@/modules/shared/application/utils/factory';
 import {
   factoryUserRepositoryInMemory,
-  factoryUserToken,
   factoryUserTokenRepositoryInMemory,
-} from '../../../src/modules/shared/utils/factory';
+} from '../../support/factory';
 import { UserTokenRepository } from '../../../src/modules/auth/application/ports/repositories/user-token.repository';
 
 describe('Verify user email', () => {

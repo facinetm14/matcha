@@ -1,4 +1,4 @@
-import { UserStatus } from '../../application/consts/user-status.enum';
+import { UserStatus } from '../consts/user-status.enum';
 import { Location } from './user-profile.entity';
 
 export type User = {

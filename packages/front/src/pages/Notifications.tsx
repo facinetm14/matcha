@@ -12,6 +12,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { UserProfile } from '@/types/user';
 import { Notification } from '@/types/user';
 import { getInitials } from '@/utils/get-initials';
+import { resolveUserImageUrl } from '@/utils/resolve-user-image-url';
 import { Loadder } from '@/components/ui/Loadder';
 import { SocketEvents } from '../../../shared/socket-events';
 import { useNavigate } from 'react-router-dom';
@@ -208,7 +209,9 @@ export default function Notifications() {
                   <CardContent className="p-4">
                     <div className="flex items-center gap-4">
                       <Avatar className="w-12 h-12">
-                        <AvatarImage src={user?.photos[0]?.preview} />
+                        <AvatarImage
+                          src={resolveUserImageUrl(user?.photos[0]?.preview)}
+                        />
                         <AvatarFallback>
                           {getInitials(user?.firstName, user?.lastName)}
                         </AvatarFallback>

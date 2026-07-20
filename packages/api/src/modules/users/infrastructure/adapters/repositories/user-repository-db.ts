@@ -10,13 +10,13 @@ import {
   buildUserProfileFromUserAggregate,
   mapUserModelToEntity,
 } from '../../mappers/user-model-to-entity';
-import { Logger } from '../../../../shared/ports/logger.service';
-import { mapEnityOrDtoToModel } from '../../../../shared/utils/map-entity-or-dto-to-model';
+import { Logger } from '@/modules/shared/application/ports/services/logger.service';
+import { mapEnityOrDtoToModel } from '@/modules/shared/infrastructure/utils/map-entity-or-dto-to-model';
 import { UserModel } from '../../models/user.model';
-import { CacheService } from '@/modules/shared/ports/cache.service';
+import { CacheService } from '@/modules/shared/application/ports/services/cache.service';
 import { TYPE } from '@/config/ioc/inversify-type';
 import { UpdateUserDto } from '@/modules/users/application/dto/update-user.dto';
-import { CacheResourceKeys } from '@/modules/shared/consts/cache-ressource-keys';
+import { CacheResourceKeys } from '@/modules/shared/application/consts/cache-ressource-keys';
 import { FilterUsersDto } from '@/modules/users/application/dto/filter-users.dto';
 
 @injectable()

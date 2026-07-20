@@ -1,0 +1,4 @@
+export const MAX_USER_PHOTOS = 5;
+export const MAX_PHOTO_UPLOAD_SIZE_BYTES = 10 * 1024 * 1024;
+export const PHOTO_MAX_WIDTH_PX = 1200;
+export const PHOTO_COMPRESSION_QUALITY = 85;

@@ -1,15 +1,15 @@
 import { inject, injectable } from 'inversify';
 import { UserRepository } from '../../../users/application/ports/repositories/user.repository';
-import { Err, Ok, Result } from '../../../shared/utils/result';
+import { Err, Ok, Result } from '@/modules/shared/application/utils/result';
 import { LoginUserError } from '../errors/login-user.error';
 import { UserUniqKeys } from '../../../users/application/consts/user-uniq-keys.enum';
-import { verifyPassword } from '../../infrastructure/utils/password';
-import { UserStatus } from '../../../users/application/consts/user-status.enum';
+import { PasswordHasher } from '../ports/services/password-hasher';
+import { UserStatus } from '../../../users/domain/consts/user-status.enum';
 import { UserTokenRepository } from '../ports/repositories/user-token.repository';
-import { UserTokenCateory } from '../consts/user-token-category';
+import { UserTokenCateory } from '../../domain/consts/user-token-category';
 import { REFRESH_ACESS_TOKEN_TTL_IN_MS } from '../consts/access-token-ttl';
 import { AccessToken } from '@/modules/auth/domain/entities/access-token.entity';
-import { factoryUserToken } from '@/modules/shared/utils/factory';
+import { factoryUserToken } from '@/modules/shared/application/utils/factory';
 import { AccessTokenService } from '../ports/services/access-token.service';
 import { TYPE } from '@/config/ioc/inversify-type';
 import { LoginUserDto } from '../dto/login-user.dto';
@@ -30,6 +30,8 @@ export class LoginUserUseCase {
     private readonly iplocation: IpLocation,
     @inject(TYPE.UserLocationRepository)
     private readonly userLocationRepository: UserLocationRepository,
+    @inject(TYPE.PasswordHasher)
+    private readonly passwordHasher: PasswordHasher,
   ) {}
 
   async execute(
@@ -54,7 +56,7 @@ export class LoginUserUseCase {
       return Err(LoginUserError.USER_UNVERIFIED);
     }
 
-    const matchPasswd = await verifyPassword(
+    const matchPasswd = await this.passwordHasher.verify(
       existingUser.passwd,
       loginUserDto.passwd,
     );

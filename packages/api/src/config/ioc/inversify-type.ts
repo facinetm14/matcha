@@ -16,4 +16,8 @@ export const TYPE = {
   MessageRepository: Symbol.for('MessageRepository'),
   UserLocationRepository: Symbol.for('UserLocationRepository'),
   IpLocation: Symbol.for('IpLocation'),
+  PasswordHasher: Symbol.for('PasswordHasher'),
+  RealtimeNotificationService: Symbol.for('RealtimeNotificationService'),
+  ImageStorageService: Symbol.for('ImageStorageService'),
+  ImageProcessor: Symbol.for('ImageProcessor'),
 };
