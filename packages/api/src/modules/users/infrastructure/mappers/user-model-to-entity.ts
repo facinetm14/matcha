@@ -109,7 +109,7 @@ export async function buildUserProfileFromUserAggregate(
                 id: user.img_id,
                 userId: user.id,
                 position: +user.img_position,
-                preview: `http://localhost:5000/api/v1/users/images/${user.img_preview}`,
+                preview: user.img_preview,
               },
             ]
           : [],
@@ -174,7 +174,7 @@ export async function buildUserProfileFromUserAggregate(
         id: user.img_id,
         userId: user.id,
         position: +user.img_position,
-        preview: `http://localhost:5000/api/v1/users/images/${user.img_preview}`,
+        preview: user.img_preview,
       });
 
       visitedImages.add(user.img_id);
