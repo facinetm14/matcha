@@ -19,9 +19,21 @@ export const createApp = (): { server: NodeServer; app: Express } => {
 
   const rateLimiter = rateLimit({
     windowMs: AuthRateLimit.TIME,
-    limit: AuthRateLimit.REQUEST,
-    ipv6Subnet: 52,
-    message: 'Too many requests, please try again later.',
+    max: AuthRateLimit.REQUEST,
+    keyGenerator: (req) => {
+      const cfConnectingIp = req.headers['cf-connecting-ip'];
+
+      if (typeof cfConnectingIp === 'string') {
+        return cfConnectingIp;
+      }
+
+      if (Array.isArray(cfConnectingIp)) {
+        return cfConnectingIp[0];
+      }
+
+      return req.ip ?? 'unknown';
+    },
+    validate: { xForwardedForHeader: false },
   });
 
   app.use(cors());
