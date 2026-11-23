@@ -8,7 +8,7 @@ A full-stack dating web application where users can register, build a profile, b
 
 When someone sends a message, the API looks up the match channel and checks whether the sender is one of its two members. An unknown channel or a different sender returns before anything is stored. For a valid sender, the use case saves the message and identifies the other member for notification. Read the [send-message use case](packages/api/src/modules/notifications/application/usecases/send-message.usecase.ts), then follow delivery into the [Socket.IO adapter](packages/api/src/modules/notifications/infrastructure/adapters/socket-io-realtime-notification.service.ts).
 
-This is a team project by fakouyat and nfauconn, credited in the [workspace manifest](package.json).
+Facinet’s [architecture refactor](https://github.com/facinetm14/matcha/commit/fb5534fc374eb59debbfb1f3e3caebdfec0ac115) touched this use case. This is a team project by fakouyat and nfauconn, credited in the [workspace manifest](package.json).
 
 ## Stack
  
