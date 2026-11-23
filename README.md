@@ -34,13 +34,15 @@ This is a team project by fakouyat and nfauconn, credited in the [workspace mani
  
 2. **Configure environment variables**
    ```bash
-   cp packages/api/.env.example packages/api/.env
-   cp packages/front/.env.example packages/front/.env
+   cp packages/api/.env_example packages/api/.env
+   cp packages/front/env_example packages/front/.env
    # Fill in DB credentials, JWT secrets, mail settings, etc.
    ```
  
 3. **Seed the database** *(first time only)*
    ```bash
+   docker compose up -d db
+   # Once PostgreSQL is accepting connections:
    make populate-db
    ```
  
